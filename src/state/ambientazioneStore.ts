@@ -1,12 +1,14 @@
 import { create } from "zustand";
-import type { Ambientazione } from "../lib/ambientazione";
+import type { Ambientazione, Crop, Personaggio, Posizione } from "../lib/ambientazione";
 import {
   apriAmbientazione,
+  copiaImmagineInCartella,
   creaAmbientazione,
   salvaAmbientazione,
 } from "../lib/storage";
 import { aggiungiRecente, aggiornaNomeRecente } from "../lib/recents";
-import { EVT, emit } from "../lib/events";
+import { EVT, emit, type ScenaPayload } from "../lib/events";
+import { clamp01, nuovoId } from "../lib/scena";
 
 export type SaveStatus = "idle" | "dirty" | "saving" | "saved" | "error";
 
@@ -16,10 +18,25 @@ interface AmbientazioneState {
   saveStatus: SaveStatus;
   lastSavedAt: number | null;
   lastError: string | null;
+  selezionatoId: string | null;
   apri: (folderPath: string) => Promise<void>;
   creaNuova: (folderParent: string, nome: string) => Promise<void>;
   chiudi: () => void;
   modifica: (fn: (draft: Ambientazione) => void) => void;
+  impostaMappa: (sourceAbsPath: string) => Promise<void>;
+  rimuoviMappa: () => void;
+  aggiungiPersonaggio: (input: {
+    sourceImgPath: string;
+    nome: string;
+    colore: string;
+    crop: Crop;
+  }) => Promise<string>;
+  spostaPersonaggio: (id: string, pos: Posizione) => void;
+  rinominaPersonaggio: (id: string, nome: string) => void;
+  cambiaColorePersonaggio: (id: string, hex: string) => void;
+  modificaCropPersonaggio: (id: string, crop: Crop) => void;
+  eliminaPersonaggio: (id: string) => void;
+  selezionaPersonaggio: (id: string | null) => void;
   markSaving: () => void;
   markSaved: (a: Ambientazione) => void;
   markError: (msg: string) => void;
@@ -29,12 +46,32 @@ function clone<T>(v: T): T {
   return JSON.parse(JSON.stringify(v)) as T;
 }
 
-async function notificaProiezione(nome: string | null): Promise<void> {
-  try {
-    await emit(EVT.ambientazioneLoaded, { nome });
-  } catch {
-    // se la proiezione non è ancora pronta non blocchiamo
-  }
+let pendingEmit = false;
+let lastPayload: ScenaPayload | null = null;
+
+function emitThrottled(payload: ScenaPayload): void {
+  lastPayload = payload;
+  if (pendingEmit) return;
+  pendingEmit = true;
+  requestAnimationFrame(() => {
+    pendingEmit = false;
+    const p = lastPayload;
+    lastPayload = null;
+    if (p) void emit(EVT.scenaUpdate, p).catch(() => undefined);
+  });
+}
+
+function payloadCorrente(state: AmbientazioneState): ScenaPayload {
+  return {
+    folderPath: state.folderPath,
+    mappaPath: state.current?.mappaPath ?? null,
+    personaggi: state.current?.personaggi ?? [],
+    nome: state.current?.nome ?? null,
+  };
+}
+
+function notificaProiezione(state: AmbientazioneState): void {
+  emitThrottled(payloadCorrente(state));
 }
 
 export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
@@ -43,6 +80,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
   saveStatus: "idle",
   lastSavedAt: null,
   lastError: null,
+  selezionatoId: null,
 
   async apri(folderPath) {
     const a = await apriAmbientazione(folderPath);
@@ -52,9 +90,10 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       saveStatus: "saved",
       lastSavedAt: Date.now(),
       lastError: null,
+      selezionatoId: null,
     });
     await aggiungiRecente(folderPath, a.nome);
-    await notificaProiezione(a.nome);
+    notificaProiezione(get());
   },
 
   async creaNuova(folderParent, nome) {
@@ -67,9 +106,10 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       saveStatus: "saved",
       lastSavedAt: Date.now(),
       lastError: null,
+      selezionatoId: null,
     });
     await aggiungiRecente(folderPath, nome);
-    await notificaProiezione(nome);
+    notificaProiezione(get());
   },
 
   chiudi() {
@@ -79,8 +119,9 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       saveStatus: "idle",
       lastSavedAt: null,
       lastError: null,
+      selezionatoId: null,
     });
-    void notificaProiezione(null);
+    notificaProiezione(get());
   },
 
   modifica(fn) {
@@ -89,6 +130,83 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
     const next = clone(cur);
     fn(next);
     set({ current: next, saveStatus: "dirty", lastError: null });
+    notificaProiezione(get());
+  },
+
+  async impostaMappa(sourceAbsPath) {
+    const { folderPath } = get();
+    if (!folderPath) throw new Error("Nessuna ambientazione aperta");
+    const id = nuovoId();
+    const relativo = await copiaImmagineInCartella(folderPath, sourceAbsPath, "", `mappa-${id}`);
+    get().modifica((draft) => {
+      draft.mappaPath = relativo;
+    });
+  },
+
+  rimuoviMappa() {
+    get().modifica((draft) => {
+      draft.mappaPath = null;
+    });
+  },
+
+  async aggiungiPersonaggio({ sourceImgPath, nome, colore, crop }) {
+    const { folderPath } = get();
+    if (!folderPath) throw new Error("Nessuna ambientazione aperta");
+    const id = nuovoId();
+    const relativo = await copiaImmagineInCartella(folderPath, sourceImgPath, "personaggi", id);
+    const personaggio: Personaggio = {
+      id,
+      nome: nome.trim(),
+      colore: colore.toUpperCase(),
+      imgPath: relativo,
+      crop,
+      posizione: { x: 0.1, y: 0.1 },
+    };
+    get().modifica((draft) => {
+      draft.personaggi.push(personaggio);
+    });
+    return id;
+  },
+
+  spostaPersonaggio(id, pos) {
+    get().modifica((draft) => {
+      const p = draft.personaggi.find((x) => x.id === id);
+      if (p) {
+        p.posizione = { x: clamp01(pos.x), y: clamp01(pos.y) };
+      }
+    });
+  },
+
+  rinominaPersonaggio(id, nome) {
+    get().modifica((draft) => {
+      const p = draft.personaggi.find((x) => x.id === id);
+      if (p) p.nome = nome.trim();
+    });
+  },
+
+  cambiaColorePersonaggio(id, hex) {
+    get().modifica((draft) => {
+      const p = draft.personaggi.find((x) => x.id === id);
+      if (p) p.colore = hex.toUpperCase();
+    });
+  },
+
+  modificaCropPersonaggio(id, crop) {
+    get().modifica((draft) => {
+      const p = draft.personaggi.find((x) => x.id === id);
+      if (p) p.crop = crop;
+    });
+  },
+
+  eliminaPersonaggio(id) {
+    get().modifica((draft) => {
+      draft.personaggi = draft.personaggi.filter((x) => x.id !== id);
+    });
+    if (get().selezionatoId === id) set({ selezionatoId: null });
+  },
+
+  selezionaPersonaggio(id) {
+    set({ selezionatoId: id });
   },
 
   markSaving() {
@@ -118,7 +236,6 @@ export async function eseguiSalvataggio(): Promise<void> {
     markSaved(aggiornata);
     if (aggiornata.nome) {
       await aggiornaNomeRecente(folderPath, aggiornata.nome);
-      await notificaProiezione(aggiornata.nome);
     }
   } catch (e) {
     markError(e instanceof Error ? e.message : String(e));

@@ -1,13 +1,21 @@
 import { emit as tauriEmit, listen as tauriListen, type UnlistenFn } from "@tauri-apps/api/event";
+import type { Personaggio } from "./ambientazione";
 
 export const EVT = {
-  ambientazioneLoaded: "ambientazione:loaded",
+  scenaUpdate: "scena:update",
 } as const;
 
 export type EventName = (typeof EVT)[keyof typeof EVT];
 
+export interface ScenaPayload {
+  folderPath: string | null;
+  mappaPath: string | null;
+  personaggi: Personaggio[];
+  nome: string | null;
+}
+
 export type EventPayloads = {
-  [EVT.ambientazioneLoaded]: { nome: string | null };
+  [EVT.scenaUpdate]: ScenaPayload;
 };
 
 export function emit<N extends EventName>(name: N, payload: EventPayloads[N]): Promise<void> {

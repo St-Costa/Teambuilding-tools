@@ -4,84 +4,80 @@
   height: 100vh;
 }
 
-.header {
+.toolbar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid rgba(127, 127, 127, 0.25);
+  flex-shrink: 0;
 }
 
-.headerSinistra {
+.toolbarSinistra {
   min-width: 0;
 }
 
 .nome {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.25rem;
 }
 
 .path {
-  margin: 0.2rem 0 0;
-  font-size: 0.8rem;
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
   opacity: 0.6;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 40ch;
 }
 
-.headerDestra {
+.toolbarDestra {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.6rem;
   flex-shrink: 0;
 }
 
+.btnAzione,
 .btnChiudi {
-  padding: 0.4rem 0.9rem;
+  padding: 0.4rem 0.85rem;
   border-radius: 5px;
   border: 1px solid currentColor;
   background: transparent;
   color: inherit;
   cursor: pointer;
   font: inherit;
+  font-size: 0.9rem;
 }
 
+.btnAzione:hover,
 .btnChiudi:hover {
   background: rgba(127, 127, 127, 0.1);
 }
 
-.main {
-  flex: 1;
+.banner {
+  background: rgba(220, 50, 50, 0.12);
+  border-bottom: 1px solid rgba(220, 50, 50, 0.45);
+  color: #a72424;
+  padding: 0.6rem 1rem;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.2rem;
-  padding: 2rem;
-  text-align: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-.placeholder {
-  font-size: 1.1rem;
-  opacity: 0.6;
-  max-width: 30rem;
-  line-height: 1.5;
-}
-
-.btnTest {
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  border: 1px dashed rgba(127, 127, 127, 0.6);
+.banner button {
+  border: none;
   background: transparent;
   color: inherit;
   cursor: pointer;
-  font: inherit;
-  opacity: 0.7;
+  font-size: 1.1rem;
 }
 
-.btnTest:hover {
-  opacity: 1;
+.corpo {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
 }

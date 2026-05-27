@@ -1,8 +1,24 @@
 export const SCHEMA_VERSION = 1 as const;
 export type SchemaVersion = typeof SCHEMA_VERSION;
 
+export interface Crop {
+  zoom: number;
+  offsetX: number;
+  offsetY: number;
+}
+
+export interface Posizione {
+  x: number;
+  y: number;
+}
+
 export interface Personaggio {
   id: string;
+  nome: string;
+  colore: string;
+  imgPath: string;
+  crop: Crop;
+  posizione: Posizione;
 }
 
 export interface Oggetto {
@@ -48,6 +64,64 @@ function isStringOrNull(v: unknown): v is string | null {
   return v === null || typeof v === "string";
 }
 
+function isNumeroFinito(v: unknown): v is number {
+  return typeof v === "number" && Number.isFinite(v);
+}
+
+function validaCrop(raw: unknown, ctx: string): Crop {
+  if (!isObject(raw)) throw new AmbientazioneCorrotta(`${ctx}: crop non è un oggetto`);
+  if (!isNumeroFinito(raw.zoom) || !isNumeroFinito(raw.offsetX) || !isNumeroFinito(raw.offsetY)) {
+    throw new AmbientazioneCorrotta(`${ctx}: crop ha campi non numerici`);
+  }
+  return { zoom: raw.zoom, offsetX: raw.offsetX, offsetY: raw.offsetY };
+}
+
+function validaPosizione(raw: unknown, ctx: string): Posizione {
+  if (!isObject(raw)) throw new AmbientazioneCorrotta(`${ctx}: posizione non è un oggetto`);
+  if (!isNumeroFinito(raw.x) || !isNumeroFinito(raw.y)) {
+    throw new AmbientazioneCorrotta(`${ctx}: posizione ha coordinate non numeriche`);
+  }
+  return { x: clamp01(raw.x), y: clamp01(raw.y) };
+}
+
+function clamp01(n: number): number {
+  return Math.min(1, Math.max(0, n));
+}
+
+function validaPersonaggio(raw: unknown, idx: number): Personaggio {
+  const ctx = `personaggio[${idx}]`;
+  if (!isObject(raw)) throw new AmbientazioneCorrotta(`${ctx} non è un oggetto`);
+  if (typeof raw.id !== "string" || raw.id === "") {
+    throw new AmbientazioneCorrotta(`${ctx}: id mancante`);
+  }
+  if (typeof raw.nome !== "string" || raw.nome.trim() === "") {
+    throw new AmbientazioneCorrotta(`${ctx}: nome mancante o vuoto`);
+  }
+  if (typeof raw.colore !== "string" || !/^#[0-9A-Fa-f]{6}$/.test(raw.colore)) {
+    throw new AmbientazioneCorrotta(`${ctx}: colore non è un esadecimale valido`);
+  }
+  if (typeof raw.imgPath !== "string" || raw.imgPath === "") {
+    throw new AmbientazioneCorrotta(`${ctx}: imgPath mancante`);
+  }
+  return {
+    id: raw.id,
+    nome: raw.nome,
+    colore: raw.colore.toUpperCase(),
+    imgPath: raw.imgPath,
+    crop: validaCrop(raw.crop, ctx),
+    posizione: validaPosizione(raw.posizione, ctx),
+  };
+}
+
+function validaOggetto(raw: unknown, idx: number): Oggetto {
+  const ctx = `oggetto[${idx}]`;
+  if (!isObject(raw)) throw new AmbientazioneCorrotta(`${ctx} non è un oggetto`);
+  if (typeof raw.id !== "string" || raw.id === "") {
+    throw new AmbientazioneCorrotta(`${ctx}: id mancante`);
+  }
+  return { id: raw.id };
+}
+
 export function validaAmbientazione(raw: unknown): Ambientazione {
   if (!isObject(raw)) {
     throw new AmbientazioneCorrotta("il manifest non è un oggetto JSON");
@@ -75,8 +149,8 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
     creataIl: raw.creataIl,
     modificataIl: raw.modificataIl,
     mappaPath: raw.mappaPath,
-    personaggi: raw.personaggi as Personaggio[],
-    oggetti: raw.oggetti as Oggetto[],
+    personaggi: raw.personaggi.map((p, i) => validaPersonaggio(p, i)),
+    oggetti: raw.oggetti.map((o, i) => validaOggetto(o, i)),
   };
 }
 
@@ -101,4 +175,23 @@ export function validaNome(nome: string): string | null {
   if (NOME_INVALIDO.test(trimmed)) return "Il nome non può contenere: / \\ : * ? \" < > |";
   if (trimmed.length > 100) return "Il nome è troppo lungo (massimo 100 caratteri).";
   return null;
+}
+
+export function validaNomePersonaggio(
+  nome: string,
+  personaggiEsistenti: Personaggio[],
+  esclusoId?: string,
+): string | null {
+  const trimmed = nome.trim();
+  if (trimmed === "") return "Il nome non può essere vuoto.";
+  if (trimmed.length > 50) return "Il nome è troppo lungo (massimo 50 caratteri).";
+  const collisione = personaggiEsistenti.some(
+    (p) => p.id !== esclusoId && p.nome.trim().toLowerCase() === trimmed.toLowerCase(),
+  );
+  if (collisione) return "Esiste già un personaggio con questo nome.";
+  return null;
+}
+
+export function cropIniziale(): Crop {
+  return { zoom: 1, offsetX: 0, offsetY: 0 };
 }

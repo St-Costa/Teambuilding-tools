@@ -1,11 +1,12 @@
 import {
+  copyFile,
   exists,
   mkdir,
   readTextFile,
   rename,
   writeTextFile,
 } from "@tauri-apps/plugin-fs";
-import { invoke } from "@tauri-apps/api/core";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import {
   Ambientazione,
   AmbientazioneCorrotta,
@@ -107,4 +108,32 @@ export async function cartellaEsiste(folderPath: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+const ESTENSIONI_IMMAGINE = new Set(["png", "jpg", "jpeg", "webp", "gif", "bmp"]);
+
+function estensioneDi(path: string): string {
+  const ultimo = path.split(/[\/\\]/).pop() ?? "";
+  const dot = ultimo.lastIndexOf(".");
+  if (dot === -1 || dot === ultimo.length - 1) return "png";
+  return ultimo.slice(dot + 1).toLowerCase();
+}
+
+export async function copiaImmagineInCartella(
+  folderPath: string,
+  sourceAbsPath: string,
+  subdir: "personaggi" | "oggetti" | "",
+  baseId: string,
+): Promise<string> {
+  const ext = estensioneDi(sourceAbsPath);
+  const safeExt = ESTENSIONI_IMMAGINE.has(ext) ? ext : "png";
+  const relativo = subdir === "" ? `${baseId}.${safeExt}` : `${subdir}/${baseId}.${safeExt}`;
+  const dest = joinPath(folderPath, relativo);
+
+  await wrapIO("copia immagine", () => copyFile(sourceAbsPath, dest));
+  return relativo;
+}
+
+export function risolviAsset(folderPath: string, relativePath: string): string {
+  return convertFileSrc(joinPath(folderPath, relativePath));
 }

@@ -1,0 +1,199 @@
+.root {
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(127, 127, 127, 0.25);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.2);
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+}
+
+.btnNuovo {
+  padding: 0.35rem 0.7rem;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btnNuovo:hover {
+  background: rgba(127, 127, 127, 0.1);
+}
+
+.vuoto {
+  padding: 1rem;
+  opacity: 0.6;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.lista {
+  list-style: none;
+  padding: 0.5rem;
+  margin: 0;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.voce {
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  position: relative;
+}
+
+.voceSelezionata {
+  background: rgba(80, 130, 255, 0.1);
+}
+
+.voceMain {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  border-radius: 6px;
+}
+
+.voceMain:hover {
+  background: rgba(127, 127, 127, 0.08);
+}
+
+.voceTesto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.voceNome {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.voceColore {
+  font-size: 0.75rem;
+  opacity: 0.65;
+}
+
+.voceMenu {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1.1rem;
+  border-radius: 4px;
+}
+
+.voceMenu:hover {
+  background: rgba(127, 127, 127, 0.15);
+}
+
+.menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 50;
+  background: #fff;
+  color: #1d1d1f;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  padding: 0.4rem;
+  min-width: 200px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .menu {
+    background: #3a3a3c;
+    color: #f5f5f7;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.menu > button {
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.menu > button:hover {
+  background: rgba(127, 127, 127, 0.1);
+}
+
+.menuLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  padding: 0.4rem 0.6rem 0;
+}
+
+.menuPalette {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.25rem;
+  padding: 0 0.4rem 0.4rem;
+}
+
+.menuColore {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+.menuColore:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.menuColoreScelto {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.menuElimina {
+  color: #a72424 !important;
+  border-top: 1px solid rgba(127, 127, 127, 0.2);
+  margin-top: 0.25rem;
+  padding-top: 0.5rem !important;
+}
