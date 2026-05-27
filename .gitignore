@@ -25,3 +25,9 @@ dist-ssr
 
 # Files not part of the project (kept in this directory for unrelated reasons)
 *.mp3
+
+# User-created ambientazioni (test or real): non vanno mai nel repo
+# Convenzione: ogni cartella che contiene un ambientazione.json è un'ambientazione
+# Aggiunto manualmente "Treno deragliato" creato durante la verifica M3.
+src-tauri/Treno deragliato/
+ambientazioni-locali/

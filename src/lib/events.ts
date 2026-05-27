@@ -1,13 +1,13 @@
 import { emit as tauriEmit, listen as tauriListen, type UnlistenFn } from "@tauri-apps/api/event";
 
 export const EVT = {
-  counter: "stage:counter",
+  ambientazioneLoaded: "ambientazione:loaded",
 } as const;
 
 export type EventName = (typeof EVT)[keyof typeof EVT];
 
 export type EventPayloads = {
-  [EVT.counter]: { value: number };
+  [EVT.ambientazioneLoaded]: { nome: string | null };
 };
 
 export function emit<N extends EventName>(name: N, payload: EventPayloads[N]): Promise<void> {

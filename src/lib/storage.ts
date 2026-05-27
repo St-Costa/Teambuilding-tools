@@ -1,0 +1,110 @@
+import {
+  exists,
+  mkdir,
+  readTextFile,
+  rename,
+  writeTextFile,
+} from "@tauri-apps/plugin-fs";
+import { invoke } from "@tauri-apps/api/core";
+import {
+  Ambientazione,
+  AmbientazioneCorrotta,
+  CartellaNonValida,
+  IOError,
+  nuovoManifest,
+  validaAmbientazione,
+} from "./ambientazione";
+
+const MANIFEST = "ambientazione.json";
+const MANIFEST_TMP = "ambientazione.json.tmp";
+
+function joinPath(folder: string, ...parts: string[]): string {
+  const sep = folder.includes("\\") && !folder.includes("/") ? "\\" : "/";
+  const trimmed = folder.replace(/[\/\\]+$/, "");
+  return [trimmed, ...parts].join(sep);
+}
+
+async function wrapIO<T>(op: string, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    throw new IOError(`${op}: ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
+
+export async function autorizzaCartella(folderPath: string): Promise<void> {
+  try {
+    await invoke<void>("allow_ambientazione_folder", { path: folderPath });
+  } catch (e) {
+    throw new IOError(`autorizzazione cartella: ${String(e)}`);
+  }
+}
+
+export async function creaAmbientazione(
+  folderPath: string,
+  nome: string,
+): Promise<Ambientazione> {
+  await autorizzaCartella(folderPath);
+
+  await wrapIO("creazione cartella", async () => {
+    await mkdir(folderPath, { recursive: true });
+    await mkdir(joinPath(folderPath, "personaggi"), { recursive: true });
+    await mkdir(joinPath(folderPath, "oggetti"), { recursive: true });
+  });
+
+  const manifest = nuovoManifest(nome);
+  await scriviManifest(folderPath, manifest);
+  return manifest;
+}
+
+export async function apriAmbientazione(folderPath: string): Promise<Ambientazione> {
+  await autorizzaCartella(folderPath);
+
+  const manifestPath = joinPath(folderPath, MANIFEST);
+  const presente = await wrapIO("verifica manifest", () => exists(manifestPath));
+  if (!presente) throw new CartellaNonValida(folderPath);
+
+  const testo = await wrapIO("lettura manifest", () => readTextFile(manifestPath));
+  let raw: unknown;
+  try {
+    raw = JSON.parse(testo);
+  } catch {
+    throw new AmbientazioneCorrotta("il manifest non è JSON valido");
+  }
+  return validaAmbientazione(raw);
+}
+
+export async function salvaAmbientazione(
+  folderPath: string,
+  ambientazione: Ambientazione,
+): Promise<Ambientazione> {
+  const aggiornata: Ambientazione = {
+    ...ambientazione,
+    modificataIl: new Date().toISOString(),
+  };
+  await scriviManifest(folderPath, aggiornata);
+  return aggiornata;
+}
+
+async function scriviManifest(
+  folderPath: string,
+  ambientazione: Ambientazione,
+): Promise<void> {
+  const finalePath = joinPath(folderPath, MANIFEST);
+  const tmpPath = joinPath(folderPath, MANIFEST_TMP);
+  const json = JSON.stringify(ambientazione, null, 2);
+
+  await wrapIO("scrittura manifest", async () => {
+    await writeTextFile(tmpPath, json);
+    await rename(tmpPath, finalePath);
+  });
+}
+
+export async function cartellaEsiste(folderPath: string): Promise<boolean> {
+  try {
+    await autorizzaCartella(folderPath);
+    return await exists(folderPath);
+  } catch {
+    return false;
+  }
+}

@@ -3,10 +3,10 @@ import { listen, EVT } from "../lib/events";
 import styles from "./App.module.css";
 
 export default function App() {
-  const [count, setCount] = useState(0);
+  const [nome, setNome] = useState<string | null>(null);
 
   useEffect(() => {
-    const unlistenP = listen(EVT.counter, ({ value }) => setCount(value));
+    const unlistenP = listen(EVT.ambientazioneLoaded, ({ nome }) => setNome(nome));
     return () => {
       unlistenP.then((u) => u());
     };
@@ -14,7 +14,7 @@ export default function App() {
 
   return (
     <div className={styles.root}>
-      <div className={styles.value}>{count}</div>
+      <div className={styles.value}>{nome ?? "—"}</div>
     </div>
   );
 }

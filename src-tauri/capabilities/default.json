@@ -1,13 +1,22 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permessi base: applicati a entrambe le finestre (regia e proiezione). Documenta cosa abilita e perché: senza i permessi corretti i plugin falliscono silenziosamente — vedi CLAUDE.md §9 punto 3.",
+  "description": "Permessi base condivisi da control (regia) e stage (proiezione). Comprende: eventi/window per la sincronia cross-window, dialog per i folder picker, fs granulare per leggere/scrivere il manifest dell'ambientazione e il file dei recenti in appConfigDir. Lo scope dinamico per la cartella ambientazione scelta a runtime viene esteso dal comando Rust allow_ambientazione_folder (vedi src/lib.rs).",
   "windows": ["control", "stage"],
   "permissions": [
     "core:default",
     "core:event:default",
     "core:window:default",
     "dialog:default",
-    "fs:default"
+    "fs:default",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
+    "fs:allow-mkdir",
+    "fs:allow-exists",
+    "fs:allow-read-dir",
+    "fs:allow-rename",
+    "fs:allow-remove",
+    "fs:allow-appconfig-read-recursive",
+    "fs:allow-appconfig-write-recursive"
   ]
 }

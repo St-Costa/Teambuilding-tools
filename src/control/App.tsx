@@ -1,28 +1,30 @@
-import { useState } from "react";
-import { emit, EVT } from "../lib/events";
-import styles from "./App.module.css";
+import { useEffect } from "react";
+import { useAmbientazioneStore } from "../state/ambientazioneStore";
+import { useAutosave } from "../state/useAutosave";
+import { listaRecenti } from "../lib/recents";
+import { autorizzaCartella } from "../lib/storage";
+import SelezioneAmbientazione from "./views/SelezioneAmbientazione";
+import AmbientazioneAperta from "./views/AmbientazioneAperta";
 
 export default function App() {
-  const [count, setCount] = useState(0);
+  const current = useAmbientazioneStore((s) => s.current);
+  useAutosave();
 
-  const update = (next: number) => {
-    setCount(next);
-    void emit(EVT.counter, { value: next });
-  };
+  useEffect(() => {
+    void (async () => {
+      try {
+        const recenti = await listaRecenti();
+        for (const r of recenti) {
+          if (r.esiste) {
+            await autorizzaCartella(r.path).catch(() => undefined);
+          }
+        }
+      } catch {
+        // se il restauro scope fallisce non blocchiamo: gli errori
+        // verranno mostrati al primo tentativo di apertura
+      }
+    })();
+  }, []);
 
-  return (
-    <div className={styles.root}>
-      <h1>Regia</h1>
-      <p className={styles.hint}>
-        Prova di sincronizzazione: il numero qui sotto viene replicato sulla
-        finestra di proiezione.
-      </p>
-      <div className={styles.counter}>
-        <button onClick={() => update(count - 1)} aria-label="Decrementa">−</button>
-        <span className={styles.value}>{count}</span>
-        <button onClick={() => update(count + 1)} aria-label="Incrementa">+</button>
-      </div>
-      <button className={styles.reset} onClick={() => update(0)}>Azzera</button>
-    </div>
-  );
+  return current === null ? <SelezioneAmbientazione /> : <AmbientazioneAperta />;
 }

@@ -45,3 +45,50 @@ Nessuna toccata in M1+M2. Saranno trattate quando rilevanti:
 - `tauri dev` apre 2 finestre, contatore Regia → Proiezione sincrono in tempo reale (confermato visivamente dall'utente).
 
 ---
+
+## M3 — Selezione/creazione ambientazione + autosave (2026-05-27)
+
+### D-009 — Schema manifest con `schemaVersion: 1`
+`ambientazione.json` parte dalla versione 1 esplicita, validazione manuale leggera in `src/lib/ambientazione.ts` (`validaAmbientazione`). Niente Zod o altre lib: la superficie del manifest è piccola e il controllo è esplicito. Mismatch di versione → eccezione tipata `AmbientazioneCorrotta`, gestita nella UI con messaggio italiano. La struttura per migrazioni futuristiche c'è (switch su `schemaVersion`) ma non implementata finché non avremo una v2 reale.
+
+### D-010 — Write atomico per `ambientazione.json` e `recents.json`
+Tutti i write di manifest passano per `<file>.tmp` + `rename` atomico. Motivo: se l'app crasha a metà write, il file finale resta coerente con la versione precedente. Costo trascurabile (un syscall in più). Applicato anche al file dei recenti.
+
+### D-011 — Scope filesystem dinamico via custom command Rust
+Implementato `#[tauri::command] allow_ambientazione_folder(path)` in `src-tauri/src/lib.rs`. JS lo invoca subito dopo ogni dialog folder picker e all'avvio per ogni voce nei recenti. Lo scope è in-memory (perso al riavvio), riautorizzato lazy. Alternative scartate:
+- Static scope ampio (`$HOME/**`): troppo lasco, e i path delle ambientazioni possono stare ovunque (es. cloud drive, USB).
+- `tauri-plugin-fs` auto-scope da dialog: non documentato come stabile in 2.x.
+
+In `capabilities/default.json` aggiunti i permessi granulari `fs:allow-{read-text-file,write-text-file,mkdir,exists,read-dir,rename,remove}` + `fs:allow-appconfig-{read,write}-recursive` per il file dei recenti. **Attenzione**: i nomi corretti sono `appconfig` (senza trattino), non `app-config` — il primo tentativo è fallito su `fs:allow-app-config-read-recursive` e ho dovuto correggerlo.
+
+### D-012 — Recents in `appConfigDir/recents.json`, max 10 voci
+Persistenza cross-launch tramite plugin-fs con `BaseDirectory.AppConfig` (gestito dal sistema operativo). Max 10 voci, ordine: più recente prima. Cartelle mancanti restano in lista con stato `esiste: false` per dare al conduttore la possibilità di "rimuovere dalla lista" (non eliminare dal disco, distinzione importante per non-tecnici).
+
+### D-013 — Store Zustand singleton + autosave hook
+`useAmbientazioneStore` come single source of truth lato regia. `modifica(fn)` usa clone-then-apply (JSON.parse/stringify) invece di immer per non aggiungere deps. Triggera transizione `dirty` → `saving` → `saved` via `useAutosave` (subscribe-based, debounce **500ms**, con stale-flag per modifiche durante save in volo).
+
+### D-014 — Routing condizionale, niente react-router
+`src/control/App.tsx` sceglie tra `SelezioneAmbientazione` e `AmbientazioneAperta` in base a `current === null`. Due viste sole, condizione semplice — un router sarebbe overhead.
+
+### D-015 — UI testuale in italiano, conferme su azioni semi-distruttive
+- "Apri esistente" / "Nuova ambientazione" / "Chiudi ambientazione".
+- Chiusura con `saveStatus !== 'saved'` chiede conferma.
+- Creazione su cartella esistente chiede conferma di sovrascrittura del manifest.
+- Errori tradotti in italiano con messaggio comprensibile a non-tecnico (es. "L'ambientazione è corrotta: …" invece di stack trace).
+
+### D-016 — Pulsante "Rinomina (test M3)" temporaneo
+In `AmbientazioneAperta.tsx` c'è un bottone tratteggiato di test per provare l'autosave senza aspettare M4 (mappa/personaggi). **Rimuovere** quando arriverà la prima modifica reale (M4).
+
+### D-017 — Proiezione: nome ambientazione + font auto-fit
+La proiezione mostra il nome dell'ambientazione (o "—") con `font-size: clamp(3rem, min(12vw, 60vh), 18rem)` e `word-break`. Il primo tentativo con `clamp(8rem, 30vw, 40rem)` era pensato per contenuti corti (cifre del contatore) e tagliava nomi lunghi tipo "Treno deragliato" — feedback diretto dell'utente. La formula attuale scala con il minore tra larghezza/altezza del display e ha break-word di sicurezza.
+
+### Assunzioni aperte da §10 (aggiornamento)
+- §10.3 autosave: **risolto** in M3, implementato come da preferenza confermata.
+- Altri punti invariati rispetto a M2.
+
+### Verificato
+- `npx tsc --noEmit` + `npx vite build` clean.
+- `cargo check` clean (dopo fix nome capability `appconfig`).
+- `tauri dev`: landing OK, creazione cartella + manifest su disco OK, autosave con indicatore `dirty → saving → saved` OK, recents persistenti cross-restart, errore manifest corrotto mostrato in italiano. Confermato visivamente dall'utente.
+
+---

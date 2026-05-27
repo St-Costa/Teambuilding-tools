@@ -1,0 +1,87 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.25);
+}
+
+.headerSinistra {
+  min-width: 0;
+}
+
+.nome {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.path {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.headerDestra {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.btnChiudi {
+  padding: 0.4rem 0.9rem;
+  border-radius: 5px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.btnChiudi:hover {
+  background: rgba(127, 127, 127, 0.1);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.placeholder {
+  font-size: 1.1rem;
+  opacity: 0.6;
+  max-width: 30rem;
+  line-height: 1.5;
+}
+
+.btnTest {
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  border: 1px dashed rgba(127, 127, 127, 0.6);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  opacity: 0.7;
+}
+
+.btnTest:hover {
+  opacity: 1;
+}
