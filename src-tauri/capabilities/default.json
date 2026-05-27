@@ -1,0 +1,13 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Permessi base: applicati a entrambe le finestre (regia e proiezione). Documenta cosa abilita e perché: senza i permessi corretti i plugin falliscono silenziosamente — vedi CLAUDE.md §9 punto 3.",
+  "windows": ["control", "stage"],
+  "permissions": [
+    "core:default",
+    "core:event:default",
+    "core:window:default",
+    "dialog:default",
+    "fs:default"
+  ]
+}
