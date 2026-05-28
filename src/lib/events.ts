@@ -32,6 +32,13 @@ export interface ConflittoSnapshot {
   triggerCount: number;           // incrementato a ogni gira(), serve a far ripartire CSS transition
 }
 
+export interface TimerSnapshot {
+  stato: "idle" | "running" | "paused" | "ended";
+  durationSec: number;
+  targetEndAt: number | null;
+  pausedRemainingMs: number;
+}
+
 export interface ScenaPayload {
   folderPath: string | null;
   mappaPath: string | null;
@@ -39,6 +46,7 @@ export interface ScenaPayload {
   oggetti: Oggetto[];
   nome: string | null;
   conflitto: ConflittoSnapshot | null;
+  timer: TimerSnapshot;
 }
 
 export type EventPayloads = {

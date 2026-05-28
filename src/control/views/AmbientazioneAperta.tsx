@@ -8,7 +8,9 @@ import AreaMappa from "./AreaMappa";
 import WizardPersonaggio from "./WizardPersonaggio";
 import WizardOggetto from "./WizardOggetto";
 import PannelloConflitto from "./PannelloConflitto";
+import PannelloTimer from "./PannelloTimer";
 import { useConflittoStore } from "../../state/conflittoStore";
+import "../../state/timerStore";
 import styles from "./AmbientazioneAperta.module.css";
 
 export default function AmbientazioneAperta() {
@@ -115,6 +117,7 @@ export default function AmbientazioneAperta() {
           >
             Conflitto
           </button>
+          <PannelloTimer />
           <IndicatoreSalvataggio />
           <button className={styles.btnChiudi} onClick={handleChiudi}>
             Chiudi ambientazione

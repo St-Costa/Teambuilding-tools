@@ -5,6 +5,7 @@ import { autorizzaCartella } from "../lib/storage";
 import Scena from "../components/Scena";
 import Ruota from "../components/Ruota";
 import ScoreboardConflitto from "../components/ScoreboardConflitto";
+import DisplayTimer from "../components/DisplayTimer";
 
 const STATO_INIZIALE: ScenaPayload = {
   folderPath: null,
@@ -13,6 +14,12 @@ const STATO_INIZIALE: ScenaPayload = {
   oggetti: [],
   nome: null,
   conflitto: null,
+  timer: {
+    stato: "idle",
+    durationSec: 300,
+    targetEndAt: null,
+    pausedRemainingMs: 0,
+  },
 };
 
 export default function App() {
@@ -59,6 +66,7 @@ export default function App() {
         oggetti={stato.oggetti}
         nome={stato.nome}
       />
+      {!mostraRuota && <DisplayTimer snapshot={stato.timer} />}
       {mostraRuota && stato.folderPath && stato.conflitto && (
         <div
           style={{

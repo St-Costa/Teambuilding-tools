@@ -78,15 +78,27 @@ function payloadCorrente(state: AmbientazioneState): ScenaPayload {
     oggetti: state.current?.oggetti ?? [],
     nome: state.current?.nome ?? null,
     conflitto: conflittoSnapshotProvider?.() ?? null,
+    timer: timerSnapshotProvider?.() ?? {
+      stato: "idle",
+      durationSec: 300,
+      targetEndAt: null,
+      pausedRemainingMs: 0,
+    },
   };
 }
 
-// Wiring leggero verso conflittoStore senza creare un import circolare:
-// conflittoStore si registra qui al boot e fornisce snapshot+forceEmit.
+// Wiring leggero verso conflittoStore/timerStore senza creare un import
+// circolare: i due store si registrano qui al boot e forniscono snapshot.
 type ConflittoSnapshotFn = () => import("../lib/events").ConflittoSnapshot | null;
 let conflittoSnapshotProvider: ConflittoSnapshotFn | null = null;
 export function registraConflittoSnapshotProvider(fn: ConflittoSnapshotFn | null): void {
   conflittoSnapshotProvider = fn;
+}
+
+type TimerSnapshotFn = () => import("../lib/events").TimerSnapshot;
+let timerSnapshotProvider: TimerSnapshotFn | null = null;
+export function registraTimerSnapshotProvider(fn: TimerSnapshotFn | null): void {
+  timerSnapshotProvider = fn;
 }
 
 export function forceEmitScena(): void {

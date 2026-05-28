@@ -1,0 +1,54 @@
+.banner {
+  position: fixed;
+  top: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1500;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  padding: 0.7rem 2rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  color: #fff;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  user-select: none;
+  pointer-events: none;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.cifre {
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.etichetta {
+  font-size: clamp(0.9rem, 1.4vw, 1.2rem);
+  opacity: 0.65;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+
+.scaduto .cifre {
+  color: #ff5252;
+  animation: pulseScaduto 1.1s ease-in-out infinite;
+}
+
+.scaduto .etichetta {
+  color: #ff8a80;
+  opacity: 0.85;
+}
+
+@keyframes pulseScaduto {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}

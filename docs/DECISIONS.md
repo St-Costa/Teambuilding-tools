@@ -244,3 +244,35 @@ Prima versione: `if (conflict) return <Ruota>; else return <Scena>;`. Problema: 
 - `tauri dev`: ruota in regia ferma + scoreboard, click "Gira" → animazione 5s con decelerazione naturale, suono tick alle sotto-regioni, wobble della freccia in sync, vincitore evidenziato con glow + scoreboard card highlighted. Proiezione mostra tutto sincronizzato. "Chiudi e torna alla mappa" riporta alla mappa con personaggi visibili (no flicker). Confermato visivamente dall'utente in 8+ cicli di feedback iterativo.
 
 ---
+
+## M8.1 — Timer in proiezione gestito dalla regia (2026-05-27)
+
+### D-054 — Timer effimero (non persistito)
+Il timer non viene salvato nel manifest `ambientazione.json`. Vive solo in memoria nel `timerStore`. Sopravvive al cambio di mappa/ambientazione (lo store è top-level) ma muore alla chiusura dell'app. Scelta: la durata configurata e lo stato di esecuzione sono "live state" di una partita, non parte dell'ambientazione stessa.
+
+### D-055 — Modello "epoch ms" per evitare drift
+Il timerStore tiene `targetEndAt: number | null` (epoch ms quando running) e `pausedRemainingMs: number` (ms residui congelati in pausa). Il display calcola `remainingMs = targetEndAt - Date.now()` in real-time, niente `setInterval` che decrementa un contatore — drift zero anche su sleep/wake del laptop. Provider pattern verso `ambientazioneStore.payloadCorrente` come `conflittoStore` (no import circolari).
+
+### D-056 — Stati: idle / running / paused / ended
+Quattro stati netti. `start()` da idle → running; da paused → resume (alias). `pause()` da running → paused. `reset()` torna a idle conservando `durationSec`. `markEnded()` chiamato dal display in regia quando `remaining ≤ 0` in fase running. Modifiche a `durationSec` consentite solo in idle/ended (UI disabilita gli input in running/paused).
+
+### D-057 — Banner sulla proiezione, no in idle, no durante conflitto
+- `idle`: banner nascosto → proiezione pulita finché il regista non tocca il timer.
+- `running/paused/ended`: banner visibile in alto al centro, `position: fixed; z-index: 1500` (sopra il wheel overlay z-index 1000 sarebbe stato — ma vedi sotto).
+- **Durante conflitto**: banner **nascosto** per scelta utente (richiesta esplicita M8.1). La scena ruota è una "sequenza speciale" che non deve essere distratta dal timer. Il timer continua a contare in background (audio incluso) — solo la visibilità sulla proiezione cambia. Implementato come `{!mostraRuota && <DisplayTimer …>}`.
+
+### D-058 — Pannello regia compatto in toolbar
+Widget integrato nella toolbar di `AmbientazioneAperta` tra "Conflitto" e `IndicatoreSalvataggio`. Layout orizzontale: display mm:ss + Start/Pausa/Riprendi (toggle che cambia label e colore) + Reset + due input `number` per min/sec. Input disabilitati quando running/paused (visivamente grigi + tooltip). `setInterval(200ms)` per il display locale in regia (più rapido del 100ms del DisplayTimer perché l'utente vede direttamente il widget e percepisce la fluidità).
+
+### D-059 — Audio: 1-min warning + scaduto intermittente (deroga §0 estesa)
+Estensione esplicita della deroga audio (D-050 / M6) confermata dall'utente:
+- **1-min warning**: beep lungo (~500ms, 620Hz sine, gain 0.3) UNA volta quando `running` passa sotto i 60s. Tracking via `useRef` resettato a ogni transizione fuori da `running`.
+- **Scaduto**: beep breve (~180ms, 820Hz square, gain 0.32) subito allo `stato === "ended"`, poi ogni 2s tramite `setInterval(2000)` finché `ended` rimane. Cleanup su transizione di stato.
+
+Entrambi suonati **SOLO dalla regia** (PannelloTimer è regia-only). Sintesi Web Audio API in-process, niente file. Il regista ha cliccato "Avvia" → user gesture valido per attivare AudioContext.
+
+### Verificato
+- `npx tsc --noEmit` clean.
+- `tauri dev`: avvio/pausa/riprendi/reset OK, cambio durata OK con disable in running, banner visibile in proiezione tranne in idle e durante conflitto, beep lungo a 60s, beep intermittente da 00:00. Confermato visivamente dall'utente.
+
+---
