@@ -1,0 +1,275 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+}
+
+.modale {
+  background: #fff;
+  color: #1d1d1f;
+  border-radius: 12px;
+  width: min(800px, 95vw);
+  max-height: 92vh;
+  overflow: auto;
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (prefers-color-scheme: dark) {
+  .modale {
+    background: #2c2c2e;
+    color: #f5f5f7;
+  }
+}
+
+.header {
+  padding: 1rem 1.5rem 0.5rem;
+}
+
+.header h2 {
+  margin: 0 0 0.5rem;
+}
+
+.passi {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  opacity: 0.6;
+}
+
+.passoAttivo {
+  opacity: 1;
+  font-weight: 600;
+}
+
+.body {
+  padding: 1rem 1.5rem;
+}
+
+.bodyDoppio {
+  padding: 1rem 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) 240px;
+  gap: 1.5rem;
+}
+
+.bodySpin {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hint {
+  opacity: 0.7;
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem;
+}
+
+.hintCentrato {
+  text-align: center;
+  opacity: 0.7;
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem;
+}
+
+.listaPartecipanti {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.5rem;
+}
+
+.itemPartecipante {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid rgba(127, 127, 127, 0.35);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  width: 100%;
+  font: inherit;
+  text-align: left;
+}
+
+.itemPartecipante:hover {
+  background: rgba(127, 127, 127, 0.08);
+}
+
+.itemSelezionato {
+  background: rgba(80, 130, 255, 0.12);
+  border-color: rgba(80, 130, 255, 0.5);
+}
+
+.checkbox {
+  margin-left: auto;
+  font-weight: 700;
+  color: #2d6cdf;
+}
+
+.colonnaModificatori {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.colonnaAnteprima {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.legenda {
+  list-style: none;
+  padding: 0.75rem 0 0;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.legenda li {
+  padding: 0.15rem 0;
+}
+
+.legendaMod {
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+.fila {
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filaHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.gruppoRadio {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+}
+
+.gruppoRadio label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+}
+
+.fontePanel {
+  border-top: 1px dashed rgba(127, 127, 127, 0.3);
+  padding-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.selectOggetto, .inputTesto {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(127, 127, 127, 0.5);
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.previewFonte {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.risultatoBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.4rem;
+  padding: 0.5rem 1.5rem;
+  border-radius: 999px;
+  background: rgba(80, 200, 120, 0.18);
+  color: #1f7d4a;
+  border: 1px solid rgba(80, 200, 120, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  .risultatoBanner {
+    color: #6cd28e;
+  }
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(127, 127, 127, 0.2);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.btnPrimario, .btnSecondario {
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  border: 1px solid currentColor;
+  font: inherit;
+  cursor: pointer;
+}
+
+.btnPrimario {
+  background: #1d1d1f;
+  color: #fff;
+  border-color: #1d1d1f;
+}
+
+.btnPrimario:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btnSecondario {
+  background: transparent;
+  color: inherit;
+}
+
+.btnSecondario:hover:not(:disabled) {
+  background: rgba(127, 127, 127, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .btnPrimario {
+    background: #f5f5f7;
+    color: #1d1d1f;
+    border-color: #f5f5f7;
+  }
+}
+
+.spinHint {
+  opacity: 0.6;
+  font-style: italic;
+}

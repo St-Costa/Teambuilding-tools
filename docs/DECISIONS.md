@@ -180,3 +180,67 @@ Cerchietto regia: 68 → 102px. Cerchietto proiezione: 77 → 116px. Quadratino:
 - `tauri dev`: creazione oggetto OK, assegnazione/riassegnazione/distacco dal menu ⋯ OK, quadratino renderizzato in basso-a-destra del cerchietto con sovrapposizione minima sia in regia che in proiezione, drag del personaggio porta dietro il quadratino senza glitch, eliminazione oggetto/personaggio con detach automatico, persistenza cross-restart OK (incluse ambientazioni M4 senza `oggettoId`).
 
 ---
+
+## M6 — Ruota della fortuna (2026-05-27)
+
+### D-040 — Regola modificatori `+1`/`+2`: incremento ASSOLUTO, non proporzionale
+CLAUDE.md §5.2 specificava "+20% della fetta originale". L'utente in fase di test ha precisato che voleva l'incremento assoluto: **+1 = +0.20 (20 punti percentuali) aggiunti alla baseFrazione, +2 = +0.40**. Quindi per 2 personaggi 50/50, un +1 dà raw 0.7/0.5 → normalizzato 58.3%/41.7% (e non 54.5%/45.5% come darebbe l'interpretazione "+20% di 50%"). Deviazione esplicita dalla spec, documentata in `src/lib/ruota.ts`.
+
+### D-041 — Math isolata e pure functions in `src/lib/ruota.ts`
+`calcolaFette`, `scegliVincitorePesato`, `angoloDiArresto` sono pure functions, niente DOM, testabili dalla devtools console. Convenzione angolare: 0° = top, senso orario (coerente con CSS rotate). `angoloDiArresto` aggiunge `K × 360°` di "spin pieno" per visualizzare la rotazione (K=6 default). Il margine di 10% sul bordo della fetta vincente evita di fermarsi sui confini.
+
+### D-042 — Conflitto come store separato + provider pattern per emit
+`conflittoStore` indipendente dall'`ambientazioneStore`: il conflitto è effimero, non tocca il manifest. Per evitare import circolari nell'emit verso la proiezione, `ambientazioneStore.payloadCorrente()` chiama un provider registrato da `conflittoStore` al module load (`registraConflittoSnapshotProvider`). Lo stage decide cosa mostrare da `payload.conflitto !== null`.
+
+### D-043 — Fase "pronto" per ruota ferma sulla proiezione
+Spec §5 voleva la ruota apparire "quando lanciata", ma l'utente ha chiesto di vederla anche prima dello spin (con scoreboard) per dare anticipazione al pubblico. Aggiunta `fase "pronto"` (separata da `"setup"`) che entra quando il regista clicca "Avanti" da Step 2: la proiezione mostra la ruota statica + scoreboard. Click "Gira" → fase girando. `tornaSetup()` per andare Indietro e cambiare modificatori (pulisce la ruota dalla proiezione).
+
+### D-044 — Snapshot immutabile in `snapshotPartecipanti` per consistenza durante lo spin
+Quando il conflitto entra in pronto/girando, le info dei partecipanti (nome, colore, imgPath, crop) sono copiate dentro `ConflittoSnapshot.partecipanti`. Se il regista rinomina/cambia colore/elimina un personaggio durante l'animazione, la ruota mostra ancora lo stato consistente al momento dello spin. CLAUDE.md §10.5 "ricalcolo" applicato solo in fase setup.
+
+### D-045 — Render ruota: SVG + clipPath user-space per facce, gradient pointer
+- Slices: `<path>` con `arcPath` calcolato a runtime (no librerie SVG).
+- Facce personaggio: `<image>` con `preserveAspectRatio="xMidYMid meet"` (NON `slice` — altrimenti il crop calcolato per `contain` doppia lo zoom), `clipPath` user-space con `<circle>` alla posizione assoluta della faccia. Una clipPath per fetta (definita inside l'<g> rotante in `<defs>` per ruotare con la ruota).
+- Bonus oggetto: stesso pattern con `<rect rx=22%>`.
+- **Pointer**: linear gradient bianco→argento, drop-shadow SVG via `<filter>` con `<feGaussianBlur>` + `<feOffset>`. Forma a slim teardrop.
+- Vincitore: drop-shadow filter via CSS (bianco + giallo) per glow.
+
+### D-046 — Animazione spin: CSS transition + double rAF
+Per attivare la CSS transition al primo render, doppio `requestAnimationFrame` tra mount con `angoloFinale=0` e set a `angoloFinale` reale. Senza, il browser commit lo stato finale subito e nessuna transition fires. Total 5s, `cubic-bezier(0.17, 0.67, 0.32, 1)` (lieve accelerazione, lunga decelerazione fluida). `onTransitionEnd` filtrato per `propertyName === "transform"` (SVG può propagare altri eventi).
+
+### D-047 — Bonus visivo come "estensione", non come fetta separata
+Su feedback utente: la fetta totale (base + bonus) renderizzata come **un solo path**, niente separatore bianco interno. Una linea sottile semi-trasparente `rgba(255,255,255,0.55)` strokeWidth `0.35` segna il confine base/bonus senza spezzare visivamente la fetta. Il bonus appare come "aggiunta" alla metà ruota, non come terzo slice.
+
+### D-048 — Testo bonus radiale + adattivo
+Testo lungo il raggio (rotate `midAngolo - 90`, flip 180° per metà sinistra). `textLength` + `lengthAdjust="spacingAndGlyphs"` forza il fit nello spazio disponibile (rInizio=12, rFine=R-3). Font size calcolato (~lunghezza/0.55 × N char), clamp [2.5, 9]. Truncate `…` oltre 28 char.
+
+### D-049 — Sorgente modificatore: scelta manuale + filtraggio all'oggetto attaccato
+Per ogni partecipante:
+- Radio `Nessuno / +1 / +2`.
+- Se mod ≠ Nessuno: radio `Oggetto / Descrizione libera`. Il radio "Oggetto" mostra direttamente il nome dell'oggetto attaccato al personaggio (selezione singola, no dropdown), disabilitato se il personaggio non ha oggetti. "Descrizione libera" = input testuale max 40 char.
+- L'utente in pronto/spin può vedere la fonte renderizzata nella sotto-fetta (icona oggetto o testo radiale).
+
+### D-050 — Deroga audio: tick sonoro durante lo spin (eccezione a CLAUDE.md §0)
+**§0 vieta esplicitamente audio**. L'utente ha confermato in M6 di volere un tick alla traversata dei confini delle sotto-regioni. Implementato con **Web Audio API** sintetizzato in-process (niente file MP3, niente routing custom — il volume va al mixer dell'OS): triangolare 950Hz, attack 4ms, release 40ms, ampiezza 0.22. Suonato **solo dalla regia** (`suonaTick={true}` nel `PannelloConflitto`, `false` nello stage) per autoplay: l'utente ha cliccato "Gira" → user gesture valido per attivare AudioContext. Lo stage non riceve user input → AudioContext sarebbe suspended. Documentato qui come deroga consapevole.
+
+### D-051 — Wobble freccia: keyed remount + CSS animation (NON Web Animations API)
+Pattern usato: `<g key={wobbleCount}>` con classe `puntaWobble` (CSS @keyframes 150ms ease-out, 0° → -11° → 0°). Ad ogni tick, `setWobbleCount(c+1)` cambia la key → React rimonta il g → l'animazione CSS riparte da capo. WAAPI con `element.animate()` su SVG path NON funzionava in modo affidabile su WebKitGTK (`transform-box: fill-box` non rispettato). `transform-origin` in user-space SVG coords `50px 1.5px` direttamente sull'elemento. Wobble attivo su ENTRAMBE le finestre (regia + proiezione) — separato dal sound che resta solo regia.
+
+### D-052 — Scoreboard sulla proiezione
+Sopra la ruota nel layout della proiezione: riga di card per ogni partecipante con cerchietto-faccia (~110px), nome (1.5rem), percentuale grande (~2.2rem bold) nel colore del personaggio. Card vincitrice ha bordo personaggio + glow giallo dopo lo spin. Layout: flex row centrata, gap 2rem. La ruota sotto è scalata a `min(0.72*innerWidth, 0.7*innerHeight)` per fare spazio.
+
+### D-053 — Scena sempre montata + Ruota in overlay (proiezione)
+Prima versione: `if (conflict) return <Ruota>; else return <Scena>;`. Problema: `<Scena>` unmounta/remonta perdendo `imgDim` → personaggi sparivano dalla mappa al ritorno (fix #3 ultimo round). Soluzione: **Scena sempre montata**, Ruota in `<div position:fixed inset:0>` overlay quando il conflitto è attivo. Più safety: `useEffect` extra in Scena/AreaMappa che ricava `imgDim` da `img.complete + naturalWidth` se per qualche motivo è ancora null (cache, race fullscreen toggle).
+
+### §10 spec, stato finale
+- §10.1 (resa fetta incremento): risolta con sotto-fetta inline (D-047) + tick visivo D-051.
+- §10.2 (multi-oggetto): superata da M5 (vincolo 1-a-1).
+- §10.3 (autosave): risolta in M3.
+- §10.4 (storico esiti): nessuno storico, conferma manuale. Documentato qui esplicitamente.
+- §10.5 (eliminazione personaggio in conflitto): cleanup automatico in setup (subscribe in conflittoStore), snapshot freeze in pronto/girando/risultato (D-044).
+
+### Verificato
+- `npx tsc --noEmit` + `npx vite build` clean.
+- `tauri dev`: ruota in regia ferma + scoreboard, click "Gira" → animazione 5s con decelerazione naturale, suono tick alle sotto-regioni, wobble della freccia in sync, vincitore evidenziato con glow + scoreboard card highlighted. Proiezione mostra tutto sincronizzato. "Chiudi e torna alla mappa" riporta alla mappa con personaggi visibili (no flicker). Confermato visivamente dall'utente in 8+ cicli di feedback iterativo.
+
+---

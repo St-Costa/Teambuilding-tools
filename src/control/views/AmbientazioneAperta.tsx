@@ -7,6 +7,8 @@ import PannelloPersonaggi from "./PannelloPersonaggi";
 import AreaMappa from "./AreaMappa";
 import WizardPersonaggio from "./WizardPersonaggio";
 import WizardOggetto from "./WizardOggetto";
+import PannelloConflitto from "./PannelloConflitto";
+import { useConflittoStore } from "../../state/conflittoStore";
 import styles from "./AmbientazioneAperta.module.css";
 
 export default function AmbientazioneAperta() {
@@ -22,6 +24,8 @@ export default function AmbientazioneAperta() {
   const [wizardOggettoAperto, setWizardOggettoAperto] = useState(false);
   const [erroreMappa, setErroreMappa] = useState<string | null>(null);
   const [stageFullscreen, setStageFullscreen] = useState(false);
+  const [conflittoAperto, setConflittoAperto] = useState(false);
+  const avviaConflitto = useConflittoStore((s) => s.avvia);
 
   useEffect(() => {
     let cancellato = false;
@@ -96,6 +100,21 @@ export default function AmbientazioneAperta() {
           >
             {stageFullscreen ? "Esci da tutto schermo" : "Proiezione a tutto schermo"}
           </button>
+          <button
+            className={styles.btnAzione}
+            onClick={() => {
+              avviaConflitto();
+              setConflittoAperto(true);
+            }}
+            disabled={current.personaggi.length < 2}
+            title={
+              current.personaggi.length < 2
+                ? "Servono almeno 2 personaggi"
+                : "Apri la ruota della fortuna"
+            }
+          >
+            Conflitto
+          </button>
           <IndicatoreSalvataggio />
           <button className={styles.btnChiudi} onClick={handleChiudi}>
             Chiudi ambientazione
@@ -138,6 +157,10 @@ export default function AmbientazioneAperta() {
             setWizardOggettoAperto(false);
           }}
         />
+      )}
+
+      {conflittoAperto && (
+        <PannelloConflitto onChiudi={() => setConflittoAperto(false)} />
       )}
     </div>
   );

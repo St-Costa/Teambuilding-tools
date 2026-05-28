@@ -50,6 +50,18 @@ export default function Scena({
     setImgDim(null);
   }, [mappaPath]);
 
+  // Safety net: dopo ogni render, se imgDim è null ma l'img è già caricata
+  // (cache, race con onLoad in fullscreen toggle, ecc.), settalo dai
+  // naturalWidth/Height. Senza questo, in alcuni scenari di re-render
+  // sotto overlay i personaggi non rientrano sulla mappa.
+  useEffect(() => {
+    if (imgDim) return;
+    const img = imgRef.current;
+    if (img?.complete && img.naturalWidth > 0) {
+      setImgDim({ w: img.naturalWidth, h: img.naturalHeight });
+    }
+  });
+
   if (!folderPath || !mappaPath) {
     return (
       <div className={styles.root} ref={containerRef}>

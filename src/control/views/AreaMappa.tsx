@@ -34,6 +34,15 @@ export default function AreaMappa() {
     setImgDim(null);
   }, [current?.mappaPath]);
 
+  // Safety net: ripristina imgDim se diventa null mentre l'img è già caricata.
+  useEffect(() => {
+    if (imgDim) return;
+    const img = imgRef.current;
+    if (img?.complete && img.naturalWidth > 0) {
+      setImgDim({ w: img.naturalWidth, h: img.naturalHeight });
+    }
+  });
+
   if (!current || !folderPath) return null;
 
   if (!current.mappaPath) {

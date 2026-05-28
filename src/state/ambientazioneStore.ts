@@ -77,7 +77,20 @@ function payloadCorrente(state: AmbientazioneState): ScenaPayload {
     personaggi: state.current?.personaggi ?? [],
     oggetti: state.current?.oggetti ?? [],
     nome: state.current?.nome ?? null,
+    conflitto: conflittoSnapshotProvider?.() ?? null,
   };
+}
+
+// Wiring leggero verso conflittoStore senza creare un import circolare:
+// conflittoStore si registra qui al boot e fornisce snapshot+forceEmit.
+type ConflittoSnapshotFn = () => import("../lib/events").ConflittoSnapshot | null;
+let conflittoSnapshotProvider: ConflittoSnapshotFn | null = null;
+export function registraConflittoSnapshotProvider(fn: ConflittoSnapshotFn | null): void {
+  conflittoSnapshotProvider = fn;
+}
+
+export function forceEmitScena(): void {
+  emitThrottled(payloadCorrente(useAmbientazioneStore.getState()));
 }
 
 function notificaProiezione(state: AmbientazioneState): void {
