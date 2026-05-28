@@ -35,6 +35,11 @@ interface AmbientazioneState {
   rinominaPersonaggio: (id: string, nome: string) => void;
   cambiaColorePersonaggio: (id: string, hex: string) => void;
   modificaCropPersonaggio: (id: string, crop: Crop) => void;
+  salvaPosizioneInizialePersonaggio: (id: string) => void;
+  ripristinaPosizioneInizialePersonaggio: (id: string) => void;
+  eliminaPosizioneInizialePersonaggio: (id: string) => void;
+  salvaTuttePosizioniIniziali: () => void;
+  ripristinaTuttePosizioniIniziali: () => void;
   eliminaPersonaggio: (id: string) => void;
   selezionaPersonaggio: (id: string | null) => void;
   aggiungiOggetto: (input: {
@@ -119,6 +124,15 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
 
   async apri(folderPath) {
     const a = await apriAmbientazione(folderPath);
+    // All'apertura, ogni personaggio con una posizione iniziale salvata viene
+    // riportato lì. Modifica in-memory: saveStatus resta "saved" (niente
+    // autosave forzato), così le posizioni iniziali non vengono riscritte sul
+    // disco a meno che l'utente non sposti davvero qualcuno.
+    for (const p of a.personaggi) {
+      if (p.posizioneIniziale) {
+        p.posizione = { x: p.posizioneIniziale.x, y: p.posizioneIniziale.y };
+      }
+    }
     set({
       current: a,
       folderPath,
@@ -196,6 +210,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       imgPath: relativo,
       crop,
       posizione: { x: 0.1, y: 0.1 },
+      posizioneIniziale: null,
       oggettoId: null,
     };
     get().modifica((draft) => {
@@ -231,6 +246,47 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
     get().modifica((draft) => {
       const p = draft.personaggi.find((x) => x.id === id);
       if (p) p.crop = crop;
+    });
+  },
+
+  salvaPosizioneInizialePersonaggio(id) {
+    get().modifica((draft) => {
+      const p = draft.personaggi.find((x) => x.id === id);
+      if (p) p.posizioneIniziale = { x: p.posizione.x, y: p.posizione.y };
+    });
+  },
+
+  ripristinaPosizioneInizialePersonaggio(id) {
+    get().modifica((draft) => {
+      const p = draft.personaggi.find((x) => x.id === id);
+      if (p && p.posizioneIniziale) {
+        p.posizione = { x: p.posizioneIniziale.x, y: p.posizioneIniziale.y };
+      }
+    });
+  },
+
+  eliminaPosizioneInizialePersonaggio(id) {
+    get().modifica((draft) => {
+      const p = draft.personaggi.find((x) => x.id === id);
+      if (p) p.posizioneIniziale = null;
+    });
+  },
+
+  salvaTuttePosizioniIniziali() {
+    get().modifica((draft) => {
+      for (const p of draft.personaggi) {
+        p.posizioneIniziale = { x: p.posizione.x, y: p.posizione.y };
+      }
+    });
+  },
+
+  ripristinaTuttePosizioniIniziali() {
+    get().modifica((draft) => {
+      for (const p of draft.personaggi) {
+        if (p.posizioneIniziale) {
+          p.posizione = { x: p.posizioneIniziale.x, y: p.posizioneIniziale.y };
+        }
+      }
     });
   },
 

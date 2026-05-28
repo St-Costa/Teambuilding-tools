@@ -276,3 +276,23 @@ Entrambi suonati **SOLO dalla regia** (PannelloTimer è regia-only). Sintesi Web
 - `tauri dev`: avvio/pausa/riprendi/reset OK, cambio durata OK con disable in running, banner visibile in proiezione tranne in idle e durante conflitto, beep lungo a 60s, beep intermittente da 00:00. Confermato visivamente dall'utente.
 
 ---
+
+## M8.2 — Posizioni iniziali dei personaggi (2026-05-27)
+
+### D-060 — `posizioneIniziale` campo opzionale nel manifest
+Aggiunto `Personaggio.posizioneIniziale: Posizione | null` (default null). Validator accetta `undefined` o `null` su lettura → manifest M5/M6 esistenti restano validi (compat naturale, niente schema bump).
+
+### D-061 — Solo controllo globale, no per-personaggio
+Su feedback utente (prima iterazione M8.2 aveva entrambi): tolte le voci dal menu ⋯ del personaggio. **L'unico controllo è in toolbar**: dropdown "Posizioni ▾" con "Salva tutte come iniziali" e "Ripristina tutte alle iniziali". Le azioni store per-personaggio (`salvaPosizioneInizialePersonaggio` ecc.) restano nello store ma non sono più esposte in UI.
+
+### D-062 — Apertura ambientazione resetta automaticamente alle iniziali
+Su feedback utente: aprire l'ambientazione deve riportare TUTTI i personaggi alle loro posizioni iniziali (se ce le hanno). Implementato in `apri()`: dopo il load del manifest, mutazione in-memory di `posizione = posizioneIniziale` per chi ne ha una. `saveStatus` resta `"saved"` → niente autosave forzato, l'on-disk resta intatto con le "ultime posizioni" finché l'utente non sposta davvero qualcuno. Idempotente: se nessuno tocca niente, l'on-disk non cambia mai. Se l'utente sposta, autosave salva le posizioni nuove come "ultime" — sostituite di nuovo alla prossima apertura.
+
+Effetto pratico: ogni "sessione" della partita parte sempre dalla situazione di setup, indipendentemente da dove sono finiti i personaggi alla fine della sessione precedente.
+
+### Verificato
+- Compat: aperto ambientazione M6 (senza `posizioneIniziale`) → letta come null, niente errore.
+- Salva tutte → autosave fa scrivere il campo nel manifest. Chiudi/riapri → personaggi nelle iniziali.
+- Sposta + chiudi + riapri → personaggi tornano alle iniziali (non alle "ultime"). Confermato dall'utente.
+
+---

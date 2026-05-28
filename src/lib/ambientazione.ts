@@ -19,6 +19,7 @@ export interface Personaggio {
   imgPath: string;
   crop: Crop;
   posizione: Posizione;
+  posizioneIniziale: Posizione | null;
   oggettoId: string | null;
 }
 
@@ -109,6 +110,11 @@ function validaPersonaggio(raw: unknown, idx: number): Personaggio {
   }
   const oggettoId =
     typeof raw.oggettoId === "string" && raw.oggettoId !== "" ? raw.oggettoId : null;
+  // posizioneIniziale opzionale: assente in manifest M5/M6 → null.
+  let posizioneIniziale: Posizione | null = null;
+  if (raw.posizioneIniziale !== undefined && raw.posizioneIniziale !== null) {
+    posizioneIniziale = validaPosizione(raw.posizioneIniziale, `${ctx}.posizioneIniziale`);
+  }
   return {
     id: raw.id,
     nome: raw.nome,
@@ -116,6 +122,7 @@ function validaPersonaggio(raw: unknown, idx: number): Personaggio {
     imgPath: raw.imgPath,
     crop: validaCrop(raw.crop, ctx),
     posizione: validaPosizione(raw.posizione, ctx),
+    posizioneIniziale,
     oggettoId,
   };
 }

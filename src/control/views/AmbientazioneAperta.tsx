@@ -20,6 +20,8 @@ export default function AmbientazioneAperta() {
   const impostaMappa = useAmbientazioneStore((s) => s.impostaMappa);
   const aggiungiPersonaggio = useAmbientazioneStore((s) => s.aggiungiPersonaggio);
   const aggiungiOggetto = useAmbientazioneStore((s) => s.aggiungiOggetto);
+  const salvaTutte = useAmbientazioneStore((s) => s.salvaTuttePosizioniIniziali);
+  const ripristinaTutte = useAmbientazioneStore((s) => s.ripristinaTuttePosizioniIniziali);
   const chiudi = useAmbientazioneStore((s) => s.chiudi);
 
   const [wizardPersonaggioAperto, setWizardPersonaggioAperto] = useState(false);
@@ -117,6 +119,32 @@ export default function AmbientazioneAperta() {
           >
             Conflitto
           </button>
+          <details className={styles.menuPosizioniRoot}>
+            <summary className={styles.btnAzione} title="Salva o ripristina posizioni iniziali">
+              Posizioni ▾
+            </summary>
+            <div className={styles.menuPosizioni}>
+              <button
+                onClick={(e) => {
+                  if (!confirm("Salva la posizione corrente di tutti i personaggi come posizione iniziale?")) return;
+                  salvaTutte();
+                  (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
+                }}
+                disabled={current.personaggi.length === 0}
+              >
+                Salva tutte come iniziali
+              </button>
+              <button
+                onClick={(e) => {
+                  ripristinaTutte();
+                  (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
+                }}
+                disabled={!current.personaggi.some((p) => p.posizioneIniziale !== null)}
+              >
+                Ripristina tutte alle iniziali
+              </button>
+            </div>
+          </details>
           <PannelloTimer />
           <IndicatoreSalvataggio />
           <button className={styles.btnChiudi} onClick={handleChiudi}>
