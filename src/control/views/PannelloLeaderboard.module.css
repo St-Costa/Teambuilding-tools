@@ -1,0 +1,230 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+}
+
+.modale {
+  background: #fff;
+  color: #1d1d1f;
+  border-radius: 12px;
+  width: min(900px, 96vw);
+  max-height: 92vh;
+  overflow: auto;
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (prefers-color-scheme: dark) {
+  .modale {
+    background: #2c2c2e;
+    color: #f5f5f7;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.2);
+}
+
+.header h2 {
+  margin: 0;
+}
+
+.btnChiudi {
+  padding: 0.45rem 1rem;
+  border-radius: 5px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.btnChiudi:hover {
+  background: rgba(127, 127, 127, 0.1);
+}
+
+.sezioneObiettivi {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.2);
+}
+
+.hint {
+  margin: 0 0 0.75rem;
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
+
+.gruppoObiettivi {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.labelTesto {
+  opacity: 0.65;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.label input {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid rgba(127, 127, 127, 0.5);
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.label input:focus {
+  outline: 2px solid #4c8aff;
+  border-color: transparent;
+}
+
+.sezioneTabella {
+  padding: 1rem 1.5rem;
+}
+
+.sezionePodio {
+  padding: 0.5rem 1.5rem 1.5rem;
+  border-top: 1px solid rgba(127, 127, 127, 0.2);
+}
+
+.vuoto {
+  opacity: 0.6;
+  font-style: italic;
+  padding: 1rem;
+  text-align: center;
+}
+
+.tabella {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+}
+
+.tabella thead th {
+  text-align: left;
+  font-weight: 600;
+  padding: 0.6rem 0.5rem;
+  border-bottom: 2px solid rgba(127, 127, 127, 0.35);
+  font-size: 0.9rem;
+}
+
+.thObiettivo {
+  text-align: center !important;
+  max-width: 12rem;
+  word-break: break-word;
+}
+
+.thTotale {
+  text-align: center !important;
+  width: 5rem;
+}
+
+.tabella tbody tr {
+  border-bottom: 1px solid rgba(127, 127, 127, 0.18);
+}
+
+.tabella tbody tr:hover {
+  background: rgba(127, 127, 127, 0.06);
+}
+
+.tdPersonaggio {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.5rem;
+}
+
+.nomePersonaggio {
+  font-weight: 600;
+}
+
+.tdTick {
+  text-align: center;
+  cursor: pointer;
+  font-size: 1.6rem;
+  font-weight: 700;
+  height: 3.4rem;
+  border-left: 1px solid rgba(127, 127, 127, 0.18);
+  border-right: 1px solid rgba(127, 127, 127, 0.18);
+  color: transparent;
+  user-select: none;
+  transition: background 0.12s, color 0.12s;
+}
+
+.tdTick:hover {
+  background: rgba(80, 130, 255, 0.12);
+}
+
+.tdTickOn {
+  color: #2e7d32;
+  background: rgba(80, 200, 120, 0.14);
+}
+
+.tdTickOn:hover {
+  background: rgba(80, 200, 120, 0.22);
+}
+
+.tdTickMalusOn {
+  color: #c62828;
+  background: rgba(220, 50, 50, 0.14);
+}
+
+.tdTickMalusOn:hover {
+  background: rgba(220, 50, 50, 0.22);
+}
+
+.thObiettivoMalus {
+  color: #c62828;
+}
+
+.badgeMalus {
+  font-size: 0.75rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  margin-left: 0.3rem;
+  vertical-align: middle;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.totaleNegativo {
+  color: #c62828;
+}
+
+.tdTotale {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.totaleNumero {
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.totaleSlash {
+  opacity: 0.5;
+  font-size: 0.9rem;
+  margin-left: 0.2rem;
+}

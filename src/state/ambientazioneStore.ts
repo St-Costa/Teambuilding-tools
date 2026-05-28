@@ -40,6 +40,7 @@ interface AmbientazioneState {
   eliminaPosizioneInizialePersonaggio: (id: string) => void;
   salvaTuttePosizioniIniziali: () => void;
   ripristinaTuttePosizioniIniziali: () => void;
+  setObiettivo: (indice: 0 | 1 | 2, testo: string) => void;
   eliminaPersonaggio: (id: string) => void;
   selezionaPersonaggio: (id: string | null) => void;
   aggiungiOggetto: (input: {
@@ -89,6 +90,7 @@ function payloadCorrente(state: AmbientazioneState): ScenaPayload {
       targetEndAt: null,
       pausedRemainingMs: 0,
     },
+    leaderboard: leaderboardSnapshotProvider?.() ?? null,
   };
 }
 
@@ -104,6 +106,12 @@ type TimerSnapshotFn = () => import("../lib/events").TimerSnapshot;
 let timerSnapshotProvider: TimerSnapshotFn | null = null;
 export function registraTimerSnapshotProvider(fn: TimerSnapshotFn | null): void {
   timerSnapshotProvider = fn;
+}
+
+type LeaderboardSnapshotFn = () => import("../lib/events").LeaderboardSnapshot | null;
+let leaderboardSnapshotProvider: LeaderboardSnapshotFn | null = null;
+export function registraLeaderboardSnapshotProvider(fn: LeaderboardSnapshotFn | null): void {
+  leaderboardSnapshotProvider = fn;
 }
 
 export function forceEmitScena(): void {
@@ -287,6 +295,18 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
           p.posizione = { x: p.posizioneIniziale.x, y: p.posizioneIniziale.y };
         }
       }
+    });
+  },
+
+  setObiettivo(indice, testo) {
+    get().modifica((draft) => {
+      const nuovi: [string, string, string] = [
+        draft.obiettivi[0],
+        draft.obiettivi[1],
+        draft.obiettivi[2],
+      ];
+      nuovi[indice] = testo;
+      draft.obiettivi = nuovi;
     });
   },
 

@@ -296,3 +296,41 @@ Effetto pratico: ogni "sessione" della partita parte sempre dalla situazione di 
 - Sposta + chiudi + riapri → personaggi tornano alle iniziali (non alle "ultime"). Confermato dall'utente.
 
 ---
+
+## M8.3 — Leaderboard finale con 3 obiettivi + podio (2026-05-27)
+
+### D-063 — `obiettivi: [string, string, string]` nel manifest
+Aggiunto al manifest dell'Ambientazione. Default `["", "", ""]`. Compat naturale (manifest M5-M8.2 senza il campo → letti come default). Editabili dalla regia tramite la sezione obiettivi del pannello leaderboard; persistiti con autosave standard.
+
+### D-064 — Terzo obiettivo come MALUS (−1 sul totale)
+Su richiesta utente in iterazione UX: il 3° obiettivo non somma, **sottrae** dal totale. Math: `totale = (t[0] ? 1 : 0) + (t[1] ? 1 : 0) - (t[2] ? 1 : 0)`. Range possibile: −1..+2. Visualmente:
+- Label "Malus" (no badge "−1" — toglie chiarezza visiva, il colore basta).
+- Header colonna in rosso.
+- Cella attiva: sfondo rosso + simbolo **✗** rosso (non ✓).
+- Numero totale in rosso se < 0.
+
+### D-065 — Leaderboard effimera (come ruota)
+`leaderboardStore` con snapshot dei personaggi al momento di `apri()` (consistenza se l'utente modifica il manifest durante la leaderboard). `tick: Record<id, [bool, bool, bool]>` mutabile, NON persistito. Su `chiudi()` tutto svuotato. Provider pattern verso `ambientazioneStore.payloadCorrente` come `conflittoSnapshotProvider`.
+
+### D-066 — Mutua esclusione con conflitto
+Leaderboard e Ruota sono entrambe overlay full-screen sulla proiezione (z-index 1000). Mutua esclusione gestita dai bottoni regia: "Conflitto" disabled se leaderboard aperta e viceversa. Il banner timer viene nascosto in proiezione durante entrambi i casi overlay (`!mostraRuota && !mostraLeaderboard`).
+
+### D-067 — Tabella in regia con ordine fisso + Podio ordinato sotto
+Su feedback utente in iterazione: la tabella mostra le righe in ordine di creazione (stabile, evita jumps durante i tick). **Sotto** la tabella, su entrambi gli schermi, un nuovo componente `ClassificaPodio` mostra una riga orizzontale di cerchietti ordinati per totale desc. Tie-break per ordine d'inserimento (stable sort).
+
+### D-068 — Vincitori (anche multipli): corona + alone dorato
+Sul podio, i personaggi con `totale === maxTotale` ricevono:
+- Emoji 👑 sopra il cerchietto (CSS animation "coronaIn" 400ms ease-out su entrata).
+- Drop-shadow giallo-oro a tre livelli sul cerchietto stesso (`drop-shadow(0 0 10px) (0 0 22px) (0 0 36px)`).
+- `translateY(-4px)` per "alzare" leggermente il vincitore.
+
+Più vincitori in parità → tutti ricevono il trattamento.
+
+### D-069 — Dimensioni font proporzionali al cerchietto
+`ClassificaPodio` è riutilizzato in regia (cerchietto 64px) e proiezione (cerchietto 140px). I font (nome, punteggio, corona) sono calcolati inline come frazioni della `dimensioneCerchietto` → look identico, dimensioni scalate. Evita media query complesse.
+
+### Verificato
+- `npx tsc --noEmit` clean.
+- `tauri dev`: bottone "Leaderboard" in toolbar regia, modale full-screen con sezione obiettivi editabili (autosave) + tabella tick + podio. Proiezione mostra tabella + podio sincronizzati. Click su cella malus → ✗ rossa, totale aggiornato (-1). Podio si riordina in tempo reale, vincitore con corona + alone dorato (anche in parità). Mutua esclusione con conflitto verificata. Confermato dall'utente.
+
+---

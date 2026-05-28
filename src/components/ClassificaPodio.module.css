@@ -1,0 +1,69 @@
+.root {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 1.6rem;
+  flex-wrap: wrap;
+  padding: 1.5rem 1rem 0.5rem;
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  transition: transform 0.2s ease;
+}
+
+.entryVincitore {
+  transform: translateY(-4px);
+}
+
+.corona {
+  line-height: 1;
+  filter: drop-shadow(0 0 6px rgba(255, 195, 0, 0.7));
+  animation: coronaIn 0.4s ease-out;
+}
+
+@keyframes coronaIn {
+  0% { transform: translateY(8px) scale(0.4); opacity: 0; }
+  60% { transform: translateY(-3px) scale(1.12); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.alone {
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.aloneVincitore {
+  filter:
+    drop-shadow(0 0 10px rgba(255, 200, 0, 0.85))
+    drop-shadow(0 0 22px rgba(255, 170, 0, 0.55))
+    drop-shadow(0 0 36px rgba(255, 140, 0, 0.35));
+}
+
+.nome {
+  font-weight: 700;
+  text-align: center;
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.punteggio {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.punteggioNegativo {
+  color: #c62828;
+}
+
+@media (prefers-color-scheme: dark) {
+  .punteggioNegativo {
+    color: #ff6b6b;
+  }
+}

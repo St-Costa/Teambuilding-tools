@@ -39,6 +39,21 @@ export interface TimerSnapshot {
   pausedRemainingMs: number;
 }
 
+export interface RigaLeaderboardSnap {
+  personaggioId: string;
+  nome: string;
+  colore: string;
+  imgPath: string;
+  crop: import("./ambientazione").Crop;
+  tick: [boolean, boolean, boolean];
+  totale: number;
+}
+
+export interface LeaderboardSnapshot {
+  obiettivi: [string, string, string];
+  righe: RigaLeaderboardSnap[];
+}
+
 export interface ScenaPayload {
   folderPath: string | null;
   mappaPath: string | null;
@@ -47,6 +62,7 @@ export interface ScenaPayload {
   nome: string | null;
   conflitto: ConflittoSnapshot | null;
   timer: TimerSnapshot;
+  leaderboard: LeaderboardSnapshot | null;
 }
 
 export type EventPayloads = {

@@ -6,6 +6,7 @@ import Scena from "../components/Scena";
 import Ruota from "../components/Ruota";
 import ScoreboardConflitto from "../components/ScoreboardConflitto";
 import DisplayTimer from "../components/DisplayTimer";
+import ScenaLeaderboard from "../components/ScenaLeaderboard";
 
 const STATO_INIZIALE: ScenaPayload = {
   folderPath: null,
@@ -20,6 +21,7 @@ const STATO_INIZIALE: ScenaPayload = {
     targetEndAt: null,
     pausedRemainingMs: 0,
   },
+  leaderboard: null,
 };
 
 export default function App() {
@@ -52,11 +54,12 @@ export default function App() {
     };
   }, []);
 
-  // Scena sempre montata: la Ruota la copre in overlay quando il conflitto
-  // è attivo. Così Scena non subisce unmount/remount → personaggi sulla
-  // mappa restano renderizzati quando il conflitto si chiude (no reset
-  // di imgDim/container).
+  // Scena sempre montata: Ruota / Leaderboard la coprono in overlay.
+  // Così Scena non subisce unmount/remount → personaggi sulla mappa restano
+  // renderizzati quando l'overlay si chiude (no reset di imgDim/container).
   const mostraRuota = stato.conflitto !== null && stato.folderPath !== null;
+  const mostraLeaderboard = stato.leaderboard !== null && stato.folderPath !== null;
+  const overlayAttivo = mostraRuota || mostraLeaderboard;
   return (
     <>
       <Scena
@@ -66,7 +69,10 @@ export default function App() {
         oggetti={stato.oggetti}
         nome={stato.nome}
       />
-      {!mostraRuota && <DisplayTimer snapshot={stato.timer} />}
+      {!overlayAttivo && <DisplayTimer snapshot={stato.timer} />}
+      {mostraLeaderboard && stato.folderPath && stato.leaderboard && (
+        <ScenaLeaderboard snapshot={stato.leaderboard} folderPath={stato.folderPath} />
+      )}
       {mostraRuota && stato.folderPath && stato.conflitto && (
         <div
           style={{

@@ -9,7 +9,9 @@ import WizardPersonaggio from "./WizardPersonaggio";
 import WizardOggetto from "./WizardOggetto";
 import PannelloConflitto from "./PannelloConflitto";
 import PannelloTimer from "./PannelloTimer";
+import PannelloLeaderboard from "./PannelloLeaderboard";
 import { useConflittoStore } from "../../state/conflittoStore";
+import { useLeaderboardStore } from "../../state/leaderboardStore";
 import "../../state/timerStore";
 import styles from "./AmbientazioneAperta.module.css";
 
@@ -30,6 +32,12 @@ export default function AmbientazioneAperta() {
   const [stageFullscreen, setStageFullscreen] = useState(false);
   const [conflittoAperto, setConflittoAperto] = useState(false);
   const avviaConflitto = useConflittoStore((s) => s.avvia);
+  const [leaderboardAperta, setLeaderboardAperta] = useState(false);
+  const apriLeaderboard = useLeaderboardStore((s) => s.apri);
+  const conflittoFase = useConflittoStore((s) => s.fase);
+  const leaderboardFaseStore = useLeaderboardStore((s) => s.fase);
+  const conflittoInCorso = conflittoFase !== "chiuso";
+  const leaderboardInCorso = leaderboardFaseStore === "aperta";
 
   useEffect(() => {
     let cancellato = false;
@@ -110,14 +118,33 @@ export default function AmbientazioneAperta() {
               avviaConflitto();
               setConflittoAperto(true);
             }}
-            disabled={current.personaggi.length < 2}
+            disabled={current.personaggi.length < 2 || leaderboardInCorso}
             title={
-              current.personaggi.length < 2
-                ? "Servono almeno 2 personaggi"
-                : "Apri la ruota della fortuna"
+              leaderboardInCorso
+                ? "Chiudi prima la leaderboard"
+                : current.personaggi.length < 2
+                  ? "Servono almeno 2 personaggi"
+                  : "Apri la ruota della fortuna"
             }
           >
             Conflitto
+          </button>
+          <button
+            className={styles.btnAzione}
+            onClick={() => {
+              apriLeaderboard();
+              setLeaderboardAperta(true);
+            }}
+            disabled={current.personaggi.length === 0 || conflittoInCorso}
+            title={
+              conflittoInCorso
+                ? "Chiudi prima il conflitto"
+                : current.personaggi.length === 0
+                  ? "Serve almeno 1 personaggio"
+                  : "Mostra la leaderboard finale"
+            }
+          >
+            Leaderboard
           </button>
           <details className={styles.menuPosizioniRoot}>
             <summary className={styles.btnAzione} title="Salva o ripristina posizioni iniziali">
@@ -192,6 +219,10 @@ export default function AmbientazioneAperta() {
 
       {conflittoAperto && (
         <PannelloConflitto onChiudi={() => setConflittoAperto(false)} />
+      )}
+
+      {leaderboardAperta && (
+        <PannelloLeaderboard onChiudi={() => setLeaderboardAperta(false)} />
       )}
     </div>
   );

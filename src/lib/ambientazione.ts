@@ -38,6 +38,7 @@ export interface Ambientazione {
   mappaPath: string | null;
   personaggi: Personaggio[];
   oggetti: Oggetto[];
+  obiettivi: [string, string, string];
 }
 
 export class AmbientazioneCorrotta extends Error {
@@ -170,6 +171,13 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
   }
   const personaggi = raw.personaggi.map((p, i) => validaPersonaggio(p, i));
   const oggetti = raw.oggetti.map((o, i) => validaOggetto(o, i));
+  // obiettivi: array opzionale di 3 stringhe, default vuoti per manifest M5-M8.2.
+  const obiettiviRaw = Array.isArray(raw.obiettivi) ? raw.obiettivi : [];
+  const obiettivi: [string, string, string] = [
+    typeof obiettiviRaw[0] === "string" ? obiettiviRaw[0] : "",
+    typeof obiettiviRaw[1] === "string" ? obiettiviRaw[1] : "",
+    typeof obiettiviRaw[2] === "string" ? obiettiviRaw[2] : "",
+  ];
   // Validazione referenziale: ogni Personaggio.oggettoId deve puntare a un
   // Oggetto esistente. Se non corrisponde (es. perché l'oggetto è stato
   // eliminato fuori-app), lo ripuliamo silenziosamente — meglio guarire che
@@ -186,6 +194,7 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
     mappaPath: raw.mappaPath,
     personaggi,
     oggetti,
+    obiettivi,
   };
 }
 
@@ -199,6 +208,7 @@ export function nuovoManifest(nome: string): Ambientazione {
     mappaPath: null,
     personaggi: [],
     oggetti: [],
+    obiettivi: ["", "", ""],
   };
 }
 
