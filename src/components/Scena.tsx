@@ -1,20 +1,34 @@
 import { useEffect, useRef, useState } from "react";
-import type { Personaggio } from "../lib/ambientazione";
+import { oggettoDi, type Oggetto, type Personaggio } from "../lib/ambientazione";
 import { risolviAsset } from "../lib/storage";
 import { rettangoloContain } from "../lib/scena";
 import Cerchietto from "./Cerchietto";
+import Quadratino from "./Quadratino";
 import styles from "./Scena.module.css";
 
 interface Props {
   folderPath: string | null;
   mappaPath: string | null;
   personaggi: Personaggio[];
+  oggetti: Oggetto[];
   nome: string | null;
 }
 
-const DIM_CERCHIETTO = 77;
+const DIM_CERCHIETTO = 116;
+const DIM_QUADRATINO = Math.round(DIM_CERCHIETTO * 0.8);
+const CENTRO_CERCHIETTO = DIM_CERCHIETTO / 2;
+// Stessa formula di AreaMappa: quadratino in basso-a-destra con sovrapposizione
+// 10% del raggio cerchietto (angolo top-left a 0.9 × raggio dal centro).
+const OFFSET_DIAG =
+  0.9 * CENTRO_CERCHIETTO * Math.SQRT1_2 + DIM_QUADRATINO / 2;
 
-export default function Scena({ folderPath, mappaPath, personaggi, nome }: Props) {
+export default function Scena({
+  folderPath,
+  mappaPath,
+  personaggi,
+  oggetti,
+  nome,
+}: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [container, setContainer] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
@@ -62,24 +76,43 @@ export default function Scena({ folderPath, mappaPath, personaggi, nome }: Props
         draggable={false}
       />
       {rett &&
-        personaggi.map((p) => (
-          <div
-            key={p.id}
-            className={styles.cerchiettoWrap}
-            style={{
-              left: rett.offsetX + p.posizione.x * rett.larghezza,
-              top: rett.offsetY + p.posizione.y * rett.altezza,
-            }}
-          >
-            <Cerchietto
-              src={risolviAsset(folderPath, p.imgPath)}
-              colore={p.colore}
-              crop={p.crop}
-              dimensione={DIM_CERCHIETTO}
-              alt={p.nome}
-            />
-          </div>
-        ))}
+        personaggi.map((p) => {
+          const oggetto = oggettoDi(p, oggetti);
+          return (
+            <div
+              key={p.id}
+              className={styles.cerchiettoWrap}
+              style={{
+                left: rett.offsetX + p.posizione.x * rett.larghezza,
+                top: rett.offsetY + p.posizione.y * rett.altezza,
+              }}
+            >
+              <Cerchietto
+                src={risolviAsset(folderPath, p.imgPath)}
+                colore={p.colore}
+                crop={p.crop}
+                dimensione={DIM_CERCHIETTO}
+                alt={p.nome}
+              />
+              {oggetto && (
+                <div
+                  className={styles.quadratinoWrap}
+                  style={{
+                    left: `${CENTRO_CERCHIETTO + OFFSET_DIAG - 10}px`,
+                    top: `${CENTRO_CERCHIETTO + OFFSET_DIAG - 10}px`,
+                  }}
+                >
+                  <Quadratino
+                    src={risolviAsset(folderPath, oggetto.imgPath)}
+                    crop={oggetto.crop}
+                    dimensione={DIM_QUADRATINO}
+                    alt={oggetto.nome}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
     </div>
   );
 }

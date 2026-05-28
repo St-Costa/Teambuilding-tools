@@ -19,10 +19,14 @@ export interface Personaggio {
   imgPath: string;
   crop: Crop;
   posizione: Posizione;
+  oggettoId: string | null;
 }
 
 export interface Oggetto {
   id: string;
+  nome: string;
+  imgPath: string;
+  crop: Crop;
 }
 
 export interface Ambientazione {
@@ -103,6 +107,8 @@ function validaPersonaggio(raw: unknown, idx: number): Personaggio {
   if (typeof raw.imgPath !== "string" || raw.imgPath === "") {
     throw new AmbientazioneCorrotta(`${ctx}: imgPath mancante`);
   }
+  const oggettoId =
+    typeof raw.oggettoId === "string" && raw.oggettoId !== "" ? raw.oggettoId : null;
   return {
     id: raw.id,
     nome: raw.nome,
@@ -110,6 +116,7 @@ function validaPersonaggio(raw: unknown, idx: number): Personaggio {
     imgPath: raw.imgPath,
     crop: validaCrop(raw.crop, ctx),
     posizione: validaPosizione(raw.posizione, ctx),
+    oggettoId,
   };
 }
 
@@ -119,7 +126,18 @@ function validaOggetto(raw: unknown, idx: number): Oggetto {
   if (typeof raw.id !== "string" || raw.id === "") {
     throw new AmbientazioneCorrotta(`${ctx}: id mancante`);
   }
-  return { id: raw.id };
+  if (typeof raw.nome !== "string" || raw.nome.trim() === "") {
+    throw new AmbientazioneCorrotta(`${ctx}: nome mancante o vuoto`);
+  }
+  if (typeof raw.imgPath !== "string" || raw.imgPath === "") {
+    throw new AmbientazioneCorrotta(`${ctx}: imgPath mancante`);
+  }
+  return {
+    id: raw.id,
+    nome: raw.nome,
+    imgPath: raw.imgPath,
+    crop: validaCrop(raw.crop, ctx),
+  };
 }
 
 export function validaAmbientazione(raw: unknown): Ambientazione {
@@ -143,14 +161,24 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
   if (!Array.isArray(raw.personaggi) || !Array.isArray(raw.oggetti)) {
     throw new AmbientazioneCorrotta("personaggi/oggetti non sono array");
   }
+  const personaggi = raw.personaggi.map((p, i) => validaPersonaggio(p, i));
+  const oggetti = raw.oggetti.map((o, i) => validaOggetto(o, i));
+  // Validazione referenziale: ogni Personaggio.oggettoId deve puntare a un
+  // Oggetto esistente. Se non corrisponde (es. perché l'oggetto è stato
+  // eliminato fuori-app), lo ripuliamo silenziosamente — meglio guarire che
+  // bocciare l'intera ambientazione.
+  const idsOggetti = new Set(oggetti.map((o) => o.id));
+  for (const p of personaggi) {
+    if (p.oggettoId && !idsOggetti.has(p.oggettoId)) p.oggettoId = null;
+  }
   return {
     schemaVersion: SCHEMA_VERSION,
     nome: raw.nome,
     creataIl: raw.creataIl,
     modificataIl: raw.modificataIl,
     mappaPath: raw.mappaPath,
-    personaggi: raw.personaggi.map((p, i) => validaPersonaggio(p, i)),
-    oggetti: raw.oggetti.map((o, i) => validaOggetto(o, i)),
+    personaggi,
+    oggetti,
   };
 }
 
@@ -190,6 +218,29 @@ export function validaNomePersonaggio(
   );
   if (collisione) return "Esiste già un personaggio con questo nome.";
   return null;
+}
+
+export function validaNomeOggetto(
+  nome: string,
+  oggettiEsistenti: Oggetto[],
+  esclusoId?: string,
+): string | null {
+  const trimmed = nome.trim();
+  if (trimmed === "") return "Il nome non può essere vuoto.";
+  if (trimmed.length > 50) return "Il nome è troppo lungo (massimo 50 caratteri).";
+  const collisione = oggettiEsistenti.some(
+    (o) => o.id !== esclusoId && o.nome.trim().toLowerCase() === trimmed.toLowerCase(),
+  );
+  if (collisione) return "Esiste già un oggetto con questo nome.";
+  return null;
+}
+
+export function oggettoDi(
+  personaggio: Personaggio,
+  oggetti: Oggetto[],
+): Oggetto | null {
+  if (!personaggio.oggettoId) return null;
+  return oggetti.find((o) => o.id === personaggio.oggettoId) ?? null;
 }
 
 export function cropIniziale(): Crop {

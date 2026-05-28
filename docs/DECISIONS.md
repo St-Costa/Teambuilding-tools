@@ -142,3 +142,41 @@ Nuovo modale `EditorRitaglioPersonaggio` aperto dal menu ⋯ ("Modifica ritaglio
 - `tauri dev`: mappa load OK (con copia in folder), wizard 3-step OK con palette + crop pan/zoom 10x, drag personaggi smooth con sync proiezione in tempo reale, edit ritaglio OK, fullscreen toggle OK (button regia + ESC stage), persistenza OK cross-restart. Confermato visivamente dall'utente in 5+ cicli di feedback.
 
 ---
+
+## M5 — Oggetti + assegnazione 1-a-1 (2026-05-27)
+
+### D-030 — Vincolo 1-a-1: un personaggio ha al massimo un oggetto
+Scelta esplicita dell'utente in fase di plan, più stretta dello spec §4.3 (che ammetteva "più oggetti attaccati"). `Personaggio.oggettoId: string | null` invece di un array. Vantaggi: UI molto più semplice (niente layout di più oggetti attorno al cerchio, §10.2 superato), nessuna ambiguità su quale oggetto fa da modificatore nella ruota M6. Limita anche le interazioni ai casi che il conduttore davvero gestirà dal vivo. Se in futuro emerge la necessità di multi-oggetto, si torna a un array con migrazione di schema.
+
+### D-031 — Vincolo anche all'inverso: un oggetto su un solo personaggio
+`assegnaOggettoAPersonaggio(persId, oggId)` libera automaticamente l'eventuale precedente proprietario dell'oggetto. Riassegnazione = trasferimento (no clonazione). Rende l'oggetto un'entità "fisica" del mondo, non solo una statistica. UX: in "Oggetto" del menu ⋯ del personaggio target, l'oggetto già assegnato a un altro è visibile con etichetta "(di Anna)" — riassegnare non richiede conferma esplicita (è una scelta consapevole del conduttore).
+
+### D-032 — Validazione referenziale "guaritrice", non bocciante
+`Personaggio.oggettoId` che punta a un id inesistente (es. oggetto eliminato fuori-app, file editato a mano) viene ripulito a `null` durante la validazione del manifest, **senza errore**. Motivo: meglio aprire un'ambientazione lievemente "amnesica" che bloccare il conduttore davanti a un crash. Compat: `Personaggio` senza `oggettoId` (manifest M4) viene letto come `oggettoId: null` — niente migrazione di schema.
+
+### D-033 — Forma visiva degli oggetti: quadratino con angoli arrotondati
+Componente `Quadratino` (`src/components/`) speculare a `Cerchietto` ma `border-radius: 22%`. Stesso modello crop (object-fit: contain + transform), stesso bordo proporzionale. **Niente colore proprio**: bordo grigio neutro (`#3a3a3c`). Gli oggetti si distinguono dai personaggi per forma, non per colore. Posizione nella scena: in basso-a-destra del cerchietto, in diagonale 45°, con sovrapposizione leggera (angolo top-left del quadratino dentro al cerchietto al 10% del raggio, poi spostato di -10px su entrambi gli assi per affinamento visivo richiesto dall'utente).
+
+### D-034 — Riuso `MaschereCircolare` per il crop degli oggetti
+Anche se l'oggetto finale è un quadratino, il crop UI nel wizard usa la stessa maschera circolare dei personaggi. La differenza visiva di angoli arrotondati vs cerchio in fase di pan/zoom è trascurabile, e duplicare la componente non avrebbe valore. La preview "finale" dell'oggetto (es. nella sidebar dopo creazione) è col quadratino vero.
+
+### D-035 — `EditorRitaglio` generalizzato (rinominato)
+`EditorRitaglioPersonaggio` → `EditorRitaglio` con props `{nome, imgPath, cropIniziale, colore?, folderPath, callbacks}`. Funziona sia per personaggi (con colore del bordo) che per oggetti (colore neutro). Niente specializzazione superflua.
+
+### D-036 — Wizard oggetto: 2 step (vs 3 del personaggio)
+`WizardOggetto.tsx` ha "Immagine" + "Ritaglio e nome". Nome inline nel passo crop perché non c'è palette colori da mostrare separatamente. Stesso auto-zoom iniziale al caricamento (cover-like) e stesso clamp pan dinamico.
+
+### D-037 — Sidebar a due sezioni: Personaggi + Oggetti
+`PannelloPersonaggi` ora è un container thin di `SezionePersonaggi` e `SezioneOggetti`, ognuna `flex: 1` con header sticky e lista scrollabile indipendente. Larghezza sidebar bumpata da 260 a 280px per accogliere il contenuto leggermente più denso. Ho mantenuto il filename `PannelloPersonaggi.tsx` per evitare un rename invasivo cross-file.
+
+### D-038 — Assegnazione oggetto dal menu ⋯ del personaggio
+L'azione di assegnazione vive sul personaggio, non sull'oggetto. Motivo dell'utente: "è un'azione che farei nella finestra NON proiettata" — concettualmente è il regista che dà l'oggetto al personaggio, non l'oggetto che cerca un proprietario. Menu ⋯ del personaggio in coda alle altre voci: sezione "Oggetto" con lista di tutti gli oggetti (mini-quadratini), etichetta "(di Anna)" per quelli già assegnati, voce "Nessuno (rimuovi oggetto)" se il personaggio ne ha uno. Niente drag-and-drop oggetto → cerchietto (esplicitamente scartato dall'utente).
+
+### D-039 — Cerchietti +50%, posizione quadratino raffinata in iterazioni
+Cerchietto regia: 68 → 102px. Cerchietto proiezione: 77 → 116px. Quadratino: 80% del cerchietto (82/93px). Bordi raddoppiati restano `dim * 0.14`. Il quadratino è posizionato lungo la diagonale bottom-right del cerchietto: la formula iniziale aveva il quadratino col centro proprio sul bordo del cerchietto → metà invadeva il volto. Refactor in due iterazioni: prima formula geometrica (angolo top-left del quadratino al 90% del raggio dal centro del cerchietto), poi offset manuale `-10, -10` per affinamento estetico. Risultato finale: leggera sovrapposizione angolare percepita come "giusta" dall'utente.
+
+### Verificato
+- `npx tsc --noEmit` + `npx vite build` clean.
+- `tauri dev`: creazione oggetto OK, assegnazione/riassegnazione/distacco dal menu ⋯ OK, quadratino renderizzato in basso-a-destra del cerchietto con sovrapposizione minima sia in regia che in proiezione, drag del personaggio porta dietro il quadratino senza glitch, eliminazione oggetto/personaggio con detach automatico, persistenza cross-restart OK (incluse ambientazioni M4 senza `oggettoId`).
+
+---

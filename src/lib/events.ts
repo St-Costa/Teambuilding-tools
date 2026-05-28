@@ -1,5 +1,5 @@
 import { emit as tauriEmit, listen as tauriListen, type UnlistenFn } from "@tauri-apps/api/event";
-import type { Personaggio } from "./ambientazione";
+import type { Oggetto, Personaggio } from "./ambientazione";
 
 export const EVT = {
   scenaUpdate: "scena:update",
@@ -11,6 +11,7 @@ export interface ScenaPayload {
   folderPath: string | null;
   mappaPath: string | null;
   personaggi: Personaggio[];
+  oggetti: Oggetto[];
   nome: string | null;
 }
 

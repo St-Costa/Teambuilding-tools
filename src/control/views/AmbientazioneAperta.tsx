@@ -6,6 +6,7 @@ import IndicatoreSalvataggio from "../components/IndicatoreSalvataggio";
 import PannelloPersonaggi from "./PannelloPersonaggi";
 import AreaMappa from "./AreaMappa";
 import WizardPersonaggio from "./WizardPersonaggio";
+import WizardOggetto from "./WizardOggetto";
 import styles from "./AmbientazioneAperta.module.css";
 
 export default function AmbientazioneAperta() {
@@ -14,9 +15,11 @@ export default function AmbientazioneAperta() {
   const saveStatus = useAmbientazioneStore((s) => s.saveStatus);
   const impostaMappa = useAmbientazioneStore((s) => s.impostaMappa);
   const aggiungiPersonaggio = useAmbientazioneStore((s) => s.aggiungiPersonaggio);
+  const aggiungiOggetto = useAmbientazioneStore((s) => s.aggiungiOggetto);
   const chiudi = useAmbientazioneStore((s) => s.chiudi);
 
-  const [wizardAperto, setWizardAperto] = useState(false);
+  const [wizardPersonaggioAperto, setWizardPersonaggioAperto] = useState(false);
+  const [wizardOggettoAperto, setWizardOggettoAperto] = useState(false);
   const [erroreMappa, setErroreMappa] = useState<string | null>(null);
   const [stageFullscreen, setStageFullscreen] = useState(false);
 
@@ -108,17 +111,31 @@ export default function AmbientazioneAperta() {
       )}
 
       <div className={styles.corpo}>
-        <PannelloPersonaggi onNuovoPersonaggio={() => setWizardAperto(true)} />
+        <PannelloPersonaggi
+          onNuovoPersonaggio={() => setWizardPersonaggioAperto(true)}
+          onNuovoOggetto={() => setWizardOggettoAperto(true)}
+        />
         <AreaMappa />
       </div>
 
-      {wizardAperto && (
+      {wizardPersonaggioAperto && (
         <WizardPersonaggio
           personaggiEsistenti={current.personaggi}
-          onAnnulla={() => setWizardAperto(false)}
+          onAnnulla={() => setWizardPersonaggioAperto(false)}
           onConferma={async (input) => {
             await aggiungiPersonaggio(input);
-            setWizardAperto(false);
+            setWizardPersonaggioAperto(false);
+          }}
+        />
+      )}
+
+      {wizardOggettoAperto && (
+        <WizardOggetto
+          oggettiEsistenti={current.oggetti}
+          onAnnulla={() => setWizardOggettoAperto(false)}
+          onConferma={async (input) => {
+            await aggiungiOggetto(input);
+            setWizardOggettoAperto(false);
           }}
         />
       )}

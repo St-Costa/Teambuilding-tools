@@ -8,6 +8,7 @@ const STATO_INIZIALE: ScenaPayload = {
   folderPath: null,
   mappaPath: null,
   personaggi: [],
+  oggetti: [],
   nome: null,
 };
 
@@ -46,6 +47,7 @@ export default function App() {
       folderPath={stato.folderPath}
       mappaPath={stato.mappaPath}
       personaggi={stato.personaggi}
+      oggetti={stato.oggetti}
       nome={stato.nome}
     />
   );

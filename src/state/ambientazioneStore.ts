@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Ambientazione, Crop, Personaggio, Posizione } from "../lib/ambientazione";
+import type { Ambientazione, Crop, Oggetto, Personaggio, Posizione } from "../lib/ambientazione";
 import {
   apriAmbientazione,
   copiaImmagineInCartella,
@@ -37,6 +37,15 @@ interface AmbientazioneState {
   modificaCropPersonaggio: (id: string, crop: Crop) => void;
   eliminaPersonaggio: (id: string) => void;
   selezionaPersonaggio: (id: string | null) => void;
+  aggiungiOggetto: (input: {
+    sourceImgPath: string;
+    nome: string;
+    crop: Crop;
+  }) => Promise<string>;
+  rinominaOggetto: (id: string, nome: string) => void;
+  modificaCropOggetto: (id: string, crop: Crop) => void;
+  eliminaOggetto: (id: string) => void;
+  assegnaOggettoAPersonaggio: (personaggioId: string, oggettoId: string | null) => void;
   markSaving: () => void;
   markSaved: (a: Ambientazione) => void;
   markError: (msg: string) => void;
@@ -66,6 +75,7 @@ function payloadCorrente(state: AmbientazioneState): ScenaPayload {
     folderPath: state.folderPath,
     mappaPath: state.current?.mappaPath ?? null,
     personaggi: state.current?.personaggi ?? [],
+    oggetti: state.current?.oggetti ?? [],
     nome: state.current?.nome ?? null,
   };
 }
@@ -161,6 +171,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       imgPath: relativo,
       crop,
       posizione: { x: 0.1, y: 0.1 },
+      oggettoId: null,
     };
     get().modifica((draft) => {
       draft.personaggi.push(personaggio);
@@ -207,6 +218,63 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
 
   selezionaPersonaggio(id) {
     set({ selezionatoId: id });
+  },
+
+  async aggiungiOggetto({ sourceImgPath, nome, crop }) {
+    const { folderPath } = get();
+    if (!folderPath) throw new Error("Nessuna ambientazione aperta");
+    const id = nuovoId();
+    const relativo = await copiaImmagineInCartella(folderPath, sourceImgPath, "oggetti", id);
+    const oggetto: Oggetto = {
+      id,
+      nome: nome.trim(),
+      imgPath: relativo,
+      crop,
+    };
+    get().modifica((draft) => {
+      draft.oggetti.push(oggetto);
+    });
+    return id;
+  },
+
+  rinominaOggetto(id, nome) {
+    get().modifica((draft) => {
+      const o = draft.oggetti.find((x) => x.id === id);
+      if (o) o.nome = nome.trim();
+    });
+  },
+
+  modificaCropOggetto(id, crop) {
+    get().modifica((draft) => {
+      const o = draft.oggetti.find((x) => x.id === id);
+      if (o) o.crop = crop;
+    });
+  },
+
+  eliminaOggetto(id) {
+    get().modifica((draft) => {
+      draft.oggetti = draft.oggetti.filter((x) => x.id !== id);
+      // Detach automatico dai personaggi che lo avevano.
+      for (const p of draft.personaggi) {
+        if (p.oggettoId === id) p.oggettoId = null;
+      }
+    });
+  },
+
+  assegnaOggettoAPersonaggio(personaggioId, oggettoId) {
+    get().modifica((draft) => {
+      // Vincolo 1-a-1: l'oggetto può essere su un solo personaggio.
+      // Se viene riassegnato, libera l'eventuale precedente proprietario.
+      if (oggettoId !== null) {
+        for (const p of draft.personaggi) {
+          if (p.id !== personaggioId && p.oggettoId === oggettoId) {
+            p.oggettoId = null;
+          }
+        }
+      }
+      const target = draft.personaggi.find((x) => x.id === personaggioId);
+      if (target) target.oggettoId = oggettoId;
+    });
   },
 
   markSaving() {

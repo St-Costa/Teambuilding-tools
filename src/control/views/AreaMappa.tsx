@@ -3,9 +3,19 @@ import { useAmbientazioneStore } from "../../state/ambientazioneStore";
 import { risolviAsset } from "../../lib/storage";
 import { clamp01 } from "../../lib/scena";
 import Cerchietto from "../../components/Cerchietto";
+import Quadratino from "../../components/Quadratino";
+import { oggettoDi } from "../../lib/ambientazione";
 import styles from "./AreaMappa.module.css";
 
-const DIM_CERCHIETTO = 68;
+const DIM_CERCHIETTO = 102;
+const DIM_QUADRATINO = Math.round(DIM_CERCHIETTO * 0.8);
+const CENTRO_CERCHIETTO = DIM_CERCHIETTO / 2;
+// Il quadratino sta in basso-a-destra del cerchietto, con leggera
+// sovrapposizione: l'angolo top-left del quadratino entra nel cerchietto per
+// il 10% del suo raggio (= bordo del quadratino a 0.9 × raggio dal centro
+// del cerchietto, lungo la diagonale).
+const OFFSET_DIAG =
+  0.9 * CENTRO_CERCHIETTO * Math.SQRT1_2 + DIM_QUADRATINO / 2;
 
 export default function AreaMappa() {
   const current = useAmbientazioneStore((s) => s.current);
@@ -115,31 +125,50 @@ export default function AreaMappa() {
             draggable={false}
           />
           {imgDim &&
-            current.personaggi.map((p) => (
-              <div
-                key={p.id}
-                className={styles.cerchiettoWrap}
-                style={{
-                  left: `${p.posizione.x * 100}%`,
-                  top: `${p.posizione.y * 100}%`,
-                }}
-                onPointerDown={(e) => handlePointerDown(e, p.id)}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerUp}
-                onClick={(e) => e.stopPropagation()}
-                title={p.nome}
-              >
-                <Cerchietto
-                  src={risolviAsset(folderPath, p.imgPath)}
-                  colore={p.colore}
-                  crop={p.crop}
-                  dimensione={DIM_CERCHIETTO}
-                  selezionato={selezionatoId === p.id}
-                  alt={p.nome}
-                />
-              </div>
-            ))}
+            current.personaggi.map((p) => {
+              const oggetto = oggettoDi(p, current!.oggetti);
+              return (
+                <div
+                  key={p.id}
+                  className={styles.cerchiettoWrap}
+                  style={{
+                    left: `${p.posizione.x * 100}%`,
+                    top: `${p.posizione.y * 100}%`,
+                  }}
+                  onPointerDown={(e) => handlePointerDown(e, p.id)}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerCancel={handlePointerUp}
+                  onClick={(e) => e.stopPropagation()}
+                  title={oggetto ? `${p.nome} (${oggetto.nome})` : p.nome}
+                >
+                  <Cerchietto
+                    src={risolviAsset(folderPath, p.imgPath)}
+                    colore={p.colore}
+                    crop={p.crop}
+                    dimensione={DIM_CERCHIETTO}
+                    selezionato={selezionatoId === p.id}
+                    alt={p.nome}
+                  />
+                  {oggetto && (
+                    <div
+                      className={styles.quadratinoWrap}
+                      style={{
+                        left: `${CENTRO_CERCHIETTO + OFFSET_DIAG - 10}px`,
+                        top: `${CENTRO_CERCHIETTO + OFFSET_DIAG - 10}px`,
+                      }}
+                    >
+                      <Quadratino
+                        src={risolviAsset(folderPath, oggetto.imgPath)}
+                        crop={oggetto.crop}
+                        dimensione={DIM_QUADRATINO}
+                        alt={oggetto.nome}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
         </div>
       </div>
     </main>
