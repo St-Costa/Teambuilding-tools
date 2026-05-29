@@ -8,8 +8,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
+  gap: 1.2rem;
+  padding: 1.4rem 1.6rem;
   border-bottom: 1px solid rgba(127, 127, 127, 0.25);
   flex-shrink: 0;
 }
@@ -20,18 +20,14 @@
 
 .nome {
   margin: 0;
-  font-size: 1.25rem;
-}
-
-.path {
-  margin: 0.15rem 0 0;
-  font-size: 0.75rem;
-  opacity: 0.6;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 40ch;
+  max-width: 32ch;
 }
 
 .toolbarDestra {
@@ -43,15 +39,41 @@
 
 .btnAzione,
 .btnChiudi {
-  padding: 0.4rem 0.85rem;
-  border-radius: 5px;
+  padding: 0.7rem 1.3rem;
+  border-radius: 7px;
   border: 1px solid currentColor;
   background: transparent;
   color: inherit;
   cursor: pointer;
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   list-style: none;
+}
+
+.btnIcona {
+  width: 4rem;
+  height: 4rem;
+  padding: 0;
+  border-radius: 9px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.btnIcona:hover:not(:disabled) {
+  background: rgba(127, 127, 127, 0.12);
+}
+
+.btnIcona:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .btnAzione::-webkit-details-marker {
@@ -135,4 +157,76 @@
   flex: 1;
   display: flex;
   overflow: hidden;
+}
+
+.confermaBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+.confermaModale {
+  background: #fff;
+  color: #1d1d1f;
+  border-radius: 12px;
+  padding: 1.5rem 1.7rem;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  .confermaModale {
+    background: #2c2c2e;
+    color: #f5f5f7;
+  }
+}
+
+.confermaModale h2 {
+  margin: 0 0 0.8rem;
+  font-size: 1.3rem;
+}
+
+.confermaModale p {
+  margin: 0 0 1.2rem;
+  line-height: 1.45;
+  opacity: 0.85;
+}
+
+.confermaBottoni {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.7rem;
+}
+
+.confermaPrimario, .confermaSecondario {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  border: 1px solid currentColor;
+  font: inherit;
+  cursor: pointer;
+}
+
+.confermaPrimario {
+  background: #c62828;
+  color: #fff;
+  border-color: #c62828;
+}
+
+.confermaPrimario:hover {
+  background: #a72424;
+}
+
+.confermaSecondario {
+  background: transparent;
+  color: inherit;
+}
+
+.confermaSecondario:hover {
+  background: rgba(127, 127, 127, 0.12);
 }

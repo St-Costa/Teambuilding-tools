@@ -4,7 +4,7 @@
   background: #000;
   color: #fff;
   z-index: 1000;
-  padding: 3rem 4rem;
+  padding: 1.5vh 3vw;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -13,25 +13,18 @@
 }
 
 .titolo {
-  margin: 0 0 2rem;
+  margin: 0 0 1.5vh;
   text-align: center;
-  font-size: clamp(3rem, 6vw, 5.5rem);
+  font-size: clamp(2rem, 5vh, 4rem);
   font-weight: 800;
   letter-spacing: 0.02em;
+  line-height: 1;
 }
 
 .tabella {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
-  overflow-y: auto;
-}
-
-.podioWrap {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  color: #fff;
+  gap: 0.6vh;
 }
 
 .riga {
@@ -39,10 +32,10 @@
   grid-template-columns: minmax(0, 1.6fr) repeat(3, 1fr) 0.7fr;
   align-items: center;
   gap: 1rem;
-  padding: 0.8rem 1.2rem;
+  padding: 0.7vh 1.2rem;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  border-radius: 12px;
 }
 
 .rigaHeader {
@@ -50,24 +43,24 @@
   border-color: transparent;
   border-bottom: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 0;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.4vh;
   padding-top: 0;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-weight: 700;
   opacity: 0.8;
-  font-size: clamp(0.9rem, 1.4vw, 1.4rem);
+  font-size: clamp(0.75rem, 1.6vh, 1.2rem);
 }
 
 .cellaPersonaggio {
   display: flex;
   align-items: center;
-  gap: 1.2rem;
+  gap: 1rem;
   min-width: 0;
 }
 
 .nome {
-  font-size: clamp(1.2rem, 2.4vw, 2.4rem);
+  font-size: clamp(1rem, 2.4vh, 2rem);
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
@@ -76,7 +69,7 @@
 
 .cellaObiettivo {
   text-align: center;
-  font-size: clamp(0.9rem, 1.4vw, 1.4rem);
+  font-size: clamp(0.85rem, 1.6vh, 1.3rem);
   font-weight: 700;
   word-break: break-word;
 }
@@ -87,9 +80,9 @@
 
 .cellaTick {
   text-align: center;
-  font-size: clamp(2rem, 4vw, 4rem);
+  font-size: clamp(1.4rem, 3.6vh, 3rem);
   font-weight: 800;
-  height: clamp(4rem, 7vw, 6rem);
+  height: clamp(2.6rem, 5.5vh, 4.5rem);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -120,18 +113,6 @@
   color: #ff8a80;
 }
 
-.badgeMalus {
-  display: inline-block;
-  font-size: 0.7em;
-  padding: 0.05em 0.5em;
-  border-radius: 999px;
-  border: 1.5px solid currentColor;
-  margin-left: 0.4em;
-  vertical-align: middle;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-}
-
 .totaleNegativo {
   color: #ff6b6b;
 }
@@ -148,12 +129,24 @@
 }
 
 .totaleNumero {
-  font-size: clamp(2rem, 4vw, 4rem);
+  font-size: clamp(1.4rem, 3.6vh, 3rem);
   font-weight: 900;
 }
 
 .totaleSlash {
   opacity: 0.45;
-  font-size: clamp(0.9rem, 1.4vw, 1.4rem);
+  font-size: clamp(0.85rem, 1.6vh, 1.3rem);
   margin-left: 0.3rem;
+}
+
+.podioWrap {
+  margin-top: 1.5vh;
+  padding-top: 1.5vh;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

@@ -118,6 +118,7 @@ export default function Scena({
                     src={risolviAsset(folderPath, oggetto.imgPath)}
                     crop={oggetto.crop}
                     dimensione={DIM_QUADRATINO}
+                    coloreBordo={p.colore}
                     alt={oggetto.nome}
                   />
                 </div>

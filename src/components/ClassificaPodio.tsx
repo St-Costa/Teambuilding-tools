@@ -1,6 +1,7 @@
 import type { RigaLeaderboardSnap } from "../lib/events";
 import { risolviAsset } from "../lib/storage";
 import Cerchietto from "./Cerchietto";
+import { IconaCorona } from "./Icone";
 import styles from "./ClassificaPodio.module.css";
 
 interface Props {
@@ -20,7 +21,7 @@ export default function ClassificaPodio({ righe, folderPath, dimensioneCerchiett
   const dim = dimensioneCerchietto;
   const fontNome = Math.round(dim * 0.2);
   const fontPunteggio = Math.round(dim * 0.42);
-  const fontCorona = Math.round(dim * 0.7);
+  const fontCorona = Math.round(dim * 0.55);
 
   return (
     <div className={styles.root}>
@@ -32,20 +33,23 @@ export default function ClassificaPodio({ righe, folderPath, dimensioneCerchiett
             className={`${styles.entry} ${vincitore ? styles.entryVincitore : ""}`}
           >
             <div
-              className={styles.corona}
-              style={{ fontSize: fontCorona, visibility: vincitore ? "visible" : "hidden" }}
-              aria-hidden="true"
+              className={styles.cerchiettoWrap}
+              style={{ width: dim, height: dim }}
             >
-              👑
-            </div>
-            <div className={`${styles.alone} ${vincitore ? styles.aloneVincitore : ""}`}>
-              <Cerchietto
-                src={risolviAsset(folderPath, r.imgPath)}
-                colore={r.colore}
-                crop={r.crop}
-                dimensione={dim}
-                alt={r.nome}
-              />
+              {vincitore && (
+                <div className={styles.corona} style={{ color: "#ffcc33" }} aria-hidden="true">
+                  <IconaCorona dimensione={fontCorona} />
+                </div>
+              )}
+              <div className={`${styles.alone} ${vincitore ? styles.aloneVincitore : ""}`}>
+                <Cerchietto
+                  src={risolviAsset(folderPath, r.imgPath)}
+                  colore={r.colore}
+                  crop={r.crop}
+                  dimensione={dim}
+                  alt={r.nome}
+                />
+              </div>
             </div>
             <div className={styles.nome} style={{ fontSize: fontNome }}>
               {r.nome}

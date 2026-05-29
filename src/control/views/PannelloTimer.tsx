@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { formatMmSs, remainingMs, useTimerStore } from "../../state/timerStore";
+import { remainingMs, useTimerStore } from "../../state/timerStore";
 import styles from "./PannelloTimer.module.css";
 
 const TICK_MS = 200;
@@ -27,38 +27,59 @@ function ctxOrNull(): AudioContext | null {
   }
 }
 
-function playBeepLungo() {
+// Campanello (1 minuto residuo): tono di campana con armonica e decay lungo.
+function playCampanello() {
   const ctx = ctxOrNull();
   if (!ctx) return;
   const now = ctx.currentTime;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(620, now);
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.3, now + 0.01);
-  gain.gain.setValueAtTime(0.3, now + 0.48);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
-  osc.connect(gain).connect(ctx.destination);
-  osc.start(now);
-  osc.stop(now + 0.6);
+  const durata = 1.8;
+  // fondamentale
+  const osc1 = ctx.createOscillator();
+  const g1 = ctx.createGain();
+  osc1.type = "sine";
+  osc1.frequency.setValueAtTime(880, now);
+  g1.gain.setValueAtTime(0, now);
+  g1.gain.linearRampToValueAtTime(0.3, now + 0.005);
+  g1.gain.exponentialRampToValueAtTime(0.001, now + durata);
+  osc1.connect(g1).connect(ctx.destination);
+  osc1.start(now);
+  osc1.stop(now + durata);
+  // armonica metallica (ratio campana ~2.756)
+  const osc2 = ctx.createOscillator();
+  const g2 = ctx.createGain();
+  osc2.type = "sine";
+  osc2.frequency.setValueAtTime(880 * 2.756, now);
+  g2.gain.setValueAtTime(0, now);
+  g2.gain.linearRampToValueAtTime(0.13, now + 0.005);
+  g2.gain.exponentialRampToValueAtTime(0.001, now + durata * 0.55);
+  osc2.connect(g2).connect(ctx.destination);
+  osc2.start(now);
+  osc2.stop(now + durata);
 }
 
-function playBeepBreve() {
+// Sveglia (allo scadere): 4 beep rapidi "ti ti ti ti".
+const SVEGLIA_BEEP = 4;
+const SVEGLIA_GAP = 0.14; // secondi tra l'inizio di ogni beep
+const SVEGLIA_DURATA_TOTALE_MS = (SVEGLIA_GAP * SVEGLIA_BEEP + 1) * 1000; // + 1s pausa
+
+function playSveglia() {
   const ctx = ctxOrNull();
   if (!ctx) return;
   const now = ctx.currentTime;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = "square";
-  osc.frequency.setValueAtTime(820, now);
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.32, now + 0.008);
-  gain.gain.setValueAtTime(0.32, now + 0.16);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-  osc.connect(gain).connect(ctx.destination);
-  osc.start(now);
-  osc.stop(now + 0.22);
+  for (let i = 0; i < SVEGLIA_BEEP; i++) {
+    const t0 = now + i * SVEGLIA_GAP;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = "square";
+    osc.frequency.setValueAtTime(1100, t0);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.32, t0 + 0.005);
+    g.gain.setValueAtTime(0.32, t0 + 0.07);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.1);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.12);
+  }
 }
 
 export default function PannelloTimer() {
@@ -90,7 +111,7 @@ export default function PannelloTimer() {
     if (stato === "running" && ms <= 0) markEnded();
   }, [ms, stato, markEnded]);
 
-  // Beep lungo all'attraversamento del minuto finale, una sola volta per ciclo.
+  // Campanello al primo passaggio sotto il minuto residuo (una volta per ciclo).
   const oneMinPlayedRef = useRef(false);
   useEffect(() => {
     if (stato !== "running") {
@@ -99,15 +120,15 @@ export default function PannelloTimer() {
     }
     if (!oneMinPlayedRef.current && ms <= 60_000 && ms > 0) {
       oneMinPlayedRef.current = true;
-      playBeepLungo();
+      playCampanello();
     }
   }, [stato, ms]);
 
-  // Allo scadere: beep breve subito + ogni 2 secondi finché stato resta ended.
+  // Allo scadere: sveglia "ti ti ti ti" subito + ripete fino al reset.
   useEffect(() => {
     if (stato !== "ended") return;
-    playBeepBreve();
-    const id = setInterval(playBeepBreve, 2000);
+    playSveglia();
+    const id = setInterval(playSveglia, SVEGLIA_DURATA_TOTALE_MS);
     return () => clearInterval(id);
   }, [stato]);
 
@@ -124,7 +145,9 @@ export default function PannelloTimer() {
     setDuration(minIniz * 60 + sec);
   }
 
-  const labelToggle =
+  const iconaToggle =
+    stato === "running" ? "❚❚" : "▶";
+  const titleToggle =
     stato === "running"
       ? "Pausa"
       : stato === "paused"
@@ -135,27 +158,24 @@ export default function PannelloTimer() {
 
   return (
     <div className={styles.root}>
-      <div
-        className={`${styles.display} ${stato === "ended" ? styles.displayScaduto : ""} ${stato === "paused" ? styles.displayPausa : ""}`}
-        title={`Timer (${stato})`}
-      >
-        {formatMmSs(ms)}
-      </div>
       <button
         type="button"
         className={`${styles.btnToggle} ${stato === "running" ? styles.btnPausa : styles.btnAvvia}`}
         onClick={onToggle}
         disabled={stato === "idle" && durationSec <= 0}
+        title={titleToggle}
+        aria-label={titleToggle}
       >
-        {labelToggle}
+        {iconaToggle}
       </button>
       <button
         type="button"
         className={styles.btnReset}
         onClick={reset}
-        title="Riporta il timer alla durata configurata"
+        title="Reset (riporta alla durata configurata)"
+        aria-label="Reset"
       >
-        Reset
+        ■
       </button>
       <div
         className={styles.gruppoDurata}

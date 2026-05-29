@@ -1,0 +1,227 @@
+.root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  border-radius: 10px;
+  background: rgba(127, 127, 127, 0.05);
+}
+
+.etichetta {
+  font-weight: 700;
+  font-size: 0.95rem;
+  opacity: 0.75;
+  margin-right: 0.2rem;
+  white-space: nowrap;
+}
+
+.slotWrap {
+  position: relative;
+}
+
+.slot {
+  width: 3rem;
+  height: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 7px;
+  border: 1px solid rgba(127, 127, 127, 0.4);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.slot:hover:not(:disabled) {
+  background: rgba(127, 127, 127, 0.14);
+}
+
+.slot:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.slotPieno {
+  border-color: rgba(80, 200, 120, 0.6);
+  background: rgba(80, 200, 120, 0.1);
+}
+
+.slotVuoto {
+  border-style: dashed;
+}
+
+.emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  width: 360px;
+  background: #fff;
+  color: #1d1d1f;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+  padding: 0.5rem 0.7rem 0.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .popover {
+    background: #3a3a3c;
+    color: #f5f5f7;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.popoverHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+.btnChiudi {
+  width: 1.6rem;
+  height: 1.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1.1rem;
+  border-radius: 5px;
+}
+
+.btnChiudi:hover {
+  background: rgba(127, 127, 127, 0.18);
+}
+
+.section {
+  margin-top: 0.5rem;
+}
+
+.sectionLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+  margin-bottom: 0.3rem;
+  font-weight: 700;
+}
+
+.audioRiga {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.audioPath {
+  flex: 1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.75;
+}
+
+.btnPrimario, .btnSecondario, .btnRimuovi, .btnAnteprima {
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btnPrimario {
+  background: #1d1d1f;
+  color: #fff;
+  border-color: #1d1d1f;
+}
+
+@media (prefers-color-scheme: dark) {
+  .btnPrimario {
+    background: #f5f5f7;
+    color: #1d1d1f;
+    border-color: #f5f5f7;
+  }
+}
+
+.btnRimuovi {
+  color: #c62828;
+}
+
+.btnRimuovi:hover {
+  background: rgba(220, 50, 50, 0.12);
+}
+
+.btnSecondario:hover, .btnAnteprima:hover {
+  background: rgba(127, 127, 127, 0.12);
+}
+
+.anteprima {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.btnAnteprima {
+  background: rgba(80, 130, 255, 0.12);
+  border-color: rgba(80, 130, 255, 0.55);
+  color: #2a4dbb;
+}
+
+.errore {
+  margin-top: 0.5rem;
+  background: rgba(220, 50, 50, 0.12);
+  border: 1px solid rgba(220, 50, 50, 0.4);
+  color: #a72424;
+  padding: 0.4rem 0.6rem;
+  border-radius: 5px;
+  font-size: 0.85rem;
+}
+
+.toastErrore {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #b3261e;
+  color: #fff;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.toastChiudi {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 1.1rem;
+  cursor: pointer;
+  line-height: 1;
+}

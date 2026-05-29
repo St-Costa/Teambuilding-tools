@@ -19,6 +19,8 @@ export default function SezioneOggetti({ onNuovoOggetto }: Props) {
   const rinomina = useAmbientazioneStore((s) => s.rinominaOggetto);
   const modificaCrop = useAmbientazioneStore((s) => s.modificaCropOggetto);
   const elimina = useAmbientazioneStore((s) => s.eliminaOggetto);
+  const modalita = useAmbientazioneStore((s) => s.modalita);
+  const inEdit = modalita === "edit";
 
   const [menuApertoPer, setMenuApertoPer] = useState<string | null>(null);
   const [editing, setEditing] = useState<Oggetto | null>(null);
@@ -55,9 +57,11 @@ export default function SezioneOggetti({ onNuovoOggetto }: Props) {
     <section className={styles.sezione}>
       <header className={styles.header}>
         <h2>Oggetti</h2>
-        <button className={styles.btnNuovo} onClick={onNuovoOggetto}>
-          + Nuovo
-        </button>
+        {inEdit && (
+          <button className={styles.btnNuovo} onClick={onNuovoOggetto}>
+            + Nuovo
+          </button>
+        )}
       </header>
 
       {current.oggetti.length === 0 ? (
@@ -82,15 +86,17 @@ export default function SezioneOggetti({ onNuovoOggetto }: Props) {
                     </span>
                   </div>
                 </div>
-                <button
-                  className={styles.voceMenu}
-                  onClick={() => setMenuApertoPer(menuApertoPer === o.id ? null : o.id)}
-                  aria-label="Altre azioni"
-                  title="Altre azioni"
-                >
-                  ⋯
-                </button>
-                {menuApertoPer === o.id && (
+                {inEdit && (
+                  <button
+                    className={styles.voceMenu}
+                    onClick={() => setMenuApertoPer(menuApertoPer === o.id ? null : o.id)}
+                    aria-label="Altre azioni"
+                    title="Altre azioni"
+                  >
+                    ⋯
+                  </button>
+                )}
+                {inEdit && menuApertoPer === o.id && (
                   <div className={styles.menu} onClick={(e) => e.stopPropagation()}>
                     <button onClick={() => handleRinomina(o.id, o.nome)}>Rinomina…</button>
                     <button onClick={() => { setMenuApertoPer(null); setEditing(o); }}>

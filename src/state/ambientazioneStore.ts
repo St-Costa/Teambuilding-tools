@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { Ambientazione, Crop, Oggetto, Personaggio, Posizione } from "../lib/ambientazione";
 import {
   apriAmbientazione,
+  copiaAudioInCartella,
   copiaImmagineInCartella,
   creaAmbientazione,
   salvaAmbientazione,
@@ -11,6 +12,7 @@ import { EVT, emit, type ScenaPayload } from "../lib/events";
 import { clamp01, nuovoId } from "../lib/scena";
 
 export type SaveStatus = "idle" | "dirty" | "saving" | "saved" | "error";
+export type ModalitaAmbientazione = "play" | "edit";
 
 interface AmbientazioneState {
   current: Ambientazione | null;
@@ -19,7 +21,8 @@ interface AmbientazioneState {
   lastSavedAt: number | null;
   lastError: string | null;
   selezionatoId: string | null;
-  apri: (folderPath: string) => Promise<void>;
+  modalita: ModalitaAmbientazione;
+  apri: (folderPath: string, modalita?: ModalitaAmbientazione) => Promise<void>;
   creaNuova: (folderParent: string, nome: string) => Promise<void>;
   chiudi: () => void;
   modifica: (fn: (draft: Ambientazione) => void) => void;
@@ -41,6 +44,9 @@ interface AmbientazioneState {
   salvaTuttePosizioniIniziali: () => void;
   ripristinaTuttePosizioniIniziali: () => void;
   setObiettivo: (indice: 0 | 1 | 2, testo: string) => void;
+  setSoundboardEmoji: (indice: number, emoji: string) => void;
+  setSoundboardAudio: (indice: number, sourceAbsPath: string | null) => Promise<void>;
+  setSottofondo: (sourceAbsPath: string | null) => Promise<void>;
   eliminaPersonaggio: (id: string) => void;
   selezionaPersonaggio: (id: string | null) => void;
   aggiungiOggetto: (input: {
@@ -129,17 +135,20 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
   lastSavedAt: null,
   lastError: null,
   selezionatoId: null,
+  modalita: "edit",
 
-  async apri(folderPath) {
+  async apri(folderPath, modalita = "edit") {
     const a = await apriAmbientazione(folderPath);
     // All'apertura, ogni personaggio con una posizione iniziale salvata viene
-    // riportato lì. Modifica in-memory: saveStatus resta "saved" (niente
-    // autosave forzato), così le posizioni iniziali non vengono riscritte sul
-    // disco a meno che l'utente non sposti davvero qualcuno.
+    // riportato lì, e l'oggetto attaccato torna a quello iniziale (anche se
+    // null = nessuno). Modifica in-memory: saveStatus resta "saved" (niente
+    // autosave forzato), così lo stato iniziale non viene riscritto sul disco
+    // a meno che l'utente non modifichi davvero qualcosa.
     for (const p of a.personaggi) {
       if (p.posizioneIniziale) {
         p.posizione = { x: p.posizioneIniziale.x, y: p.posizioneIniziale.y };
       }
+      p.oggettoId = p.oggettoInizialeId;
     }
     set({
       current: a,
@@ -148,6 +157,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       lastSavedAt: Date.now(),
       lastError: null,
       selezionatoId: null,
+      modalita,
     });
     await aggiungiRecente(folderPath, a.nome);
     notificaProiezione(get());
@@ -164,6 +174,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       lastSavedAt: Date.now(),
       lastError: null,
       selezionatoId: null,
+      modalita: "edit",
     });
     await aggiungiRecente(folderPath, nome);
     notificaProiezione(get());
@@ -177,6 +188,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       lastSavedAt: null,
       lastError: null,
       selezionatoId: null,
+      modalita: "edit",
     });
     notificaProiezione(get());
   },
@@ -220,6 +232,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       posizione: { x: 0.1, y: 0.1 },
       posizioneIniziale: null,
       oggettoId: null,
+      oggettoInizialeId: null,
     };
     get().modifica((draft) => {
       draft.personaggi.push(personaggio);
@@ -284,6 +297,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
     get().modifica((draft) => {
       for (const p of draft.personaggi) {
         p.posizioneIniziale = { x: p.posizione.x, y: p.posizione.y };
+        p.oggettoInizialeId = p.oggettoId;
       }
     });
   },
@@ -294,6 +308,8 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
         if (p.posizioneIniziale) {
           p.posizione = { x: p.posizioneIniziale.x, y: p.posizioneIniziale.y };
         }
+        // Ripristina anche l'oggetto iniziale (può essere null = nessun oggetto).
+        p.oggettoId = p.oggettoInizialeId;
       }
     });
   },
@@ -307,6 +323,45 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       ];
       nuovi[indice] = testo;
       draft.obiettivi = nuovi;
+    });
+  },
+
+  setSoundboardEmoji(indice, emoji) {
+    get().modifica((draft) => {
+      if (indice < 0 || indice >= draft.soundboard.length) return;
+      draft.soundboard[indice].emoji = emoji;
+    });
+  },
+
+  async setSoundboardAudio(indice, sourceAbsPath) {
+    const { folderPath, current } = get();
+    if (!folderPath || !current) throw new Error("Nessuna ambientazione aperta");
+    if (indice < 0 || indice >= current.soundboard.length) return;
+    if (sourceAbsPath === null) {
+      get().modifica((draft) => {
+        draft.soundboard[indice].audioPath = null;
+      });
+      return;
+    }
+    const slotId = current.soundboard[indice].id;
+    const relativo = await copiaAudioInCartella(folderPath, sourceAbsPath, "audio", slotId);
+    get().modifica((draft) => {
+      draft.soundboard[indice].audioPath = relativo;
+    });
+  },
+
+  async setSottofondo(sourceAbsPath) {
+    const { folderPath, current } = get();
+    if (!folderPath || !current) throw new Error("Nessuna ambientazione aperta");
+    if (sourceAbsPath === null) {
+      get().modifica((draft) => {
+        draft.sottofondoPath = null;
+      });
+      return;
+    }
+    const relativo = await copiaAudioInCartella(folderPath, sourceAbsPath, "audio", "sottofondo");
+    get().modifica((draft) => {
+      draft.sottofondoPath = relativo;
     });
   },
 

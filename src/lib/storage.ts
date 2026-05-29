@@ -3,6 +3,7 @@ import {
   exists,
   mkdir,
   readTextFile,
+  remove,
   rename,
   writeTextFile,
 } from "@tauri-apps/plugin-fs";
@@ -136,4 +137,32 @@ export async function copiaImmagineInCartella(
 
 export function risolviAsset(folderPath: string, relativePath: string): string {
   return convertFileSrc(joinPath(folderPath, relativePath));
+}
+
+const ESTENSIONI_AUDIO = new Set(["mp3", "wav", "ogg", "m4a", "aac", "flac"]);
+
+export async function copiaAudioInCartella(
+  folderPath: string,
+  sourceAbsPath: string,
+  subdir: "audio",
+  baseId: string,
+): Promise<string> {
+  const ext = estensioneDi(sourceAbsPath);
+  const safeExt = ESTENSIONI_AUDIO.has(ext) ? ext : "mp3";
+  const relativo = `${subdir}/${baseId}.${safeExt}`;
+  const dest = joinPath(folderPath, relativo);
+
+  // assicura che la sottocartella esista
+  await wrapIO("creazione cartella audio", () =>
+    mkdir(joinPath(folderPath, subdir), { recursive: true }),
+  );
+  await wrapIO("copia audio", () => copyFile(sourceAbsPath, dest));
+  return relativo;
+}
+
+export async function eliminaAmbientazione(folderPath: string): Promise<void> {
+  await autorizzaCartella(folderPath);
+  await wrapIO("eliminazione cartella ambientazione", () =>
+    remove(folderPath, { recursive: true }),
+  );
 }

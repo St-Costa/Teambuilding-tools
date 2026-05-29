@@ -25,6 +25,8 @@ export default function SezionePersonaggi({ onNuovoPersonaggio }: Props) {
   const modificaCrop = useAmbientazioneStore((s) => s.modificaCropPersonaggio);
   const elimina = useAmbientazioneStore((s) => s.eliminaPersonaggio);
   const assegnaOggetto = useAmbientazioneStore((s) => s.assegnaOggettoAPersonaggio);
+  const modalita = useAmbientazioneStore((s) => s.modalita);
+  const inEdit = modalita === "edit";
 
   const [menuApertoPer, setMenuApertoPer] = useState<string | null>(null);
   const [editing, setEditing] = useState<Personaggio | null>(null);
@@ -66,9 +68,11 @@ export default function SezionePersonaggi({ onNuovoPersonaggio }: Props) {
     <section className={styles.sezione}>
       <header className={styles.header}>
         <h2>Personaggi</h2>
-        <button className={styles.btnNuovo} onClick={onNuovoPersonaggio}>
-          + Nuovo
-        </button>
+        {inEdit && (
+          <button className={styles.btnNuovo} onClick={onNuovoPersonaggio}>
+            + Nuovo
+          </button>
+        )}
       </header>
 
       {current.personaggi.length === 0 ? (
@@ -113,26 +117,30 @@ export default function SezionePersonaggi({ onNuovoPersonaggio }: Props) {
                 </button>
                 {menuApertoPer === p.id && (
                   <div className={styles.menu} onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => handleRinomina(p.id, p.nome)}>Rinomina…</button>
-                    <button onClick={() => { setMenuApertoPer(null); setEditing(p); }}>
-                      Modifica ritaglio…
-                    </button>
-                    <div className={styles.menuLabel}>Cambia colore</div>
-                    <div className={styles.menuPalette}>
-                      {PALETTE.map((c) => {
-                        const usato = coloriUsati.has(c.hex.toUpperCase()) && c.hex !== p.colore;
-                        return (
-                          <button
-                            key={c.hex}
-                            className={`${styles.menuColore} ${c.hex === p.colore ? styles.menuColoreScelto : ""}`}
-                            style={{ background: c.hex }}
-                            onClick={() => !usato && handleCambiaColore(p.id, c.hex)}
-                            disabled={usato}
-                            title={usato ? `${c.nome} (già usato)` : c.nome}
-                          />
-                        );
-                      })}
-                    </div>
+                    {inEdit && (
+                      <>
+                        <button onClick={() => handleRinomina(p.id, p.nome)}>Rinomina…</button>
+                        <button onClick={() => { setMenuApertoPer(null); setEditing(p); }}>
+                          Modifica ritaglio…
+                        </button>
+                        <div className={styles.menuLabel}>Cambia colore</div>
+                        <div className={styles.menuPalette}>
+                          {PALETTE.map((c) => {
+                            const usato = coloriUsati.has(c.hex.toUpperCase()) && c.hex !== p.colore;
+                            return (
+                              <button
+                                key={c.hex}
+                                className={`${styles.menuColore} ${c.hex === p.colore ? styles.menuColoreScelto : ""}`}
+                                style={{ background: c.hex }}
+                                onClick={() => !usato && handleCambiaColore(p.id, c.hex)}
+                                disabled={usato}
+                                title={usato ? `${c.nome} (già usato)` : c.nome}
+                              />
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
                     <div className={styles.menuLabel}>Oggetto</div>
                     {current.oggetti.length === 0 ? (
                       <p className={styles.menuVuoto}>
@@ -179,9 +187,11 @@ export default function SezionePersonaggi({ onNuovoPersonaggio }: Props) {
                         )}
                       </div>
                     )}
-                    <button className={styles.menuElimina} onClick={() => handleElimina(p.id, p.nome)}>
-                      Elimina personaggio
-                    </button>
+                    {inEdit && (
+                      <button className={styles.menuElimina} onClick={() => handleElimina(p.id, p.nome)}>
+                        Elimina personaggio
+                      </button>
+                    )}
                   </div>
                 )}
               </li>

@@ -1,10 +1,10 @@
 .root {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.25rem 0.6rem;
+  gap: 0.6rem;
+  padding: 0.55rem 0.9rem;
   border: 1px solid rgba(127, 127, 127, 0.3);
-  border-radius: 8px;
+  border-radius: 10px;
   background: rgba(127, 127, 127, 0.05);
 }
 
@@ -34,14 +34,24 @@
 }
 
 .btnToggle, .btnReset {
-  padding: 0.3rem 0.65rem;
-  border-radius: 5px;
+  width: 3.2rem;
+  height: 3.2rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
   border: 1px solid currentColor;
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   cursor: pointer;
+  line-height: 1;
+}
+
+.btnReset {
+  font-size: 1.35rem;
 }
 
 .btnToggle:hover, .btnReset:hover {
@@ -59,21 +69,23 @@
 .gruppoDurata {
   display: flex;
   align-items: center;
-  gap: 0.1rem;
-  margin-left: 0.2rem;
-  font-size: 0.85rem;
+  gap: 0.2rem;
+  margin-left: 0.3rem;
+  font-size: 1.2rem;
 }
 
 .inputDurata {
   width: 2.6em;
-  padding: 0.25rem 0.3rem;
-  border: 1px solid rgba(127, 127, 127, 0.45);
-  border-radius: 4px;
+  padding: 0.5rem 0.4rem;
+  border: 1px solid rgba(127, 127, 127, 0.5);
+  border-radius: 6px;
   background: transparent;
   color: inherit;
   font: inherit;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.5rem;
   text-align: center;
+  font-weight: 700;
 }
 
 .inputDurata:disabled {
@@ -84,4 +96,5 @@
 .duePunti {
   opacity: 0.6;
   font-weight: 700;
+  font-size: 1.5rem;
 }

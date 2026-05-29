@@ -14,6 +14,8 @@ export default function PannelloLeaderboard({ onChiudi }: Props) {
   const current = useAmbientazioneStore((s) => s.current);
   const folderPath = useAmbientazioneStore((s) => s.folderPath);
   const setObiettivo = useAmbientazioneStore((s) => s.setObiettivo);
+  const modalita = useAmbientazioneStore((s) => s.modalita);
+  const inEdit = modalita === "edit";
 
   const righe = useLeaderboardStore((s) => s.righe);
   const tick = useLeaderboardStore((s) => s.tick);
@@ -63,29 +65,31 @@ export default function PannelloLeaderboard({ onChiudi }: Props) {
           </button>
         </header>
 
-        <section className={styles.sezioneObiettivi}>
-          <p className={styles.hint}>
-            Imposta i nomi dei 3 obiettivi (salvati nell'ambientazione).
-          </p>
-          <div className={styles.gruppoObiettivi}>
-            {([0, 1, 2] as const).map((idx) => (
-              <label key={idx} className={styles.label}>
-                <span className={styles.labelTesto}>
-                  {idx === 2 ? "Malus" : `Obiettivo ${idx + 1}`}
-                </span>
-                <input
-                  type="text"
-                  value={current.obiettivi[idx]}
-                  onChange={(e) => setObiettivo(idx, e.target.value)}
-                  maxLength={60}
-                  placeholder={
-                    idx === 2 ? `es. "Penalità"` : `es. "Obiettivo ${idx + 1}"`
-                  }
-                />
-              </label>
-            ))}
-          </div>
-        </section>
+        {inEdit && (
+          <section className={styles.sezioneObiettivi}>
+            <p className={styles.hint}>
+              Imposta i nomi dei 3 obiettivi (salvati nell'ambientazione).
+            </p>
+            <div className={styles.gruppoObiettivi}>
+              {([0, 1, 2] as const).map((idx) => (
+                <label key={idx} className={styles.label}>
+                  <span className={styles.labelTesto}>
+                    {idx === 2 ? "Malus" : `Obiettivo ${idx + 1}`}
+                  </span>
+                  <input
+                    type="text"
+                    value={current.obiettivi[idx]}
+                    onChange={(e) => setObiettivo(idx, e.target.value)}
+                    maxLength={60}
+                    placeholder={
+                      idx === 2 ? `es. "Penalità"` : `es. "Obiettivo ${idx + 1}"`
+                    }
+                  />
+                </label>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className={styles.sezioneTabella}>
           {righe.length === 0 ? (

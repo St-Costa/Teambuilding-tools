@@ -1,55 +1,89 @@
 .root {
   display: flex;
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: flex-end;
-  gap: 1.6rem;
+  gap: 1rem;
   flex-wrap: wrap;
-  padding: 1.5rem 1rem 0.5rem;
+  padding: 1.5rem 2.5rem 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .entry {
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.3rem;
   transition: transform 0.2s ease;
+  padding: 0 0.3rem;
 }
 
 .entryVincitore {
   transform: translateY(-4px);
 }
 
+.cerchiettoWrap {
+  position: relative;
+  display: inline-block;
+}
+
 .corona {
+  position: absolute;
+  left: 50%;
+  top: -0.05em;
+  transform: translate(-50%, -90%);
+  transform-origin: bottom center;
+  z-index: 10;
   line-height: 1;
-  filter: drop-shadow(0 0 6px rgba(255, 195, 0, 0.7));
+  filter: drop-shadow(0 0 6px rgba(255, 195, 0, 0.85));
   animation: coronaIn 0.4s ease-out;
+  pointer-events: none;
 }
 
 @keyframes coronaIn {
-  0% { transform: translateY(8px) scale(0.4); opacity: 0; }
-  60% { transform: translateY(-3px) scale(1.12); opacity: 1; }
-  100% { transform: translateY(0) scale(1); opacity: 1; }
+  0%   { transform: translate(-50%, -90%) scale(0.4); opacity: 0; }
+  60%  { transform: translate(-50%, -90%) scale(1.12); opacity: 1; }
+  100% { transform: translate(-50%, -90%) scale(1); opacity: 1; }
 }
 
 .alone {
+  position: relative;
   border-radius: 50%;
   display: inline-block;
 }
 
-.aloneVincitore {
-  filter:
-    drop-shadow(0 0 10px rgba(255, 200, 0, 0.85))
-    drop-shadow(0 0 22px rgba(255, 170, 0, 0.55))
-    drop-shadow(0 0 36px rgba(255, 140, 0, 0.35));
+.aloneVincitore::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 215, 0, 0.55) 0%,
+    rgba(255, 180, 0, 0.32) 38%,
+    rgba(255, 150, 0, 0.12) 65%,
+    rgba(255, 150, 0, 0) 100%
+  );
+  z-index: -1;
+  pointer-events: none;
+  animation: aloneIn 0.4s ease-out;
+}
+
+@keyframes aloneIn {
+  0%   { opacity: 0; transform: scale(0.75); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 .nome {
   font-weight: 700;
   text-align: center;
-  max-width: 14ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  max-width: 100%;
+  white-space: normal;
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.15;
 }
 
 .punteggio {

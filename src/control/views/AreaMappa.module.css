@@ -1,8 +1,9 @@
 .root {
   flex: 1;
-  display: flex;
+  position: relative;
   overflow: hidden;
   background: #f0f0f0;
+  user-select: none;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -11,22 +12,13 @@
   }
 }
 
-.scroll {
-  flex: 1;
-  overflow: auto;
-  padding: 1rem;
-  display: flex;
-}
-
-.contenitore {
-  position: relative;
-  margin: auto;
-  user-select: none;
-}
-
 .mappa {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   display: block;
-  max-width: none;
   user-select: none;
   -webkit-user-drag: none;
 }

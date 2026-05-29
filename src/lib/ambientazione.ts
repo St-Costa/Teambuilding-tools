@@ -21,6 +21,7 @@ export interface Personaggio {
   posizione: Posizione;
   posizioneIniziale: Posizione | null;
   oggettoId: string | null;
+  oggettoInizialeId: string | null;
 }
 
 export interface Oggetto {
@@ -28,6 +29,14 @@ export interface Oggetto {
   nome: string;
   imgPath: string;
   crop: Crop;
+}
+
+export const NUM_SLOT_SOUNDBOARD = 6;
+
+export interface SlotSoundboard {
+  id: string;
+  emoji: string;
+  audioPath: string | null;
 }
 
 export interface Ambientazione {
@@ -39,6 +48,8 @@ export interface Ambientazione {
   personaggi: Personaggio[];
   oggetti: Oggetto[];
   obiettivi: [string, string, string];
+  soundboard: SlotSoundboard[];
+  sottofondoPath: string | null;
 }
 
 export class AmbientazioneCorrotta extends Error {
@@ -111,6 +122,10 @@ function validaPersonaggio(raw: unknown, idx: number): Personaggio {
   }
   const oggettoId =
     typeof raw.oggettoId === "string" && raw.oggettoId !== "" ? raw.oggettoId : null;
+  const oggettoInizialeId =
+    typeof raw.oggettoInizialeId === "string" && raw.oggettoInizialeId !== ""
+      ? raw.oggettoInizialeId
+      : null;
   // posizioneIniziale opzionale: assente in manifest M5/M6 → null.
   let posizioneIniziale: Posizione | null = null;
   if (raw.posizioneIniziale !== undefined && raw.posizioneIniziale !== null) {
@@ -125,6 +140,7 @@ function validaPersonaggio(raw: unknown, idx: number): Personaggio {
     posizione: validaPosizione(raw.posizione, ctx),
     posizioneIniziale,
     oggettoId,
+    oggettoInizialeId,
   };
 }
 
@@ -178,6 +194,20 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
     typeof obiettiviRaw[1] === "string" ? obiettiviRaw[1] : "",
     typeof obiettiviRaw[2] === "string" ? obiettiviRaw[2] : "",
   ];
+  const soundboard: SlotSoundboard[] = soundboardIniziale();
+  if (Array.isArray(raw.soundboard)) {
+    for (let i = 0; i < Math.min(NUM_SLOT_SOUNDBOARD, raw.soundboard.length); i++) {
+      const s = raw.soundboard[i];
+      if (s && typeof s === "object") {
+        const obj = s as Record<string, unknown>;
+        if (typeof obj.id === "string") soundboard[i].id = obj.id;
+        if (typeof obj.emoji === "string" && obj.emoji.length > 0) soundboard[i].emoji = obj.emoji;
+        if (typeof obj.audioPath === "string" && obj.audioPath !== "") {
+          soundboard[i].audioPath = obj.audioPath;
+        }
+      }
+    }
+  }
   // Validazione referenziale: ogni Personaggio.oggettoId deve puntare a un
   // Oggetto esistente. Se non corrisponde (es. perché l'oggetto è stato
   // eliminato fuori-app), lo ripuliamo silenziosamente — meglio guarire che
@@ -186,6 +216,10 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
   for (const p of personaggi) {
     if (p.oggettoId && !idsOggetti.has(p.oggettoId)) p.oggettoId = null;
   }
+  const sottofondoPath =
+    typeof raw.sottofondoPath === "string" && raw.sottofondoPath.length > 0
+      ? raw.sottofondoPath
+      : null;
   return {
     schemaVersion: SCHEMA_VERSION,
     nome: raw.nome,
@@ -195,7 +229,17 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
     personaggi,
     oggetti,
     obiettivi,
+    soundboard,
+    sottofondoPath,
   };
+}
+
+function soundboardIniziale(): SlotSoundboard[] {
+  const out: SlotSoundboard[] = [];
+  for (let i = 0; i < NUM_SLOT_SOUNDBOARD; i++) {
+    out.push({ id: `slot-${i}`, emoji: "🔘", audioPath: null });
+  }
+  return out;
 }
 
 export function nuovoManifest(nome: string): Ambientazione {
@@ -209,6 +253,8 @@ export function nuovoManifest(nome: string): Ambientazione {
     personaggi: [],
     oggetti: [],
     obiettivi: ["", "", ""],
+    soundboard: soundboardIniziale(),
+    sottofondoPath: null,
   };
 }
 

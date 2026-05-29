@@ -9,7 +9,7 @@ interface Props {
   folderPath: string;
 }
 
-const DIM_CERCHIETTO = 110;
+const DIM_CERCHIETTO = 75;
 
 export default function ScenaLeaderboard({ snapshot, folderPath }: Props) {
   function labelObiettivo(idx: 0 | 1 | 2): string {
@@ -73,7 +73,7 @@ export default function ScenaLeaderboard({ snapshot, folderPath }: Props) {
           <ClassificaPodio
             righe={snapshot.righe}
             folderPath={folderPath}
-            dimensioneCerchietto={140}
+            dimensioneCerchietto={95}
           />
         </div>
       )}

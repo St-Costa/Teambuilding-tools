@@ -10,6 +10,10 @@ import WizardOggetto from "./WizardOggetto";
 import PannelloConflitto from "./PannelloConflitto";
 import PannelloTimer from "./PannelloTimer";
 import PannelloLeaderboard from "./PannelloLeaderboard";
+import PannelloGioco from "./PannelloGioco";
+import PannelloSoundboard from "./PannelloSoundboard";
+import PulsanteSottofondo from "./PulsanteSottofondo";
+import { IconaCasa, IconaMonitor, IconaTrofeo, IconaVS } from "../../components/Icone";
 import { useConflittoStore } from "../../state/conflittoStore";
 import { useLeaderboardStore } from "../../state/leaderboardStore";
 import "../../state/timerStore";
@@ -17,8 +21,8 @@ import styles from "./AmbientazioneAperta.module.css";
 
 export default function AmbientazioneAperta() {
   const current = useAmbientazioneStore((s) => s.current);
-  const folderPath = useAmbientazioneStore((s) => s.folderPath);
-  const saveStatus = useAmbientazioneStore((s) => s.saveStatus);
+  const modalita = useAmbientazioneStore((s) => s.modalita);
+  const inEdit = modalita === "edit";
   const impostaMappa = useAmbientazioneStore((s) => s.impostaMappa);
   const aggiungiPersonaggio = useAmbientazioneStore((s) => s.aggiungiPersonaggio);
   const aggiungiOggetto = useAmbientazioneStore((s) => s.aggiungiOggetto);
@@ -31,6 +35,7 @@ export default function AmbientazioneAperta() {
   const [erroreMappa, setErroreMappa] = useState<string | null>(null);
   const [stageFullscreen, setStageFullscreen] = useState(false);
   const [conflittoAperto, setConflittoAperto] = useState(false);
+  const [confermaChiusuraAperta, setConfermaChiusuraAperta] = useState(false);
   const avviaConflitto = useConflittoStore((s) => s.avvia);
   const [leaderboardAperta, setLeaderboardAperta] = useState(false);
   const apriLeaderboard = useLeaderboardStore((s) => s.apri);
@@ -71,10 +76,11 @@ export default function AmbientazioneAperta() {
   if (!current) return null;
 
   function handleChiudi() {
-    if (saveStatus !== "saved") {
-      const ok = confirm("Ci sono modifiche non ancora salvate. Vuoi davvero chiudere?");
-      if (!ok) return;
-    }
+    setConfermaChiusuraAperta(true);
+  }
+
+  function confermaChiusura() {
+    setConfermaChiusuraAperta(false);
     chiudi();
   }
 
@@ -98,22 +104,25 @@ export default function AmbientazioneAperta() {
     <div className={styles.root}>
       <header className={styles.toolbar}>
         <div className={styles.toolbarSinistra}>
-          <h1 className={styles.nome}>{current.nome}</h1>
-          <p className={styles.path} title={folderPath ?? ""}>{folderPath}</p>
+          <PulsanteSottofondo />
         </div>
+        <PannelloSoundboard />
         <div className={styles.toolbarDestra}>
-          <button className={styles.btnAzione} onClick={handleImpostaMappa}>
-            {current.mappaPath ? "Cambia mappa…" : "Imposta mappa…"}
-          </button>
+          {inEdit && (
+            <button className={styles.btnAzione} onClick={handleImpostaMappa}>
+              {current.mappaPath ? "Cambia mappa…" : "Imposta mappa…"}
+            </button>
+          )}
           <button
-            className={styles.btnAzione}
+            className={styles.btnIcona}
             onClick={() => void toggleStageFullscreen()}
-            title="Mostra/nascondi la proiezione a tutto schermo"
+            title={stageFullscreen ? "Esci da tutto schermo" : "Proiezione a tutto schermo"}
+            aria-label={stageFullscreen ? "Esci da tutto schermo" : "Proiezione a tutto schermo"}
           >
-            {stageFullscreen ? "Esci da tutto schermo" : "Proiezione a tutto schermo"}
+            <IconaMonitor dimensione={30} />
           </button>
           <button
-            className={styles.btnAzione}
+            className={styles.btnIcona}
             onClick={() => {
               avviaConflitto();
               setConflittoAperto(true);
@@ -124,13 +133,14 @@ export default function AmbientazioneAperta() {
                 ? "Chiudi prima la leaderboard"
                 : current.personaggi.length < 2
                   ? "Servono almeno 2 personaggi"
-                  : "Apri la ruota della fortuna"
+                  : "Apri la ruota della fortuna (Conflitto)"
             }
+            aria-label="Conflitto"
           >
-            Conflitto
+            <IconaVS dimensione={34} />
           </button>
           <button
-            className={styles.btnAzione}
+            className={styles.btnIcona}
             onClick={() => {
               apriLeaderboard();
               setLeaderboardAperta(true);
@@ -143,39 +153,47 @@ export default function AmbientazioneAperta() {
                   ? "Serve almeno 1 personaggio"
                   : "Mostra la leaderboard finale"
             }
+            aria-label="Leaderboard"
           >
-            Leaderboard
+            <IconaTrofeo dimensione={30} />
           </button>
-          <details className={styles.menuPosizioniRoot}>
-            <summary className={styles.btnAzione} title="Salva o ripristina posizioni iniziali">
-              Posizioni ▾
-            </summary>
-            <div className={styles.menuPosizioni}>
-              <button
-                onClick={(e) => {
-                  if (!confirm("Salva la posizione corrente di tutti i personaggi come posizione iniziale?")) return;
-                  salvaTutte();
-                  (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
-                }}
-                disabled={current.personaggi.length === 0}
-              >
-                Salva tutte come iniziali
-              </button>
-              <button
-                onClick={(e) => {
-                  ripristinaTutte();
-                  (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
-                }}
-                disabled={!current.personaggi.some((p) => p.posizioneIniziale !== null)}
-              >
-                Ripristina tutte alle iniziali
-              </button>
-            </div>
-          </details>
+          {inEdit && (
+            <details className={styles.menuPosizioniRoot}>
+              <summary className={styles.btnAzione} title="Salva o ripristina posizioni iniziali">
+                Posizioni ▾
+              </summary>
+              <div className={styles.menuPosizioni}>
+                <button
+                  onClick={(e) => {
+                    if (!confirm("Salva la posizione corrente di tutti i personaggi come posizione iniziale?")) return;
+                    salvaTutte();
+                    (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
+                  }}
+                  disabled={current.personaggi.length === 0}
+                >
+                  Salva tutte come iniziali
+                </button>
+                <button
+                  onClick={(e) => {
+                    ripristinaTutte();
+                    (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
+                  }}
+                  disabled={!current.personaggi.some((p) => p.posizioneIniziale !== null)}
+                >
+                  Ripristina tutte alle iniziali
+                </button>
+              </div>
+            </details>
+          )}
           <PannelloTimer />
-          <IndicatoreSalvataggio />
-          <button className={styles.btnChiudi} onClick={handleChiudi}>
-            Chiudi ambientazione
+          {inEdit && <IndicatoreSalvataggio />}
+          <button
+            className={styles.btnIcona}
+            onClick={handleChiudi}
+            title="Torna alla schermata iniziale"
+            aria-label="Chiudi ambientazione"
+          >
+            <IconaCasa dimensione={30} />
           </button>
         </div>
       </header>
@@ -188,10 +206,14 @@ export default function AmbientazioneAperta() {
       )}
 
       <div className={styles.corpo}>
-        <PannelloPersonaggi
-          onNuovoPersonaggio={() => setWizardPersonaggioAperto(true)}
-          onNuovoOggetto={() => setWizardOggettoAperto(true)}
-        />
+        {inEdit ? (
+          <PannelloPersonaggi
+            onNuovoPersonaggio={() => setWizardPersonaggioAperto(true)}
+            onNuovoOggetto={() => setWizardOggettoAperto(true)}
+          />
+        ) : (
+          <PannelloGioco />
+        )}
         <AreaMappa />
       </div>
 
@@ -223,6 +245,36 @@ export default function AmbientazioneAperta() {
 
       {leaderboardAperta && (
         <PannelloLeaderboard onChiudi={() => setLeaderboardAperta(false)} />
+      )}
+
+      {confermaChiusuraAperta && (
+        <div className={styles.confermaBackdrop}>
+          <div className={styles.confermaModale}>
+            <h2>Tornare alla schermata iniziale?</h2>
+            <p>
+              Lo stato corrente dello scenario (posizioni dei personaggi, timer,
+              leaderboard, oggetti assegnati) <strong>non viene salvato</strong>:
+              alla riapertura lo scenario ripartirà dalle posizioni iniziali.
+            </p>
+            <div className={styles.confermaBottoni}>
+              <button
+                type="button"
+                className={styles.confermaSecondario}
+                onClick={() => setConfermaChiusuraAperta(false)}
+                autoFocus
+              >
+                Annulla
+              </button>
+              <button
+                type="button"
+                className={styles.confermaPrimario}
+                onClick={confermaChiusura}
+              >
+                Sì, esci
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

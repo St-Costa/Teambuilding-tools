@@ -1,15 +1,28 @@
 import { useEffect, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
+import { invoke } from "@tauri-apps/api/core";
 import { useAmbientazioneStore } from "../../state/ambientazioneStore";
 import {
+  aggiungiRecente,
   listaRecenti,
   rimuoviRecente,
   type RecentEntryConStato,
 } from "../../lib/recents";
 import { validaNome } from "../../lib/ambientazione";
 import { exists } from "@tauri-apps/plugin-fs";
-import { autorizzaCartella } from "../../lib/storage";
+import {
+  apriAmbientazione,
+  autorizzaCartella,
+  eliminaAmbientazione,
+  risolviAsset,
+} from "../../lib/storage";
 import styles from "./SelezioneAmbientazione.module.css";
+
+interface InstallResult {
+  nome: string;
+  path: string;
+  copiato: boolean;
+}
 
 export default function SelezioneAmbientazione() {
   const apri = useAmbientazioneStore((s) => s.apri);
@@ -18,64 +31,127 @@ export default function SelezioneAmbientazione() {
   const [recenti, setRecenti] = useState<RecentEntryConStato[]>([]);
   const [errore, setErrore] = useState<string | null>(null);
   const [creazioneAperta, setCreazioneAperta] = useState(false);
+  const [factoryDisponibili, setFactoryDisponibili] = useState(false);
+  const [ripristinoInCorso, setRipristinoInCorso] = useState(false);
+  const [repoScenari, setRepoScenari] = useState<string | null>(null);
+  // Per ogni cartella ambientazione, manteniamo il path della mappa (relativo)
+  // per renderizzare la thumbnail nel tile.
+  const [mappePerPath, setMappePerPath] = useState<Record<string, string | null>>({});
 
   useEffect(() => {
     void caricaRecenti();
+    // Mostra il bottone "Ripristina scenari pre-installati" solo se nel bundle
+    // ci sono effettivamente scenari factory.
+    void (async () => {
+      try {
+        const lista = await invoke<string[]>("lista_scenari_factory_disponibili");
+        if (lista.length > 0) setFactoryDisponibili(true);
+      } catch {
+        // se Tauri command non risponde, lasciamo il bottone nascosto
+      }
+    })();
+    void (async () => {
+      try {
+        const repo = await invoke<string | null>("cartella_repo_scenari");
+        if (repo) setRepoScenari(repo);
+      } catch {
+        // non in dev / comando non disponibile
+      }
+    })();
   }, []);
 
   async function caricaRecenti() {
     try {
-      setRecenti(await listaRecenti());
+      const lista = await listaRecenti();
+      setRecenti(lista);
+      // Carica le mappe per renderizzare le thumbnail.
+      void caricaMappe(lista);
     } catch (e) {
-      setErrore(`Impossibile caricare le ambientazioni recenti: ${stringifyErr(e)}`);
+      setErrore(`Impossibile caricare le ambientazioni: ${stringifyErr(e)}`);
     }
   }
 
-  async function handleApri() {
-    setErrore(null);
-    const scelta = await open({ directory: true, multiple: false });
-    if (typeof scelta !== "string") return;
-    try {
-      await apri(scelta);
-    } catch (e) {
-      setErrore(stringifyErr(e));
+  async function caricaMappe(lista: RecentEntryConStato[]) {
+    for (const r of lista) {
+      if (!r.esiste) continue;
+      if (mappePerPath[r.path] !== undefined) continue;
+      try {
+        const a = await apriAmbientazione(r.path);
+        setMappePerPath((m) => ({ ...m, [r.path]: a.mappaPath }));
+      } catch {
+        setMappePerPath((m) => ({ ...m, [r.path]: null }));
+      }
     }
   }
 
-  async function handleApriRecente(path: string) {
+  async function handleApriPlay(path: string) {
     setErrore(null);
     try {
-      await apri(path);
+      await apri(path, "play");
     } catch (e) {
       setErrore(stringifyErr(e));
       void caricaRecenti();
     }
   }
 
-  async function handleRimuoviRecente(path: string, e: React.MouseEvent) {
-    e.stopPropagation();
-    await rimuoviRecente(path);
-    void caricaRecenti();
+  async function handleApriEdit(path: string) {
+    setErrore(null);
+    try {
+      await apri(path, "edit");
+    } catch (e) {
+      setErrore(stringifyErr(e));
+      void caricaRecenti();
+    }
+  }
+
+  async function handleElimina(path: string, nome: string) {
+    const ok = confirm(`Sei sicuro di voler eliminare l'ambientazione "${nome}"?\n\nLa cartella e tutti i file verranno cancellati definitivamente dal disco.`);
+    if (!ok) return;
+    try {
+      await eliminaAmbientazione(path);
+      await rimuoviRecente(path);
+      void caricaRecenti();
+    } catch (e) {
+      setErrore(`Impossibile eliminare: ${stringifyErr(e)}`);
+    }
+  }
+
+  async function handleRipristinaFactory() {
+    const ok = confirm(
+      "Le tue modifiche agli scenari pre-installati verranno sovrascritte con la versione del bundle. Continuare?",
+    );
+    if (!ok) return;
+    setRipristinoInCorso(true);
+    setErrore(null);
+    try {
+      const ripristinati = await invoke<InstallResult[]>("ripristina_scenari_factory");
+      // Aggiorna i recenti con eventuali nuove voci e refresha l'elenco.
+      for (const r of ripristinati) {
+        try {
+          const a = await apriAmbientazione(r.path);
+          await aggiungiRecente(r.path, a.nome);
+        } catch {
+          // manifest non leggibile dopo il ripristino: salta
+        }
+      }
+      await caricaRecenti();
+    } catch (e) {
+      setErrore(`Impossibile ripristinare gli scenari pre-installati: ${stringifyErr(e)}`);
+    } finally {
+      setRipristinoInCorso(false);
+    }
   }
 
   return (
     <div className={styles.root}>
-      <h1>Apri o crea un'ambientazione</h1>
-      <p className={styles.intro}>
-        Un'ambientazione è una cartella sul tuo computer che contiene mappa,
-        personaggi, oggetti e tutto il resto del materiale per la sessione.
-      </p>
+      <h1>Ambientazioni</h1>
 
-      <div className={styles.azioni}>
-        <button className={styles.azione} onClick={handleApri}>
-          <span className={styles.azioneTitolo}>Apri esistente</span>
-          <span className={styles.azioneHint}>Scegli una cartella di ambientazione già creata</span>
-        </button>
-        <button className={styles.azione} onClick={() => setCreazioneAperta(true)}>
-          <span className={styles.azioneTitolo}>Nuova ambientazione</span>
-          <span className={styles.azioneHint}>Crea una cartella vuota da popolare</span>
-        </button>
-      </div>
+      <button
+        className={styles.btnNuova}
+        onClick={() => setCreazioneAperta(true)}
+      >
+        + Nuova ambientazione
+      </button>
 
       {errore && (
         <div className={styles.errore}>
@@ -84,43 +160,86 @@ export default function SelezioneAmbientazione() {
         </div>
       )}
 
-      <h2 className={styles.titoloRecenti}>Ambientazioni recenti</h2>
-      {recenti.length === 0 ? (
-        <p className={styles.vuoto}>Nessuna ambientazione recente.</p>
+      <h2 className={styles.titoloRecenti}>Disponibili</h2>
+      {recenti.filter((r) => r.esiste).length === 0 ? (
+        <p className={styles.vuoto}>Nessuna ambientazione disponibile.</p>
       ) : (
-        <ul className={styles.lista}>
-          {recenti.map((v) => (
-            <li
-              key={v.path}
-              className={`${styles.voce} ${!v.esiste ? styles.voceMancante : ""}`}
-            >
-              <button
-                className={styles.voceMain}
-                onClick={() => v.esiste && handleApriRecente(v.path)}
-                disabled={!v.esiste}
-                title={v.path}
-              >
-                <span className={styles.voceNome}>{v.nome}</span>
-                <span className={styles.vocePath}>{v.path}</span>
-                <span className={styles.voceData}>
-                  {v.esiste ? formattaData(v.lastOpenedAt) : "cartella mancante"}
-                </span>
-              </button>
-              <button
-                className={styles.voceRimuovi}
-                onClick={(e) => handleRimuoviRecente(v.path, e)}
-                title="Rimuovi dalla lista"
-                aria-label="Rimuovi dalla lista"
-              >
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
+        <div className={styles.griglia}>
+          {recenti
+            .filter((r) => r.esiste)
+            .map((v) => {
+              const mappaPath = mappePerPath[v.path];
+              const mappaUrl =
+                mappaPath ? risolviAsset(v.path, mappaPath) : null;
+              return (
+                <div key={v.path} className={styles.tile}>
+                  <button
+                    type="button"
+                    className={styles.tileThumb}
+                    onClick={() => handleApriPlay(v.path)}
+                    title="Apri (modalità gioco)"
+                  >
+                    {mappaUrl ? (
+                      <img
+                        src={mappaUrl}
+                        alt={v.nome}
+                        className={styles.tileMappa}
+                        draggable={false}
+                      />
+                    ) : (
+                      <div className={styles.tileSenzaMappa}>nessuna mappa</div>
+                    )}
+                  </button>
+                  <div className={styles.tileFooter}>
+                    <span className={styles.tileNome} title={v.nome}>
+                      {v.nome}
+                    </span>
+                    <div className={styles.tileAzioni}>
+                      <button
+                        type="button"
+                        className={styles.tileIcona}
+                        onClick={() => handleApriEdit(v.path)}
+                        title="Modifica ambientazione"
+                        aria-label="Modifica"
+                      >
+                        ✎
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.tileIcona} ${styles.tileEliminaIcona}`}
+                        onClick={() => void handleElimina(v.path, v.nome)}
+                        title="Elimina ambientazione"
+                        aria-label="Elimina"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      )}
+
+      {factoryDisponibili && (
+        <div className={styles.ripristinoBox}>
+          <button
+            type="button"
+            className={styles.btnRipristina}
+            onClick={() => void handleRipristinaFactory()}
+            disabled={ripristinoInCorso}
+            title="Ricopia gli scenari pre-installati dal bundle del tool, sovrascrivendo eventuali modifiche"
+          >
+            {ripristinoInCorso
+              ? "Ripristino in corso…"
+              : "Ripristina scenari pre-installati"}
+          </button>
+        </div>
       )}
 
       {creazioneAperta && (
         <ModaleCreazione
+          parentFissato={repoScenari}
           onAnnulla={() => setCreazioneAperta(false)}
           onConferma={async (nome, folderParent) => {
             setCreazioneAperta(false);
@@ -137,9 +256,11 @@ export default function SelezioneAmbientazione() {
 }
 
 function ModaleCreazione({
+  parentFissato,
   onAnnulla,
   onConferma,
 }: {
+  parentFissato: string | null;
   onAnnulla: () => void;
   onConferma: (nome: string, folderParent: string) => Promise<void>;
 }) {
@@ -155,7 +276,10 @@ function ModaleCreazione({
     }
     setErroreNome(null);
 
-    const parent = await open({ directory: true, multiple: false });
+    // Se siamo in dev (parentFissato presente) saltiamo il dialog: il nuovo
+    // scenario viene creato direttamente in <repo>/scenari-bundled/<nome>/.
+    const parent =
+      parentFissato ?? (await open({ directory: true, multiple: false }));
     if (typeof parent !== "string") return;
 
     try {
@@ -195,30 +319,21 @@ function ModaleCreazione({
         {erroreNome && <div className={styles.erroreModale}>{erroreNome}</div>}
         {erroreCartella && <div className={styles.erroreModale}>{erroreCartella}</div>}
         <p className={styles.hint}>
-          Al passo successivo sceglierai la cartella dove creare l'ambientazione.
-          Verrà creata una sottocartella con il nome scelto.
+          {parentFissato
+            ? `Lo scenario verrà creato in: ${parentFissato} (cartella bundled del repository).`
+            : "Al passo successivo sceglierai la cartella dove creare l'ambientazione. Verrà creata una sottocartella con il nome scelto."}
         </p>
         <div className={styles.bottoni}>
           <button className={styles.btnSecondario} onClick={onAnnulla}>
             Annulla
           </button>
           <button className={styles.btnPrimario} onClick={() => void conferma()}>
-            Scegli cartella…
+            {parentFissato ? "Crea" : "Scegli cartella…"}
           </button>
         </div>
       </div>
     </div>
   );
-}
-
-function formattaData(ts: number): string {
-  return new Date(ts).toLocaleString("it-IT", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 function stringifyErr(e: unknown): string {
