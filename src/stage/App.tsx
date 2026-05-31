@@ -4,7 +4,6 @@ import { listen, EVT, type ScenaPayload } from "../lib/events";
 import { autorizzaCartella } from "../lib/storage";
 import Scena from "../components/Scena";
 import Ruota from "../components/Ruota";
-import ScoreboardConflitto from "../components/ScoreboardConflitto";
 import DisplayTimer from "../components/DisplayTimer";
 import ScenaLeaderboard from "../components/ScenaLeaderboard";
 
@@ -94,10 +93,6 @@ export default function App() {
             boxSizing: "border-box",
           }}
         >
-          <ScoreboardConflitto
-            snapshot={stato.conflitto}
-            folderPath={stato.folderPath}
-          />
           <Ruota
             snapshot={stato.conflitto}
             folderPath={stato.folderPath}

@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { remainingMs, useTimerStore } from "../../state/timerStore";
 import { forceEmitScena } from "../../state/ambientazioneStore";
 import {
+  fermaCampanello,
+  fermaSveglia,
+  fermaTimerSuoni,
   playCampanello,
   playInizioTimer,
   playSveglia,
-  SVEGLIA_DURATA_TOTALE_MS,
 } from "../../lib/audio";
 import styles from "./PannelloTimer.module.css";
 
@@ -70,25 +72,43 @@ export default function PannelloTimer() {
     if (stato === "running" && ms <= 0) markEnded();
   }, [ms, stato, markEnded]);
 
-  // Campanello al primo passaggio sotto il minuto residuo (una volta per ciclo).
+  // Campanello SOLO quando il timer attraversa il minuto residuo dall'alto:
+  // se parti già sotto i 60s NON deve suonare. Rilevo l'attraversamento
+  // confrontando il valore precedente (>60s) con quello corrente (≤60s).
   const oneMinPlayedRef = useRef(false);
+  const prevMsRef = useRef<number | null>(null);
   useEffect(() => {
     if (stato !== "running") {
       oneMinPlayedRef.current = false;
+      prevMsRef.current = null;
       return;
     }
-    if (!oneMinPlayedRef.current && ms <= 60_000 && ms > 0) {
+    const prev = prevMsRef.current;
+    if (
+      !oneMinPlayedRef.current &&
+      prev !== null &&
+      prev > 60_000 &&
+      ms <= 60_000
+    ) {
       oneMinPlayedRef.current = true;
       playCampanello();
     }
+    prevMsRef.current = ms;
   }, [stato, ms]);
 
-  // Allo scadere: sveglia "ti ti ti ti" subito + ripete fino al reset.
+  // Allo scadere: ferma il campanello del minuto PRIMA di far partire la
+  // sveglia, poi sveglia in loop finché non si esce da "ended" (reset/avvio).
   useEffect(() => {
     if (stato !== "ended") return;
+    fermaCampanello();
     playSveglia();
-    const id = setInterval(playSveglia, SVEGLIA_DURATA_TOTALE_MS);
-    return () => clearInterval(id);
+    return () => fermaSveglia();
+  }, [stato]);
+
+  // Al reset (idle) ferma eventuali suoni ancora in coda (es. il campanello da
+  // 1 minuto che dura a lungo), così non restano a suonare dopo lo stop.
+  useEffect(() => {
+    if (stato === "idle") fermaTimerSuoni();
   }, [stato]);
 
   const modificabile = stato === "idle" || stato === "ended";

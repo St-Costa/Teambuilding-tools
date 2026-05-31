@@ -35,6 +35,12 @@ export default function PulsanteSottofondo() {
   const blobUrlRef = useRef<{ key: string; url: string } | null>(null);
   const [inRiproduzione, setInRiproduzione] = useState(false);
   const [errore, setErrore] = useState<string | null>(null);
+  const [volume, setVolume] = useState(0.7);
+
+  function cambiaVolume(v: number) {
+    setVolume(v);
+    if (audioRef.current) audioRef.current.volume = v;
+  }
 
   // Ferma audio quando il sottofondo cambia path o si esce dall'ambientazione.
   useEffect(() => {
@@ -80,7 +86,7 @@ export default function PulsanteSottofondo() {
       }
       const audio = new Audio(url);
       audio.loop = true;
-      audio.volume = 0.7;
+      audio.volume = volume;
       audio.onerror = () => {
         const code = audio.error?.code;
         const msg =
@@ -206,6 +212,18 @@ export default function PulsanteSottofondo() {
         <span className={styles.icona}>{inRiproduzione ? "■" : "▶"}</span>
         <span className={styles.testo}>Sottofondo</span>
       </button>
+      <span className={styles.iconaVol} aria-hidden="true">🔊</span>
+      <input
+        type="range"
+        className={styles.volume}
+        min={0}
+        max={1}
+        step={0.01}
+        value={volume}
+        onChange={(e) => cambiaVolume(Number(e.target.value))}
+        title={`Volume sottofondo: ${Math.round(volume * 100)}%`}
+        aria-label="Volume sottofondo"
+      />
       {errore && (
         <div className={styles.toastErrore} role="alert">
           {errore}

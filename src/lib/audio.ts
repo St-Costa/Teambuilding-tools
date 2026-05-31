@@ -16,10 +16,6 @@ import inizioUrl from "../assets/suoni/timer-inizio.mp3";
 import unMinUrl from "../assets/suoni/timer-1min.mp3";
 import scadutoUrl from "../assets/suoni/timer-scaduto.mp3";
 
-// Durata di un ciclo completo della sveglia di fine (4 beep + ~1s di pausa):
-// la regia la usa per ripetere il suono fino al reset.
-export const SVEGLIA_DURATA_TOTALE_MS = (0.14 * 4 + 1) * 1000;
-
 const INIZIO = 0;
 const UN_MIN = 1;
 const SCADUTO = 2;
@@ -124,7 +120,55 @@ export function playCampanello(): void {
   suona(UN_MIN);
 }
 
-/** Sveglia: tempo scaduto (4 beep). */
+/** Sveglia: tempo scaduto. Va in LOOP finché non si chiama fermaSveglia(). */
 export function playSveglia(): void {
-  suona(SCADUTO);
+  const a = elementi[SCADUTO];
+  if (!a) return;
+  try {
+    a.loop = true;
+    a.volume = 1;
+    a.currentTime = 0;
+    void a.play().catch(() => undefined);
+  } catch {
+    // silenziosi in caso di errore
+  }
+}
+
+/** Ferma il campanello del minuto (es. allo scadere, prima della sveglia). */
+export function fermaCampanello(): void {
+  const a = elementi[UN_MIN];
+  if (!a) return;
+  try {
+    a.pause();
+    a.currentTime = 0;
+  } catch {
+    // ignora
+  }
+}
+
+/** Ferma la sveglia (esce dal loop). */
+export function fermaSveglia(): void {
+  const a = elementi[SCADUTO];
+  if (!a) return;
+  try {
+    a.pause();
+    a.loop = false;
+    a.currentTime = 0;
+  } catch {
+    // ignora
+  }
+}
+
+/** Ferma TUTTI i suoni del timer (es. al reset), per non lasciarne in coda. */
+export function fermaTimerSuoni(): void {
+  for (const a of elementi) {
+    if (!a) continue;
+    try {
+      a.pause();
+      a.loop = false;
+      a.currentTime = 0;
+    } catch {
+      // ignora
+    }
+  }
 }

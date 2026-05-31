@@ -3,6 +3,8 @@ import type { FettaCalcolata } from "../lib/ruota";
 import type { ConflittoSnapshot, FonteSnap, PartecipanteSnap } from "../lib/events";
 import { risolviAsset } from "../lib/storage";
 import { playTick } from "../lib/audio";
+import Cerchietto from "./Cerchietto";
+import { IconaCorona } from "./Icone";
 import styles from "./Ruota.module.css";
 
 interface Props {
@@ -59,6 +61,10 @@ export default function Ruota({
     snapshot;
 
   const partecipantePerId = new Map(partecipanti.map((p) => [p.personaggioId, p]));
+
+  // Vincitore da incoronare (solo a risultato): dati per il pannello a destra.
+  const vincitoreSnap =
+    fase === "risultato" && vincitoreId ? partecipantePerId.get(vincitoreId) ?? null : null;
 
   const [visibleAngolo, setVisibleAngolo] = useState(0);
   const [wobbleCount, setWobbleCount] = useState(0);
@@ -238,6 +244,25 @@ export default function Ruota({
           />
         </g>
       </svg>
+
+      {/* Incoronazione del vincitore: a destra della ruota, la coroncina entra
+          dall'alto e il cerchietto del vincitore dall'basso. */}
+      {vincitoreSnap && (
+        <div className={styles.rivelaVincitore} style={{ left: `${dimensione}px` }}>
+          <div className={styles.coronaWrap} style={{ color: "#ffcc33" }}>
+            <IconaCorona dimensione={Math.round(dimensione * 0.2)} />
+          </div>
+          <div className={styles.cerchioWrap}>
+            <Cerchietto
+              src={risolviAsset(folderPath, vincitoreSnap.imgPath)}
+              colore={vincitoreSnap.colore}
+              crop={vincitoreSnap.crop}
+              dimensione={Math.round(dimensione * 0.28)}
+              alt={vincitoreSnap.nome}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -264,11 +289,16 @@ function renderFetta(
   // inizia il bonus senza spezzare visivamente la fetta.
   const baseEnd = f.startAngolo + f.baseFrazione * 360;
   const sepFine = polar(CX, R, baseEnd);
+  // A risultato: la fetta vincente resta in evidenza (glow), le altre si
+  // scuriscono. La transizione CSS rende il cambio una piccola animazione.
+  const haRisultato = fase === "risultato" && !!vincitoreId;
+  const classeFetta = haRisultato
+    ? vincitore
+      ? styles.vincitore
+      : styles.altraFetta
+    : styles.fetta;
   return (
-    <g
-      key={f.id}
-      className={vincitore ? styles.vincitore : undefined}
-    >
+    <g key={f.id} className={classeFetta}>
       <path
         d={arcPath(f.startAngolo, f.fineAngolo, R, CX, CY)}
         fill={colore}
