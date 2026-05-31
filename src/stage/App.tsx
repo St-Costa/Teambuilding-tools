@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { listen, EVT, type ScenaPayload } from "../lib/events";
 import { autorizzaCartella } from "../lib/storage";
@@ -37,11 +37,16 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Cartella già autorizzata: la regia ora ri-emette lo stato 1 volta/sec
+  // mentre il timer scorre, quindi autorizziamo SOLO quando cambia il path
+  // (un invoke Tauri al secondo sarebbe inutile e potenzialmente costoso).
+  const cartellaAutorizzata = useRef<string | null>(null);
   useEffect(() => {
     const unlistenP = listen(EVT.scenaUpdate, async (payload) => {
-      if (payload.folderPath) {
+      if (payload.folderPath && payload.folderPath !== cartellaAutorizzata.current) {
         try {
           await autorizzaCartella(payload.folderPath);
+          cartellaAutorizzata.current = payload.folderPath;
         } catch {
           // se l'autorizzazione fallisce le immagini non si vedranno,
           // ma è meglio del crash silenzioso

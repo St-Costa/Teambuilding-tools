@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { oggettoDi, type Oggetto, type Personaggio } from "../lib/ambientazione";
 import { risolviAsset } from "../lib/storage";
-import { rettangoloContain } from "../lib/scena";
+import {
+  dimensioneCerchietto,
+  RAPPORTO_QUADRATINO,
+  RIENTRO_QUADRATINO,
+  rettangoloContain,
+} from "../lib/scena";
 import Cerchietto from "./Cerchietto";
 import Quadratino from "./Quadratino";
 import styles from "./Scena.module.css";
@@ -14,13 +19,6 @@ interface Props {
   nome: string | null;
 }
 
-const DIM_CERCHIETTO = 116;
-const DIM_QUADRATINO = Math.round(DIM_CERCHIETTO * 0.8);
-const CENTRO_CERCHIETTO = DIM_CERCHIETTO / 2;
-// Stessa formula di AreaMappa: quadratino in basso-a-destra con sovrapposizione
-// 10% del raggio cerchietto (angolo top-left a 0.9 × raggio dal centro).
-const OFFSET_DIAG =
-  0.9 * CENTRO_CERCHIETTO * Math.SQRT1_2 + DIM_QUADRATINO / 2;
 
 export default function Scena({
   folderPath,
@@ -74,6 +72,15 @@ export default function Scena({
     ? rettangoloContain(imgDim.w, imgDim.h, container.w, container.h)
     : null;
 
+  // Dimensioni scalate sulla mappa renderizzata, IDENTICHE alla regia.
+  const dimCerchietto = rett ? dimensioneCerchietto(rett) : 0;
+  const dimQuadratino = Math.round(dimCerchietto * RAPPORTO_QUADRATINO);
+  const centroCerchietto = dimCerchietto / 2;
+  // Quadratino in basso-a-destra con sovrapposizione 10% del raggio (angolo
+  // top-left a 0.9 × raggio dal centro). Stessa formula di AreaMappa.
+  const offsetDiag = 0.9 * centroCerchietto * Math.SQRT1_2 + dimQuadratino / 2;
+  const rientro = dimCerchietto * RIENTRO_QUADRATINO;
+
   return (
     <div className={styles.root} ref={containerRef}>
       <img
@@ -103,21 +110,21 @@ export default function Scena({
                 src={risolviAsset(folderPath, p.imgPath)}
                 colore={p.colore}
                 crop={p.crop}
-                dimensione={DIM_CERCHIETTO}
+                dimensione={dimCerchietto}
                 alt={p.nome}
               />
               {oggetto && (
                 <div
                   className={styles.quadratinoWrap}
                   style={{
-                    left: `${CENTRO_CERCHIETTO + OFFSET_DIAG - 10}px`,
-                    top: `${CENTRO_CERCHIETTO + OFFSET_DIAG - 10}px`,
+                    left: `${centroCerchietto + offsetDiag - rientro}px`,
+                    top: `${centroCerchietto + offsetDiag - rientro}px`,
                   }}
                 >
                   <Quadratino
                     src={risolviAsset(folderPath, oggetto.imgPath)}
                     crop={oggetto.crop}
-                    dimensione={DIM_QUADRATINO}
+                    dimensione={dimQuadratino}
                     coloreBordo={p.colore}
                     alt={oggetto.nome}
                   />

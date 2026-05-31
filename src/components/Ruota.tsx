@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { FettaCalcolata } from "../lib/ruota";
 import type { ConflittoSnapshot, FonteSnap, PartecipanteSnap } from "../lib/events";
 import { risolviAsset } from "../lib/storage";
+import { playTick } from "../lib/audio";
 import styles from "./Ruota.module.css";
 
 interface Props {
@@ -9,38 +10,11 @@ interface Props {
   folderPath: string;
   dimensione: number;
   animata?: boolean;
-  // Riproduce un tick sintetizzato (Web Audio API, niente file) ogni volta che
-  // la freccia attraversa il confine di una fetta. Deroga esplicita all'audio
-  // FUORI SCOPE di CLAUDE.md §0, confermata dall'utente.
+  // Se true, fa scattare il tick (audio nativo, vedi lib/audio.ts) a ogni
+  // attraversamento di confine durante lo spin. Solo la regia lo attiva; la
+  // proiezione resta muta per evitare doppioni. Deroga a CLAUDE.md §0.
   suonaTick?: boolean;
   onSpinFine?: () => void;
-}
-
-let audioCtxCache: AudioContext | null = null;
-
-function playTick(): void {
-  try {
-    if (!audioCtxCache) {
-      const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!Ctor) return;
-      audioCtxCache = new Ctor();
-    }
-    const ctx = audioCtxCache;
-    if (ctx.state === "suspended") void ctx.resume();
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(950, now);
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.22, now + 0.004);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.05);
-  } catch {
-    // se l'audio fallisce, rimaniamo silenziosi
-  }
 }
 
 const VIEW = 100;
@@ -103,10 +77,10 @@ export default function Ruota({
   })();
 
   // rAF loop durante lo spin: legge la rotazione interpolata via
-  // getComputedStyle.transform, rileva i confini di sotto-regione e fa
-  // scattare 1) il wobble della freccia (sempre, su entrambe le finestre),
-  // 2) il tick audio (solo se suonaTick = true — di default solo regia,
-  // per evitare problemi di autoplay sulla proiezione).
+  // getComputedStyle.transform, rileva l'attraversamento di un confine di
+  // (sotto-)fetta e fa scattare 1) il WOBBLE della freccia (su entrambe le
+  // finestre), 2) il TICK audio nativo (solo regia, suonaTick = true). Il tick
+  // è agganciato all'attraversamento REALE a schermo → coincide col passaggio.
   useEffect(() => {
     if (!animata || fase !== "girando") return;
     const el = gRef.current;

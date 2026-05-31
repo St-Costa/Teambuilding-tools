@@ -1,18 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useAmbientazioneStore } from "../../state/ambientazioneStore";
 import { risolviAsset } from "../../lib/storage";
-import { clamp01, rettangoloContain } from "../../lib/scena";
+import {
+  clamp01,
+  dimensioneCerchietto,
+  RAPPORTO_QUADRATINO,
+  RIENTRO_QUADRATINO,
+  rettangoloContain,
+} from "../../lib/scena";
 import Cerchietto from "../../components/Cerchietto";
 import Quadratino from "../../components/Quadratino";
 import { oggettoDi } from "../../lib/ambientazione";
 import styles from "./AreaMappa.module.css";
-
-const DIM_CERCHIETTO = 102;
-const DIM_QUADRATINO = Math.round(DIM_CERCHIETTO * 0.8);
-const CENTRO_CERCHIETTO = DIM_CERCHIETTO / 2;
-// Il quadratino in basso-a-destra del cerchietto con leggera sovrapposizione.
-const OFFSET_DIAG =
-  0.9 * CENTRO_CERCHIETTO * Math.SQRT1_2 + DIM_QUADRATINO / 2;
 
 export default function AreaMappa() {
   const current = useAmbientazioneStore((s) => s.current);
@@ -70,6 +69,14 @@ export default function AreaMappa() {
   const rett = imgDim
     ? rettangoloContain(imgDim.w, imgDim.h, container.w, container.h)
     : null;
+
+  // Dimensioni scalate sulla mappa renderizzata, IDENTICHE alla proiezione
+  // (stessa frazione in lib/scena) → stessa dimensione relativa alla mappa.
+  const dimCerchietto = rett ? dimensioneCerchietto(rett) : 0;
+  const dimQuadratino = Math.round(dimCerchietto * RAPPORTO_QUADRATINO);
+  const centroCerchietto = dimCerchietto / 2;
+  const offsetDiag = 0.9 * centroCerchietto * Math.SQRT1_2 + dimQuadratino / 2;
+  const rientro = dimCerchietto * RIENTRO_QUADRATINO;
 
   function handleImgLoad() {
     const img = imgRef.current;
@@ -178,7 +185,7 @@ export default function AreaMappa() {
                 src={risolviAsset(folderPath, p.imgPath)}
                 colore={p.colore}
                 crop={p.crop}
-                dimensione={DIM_CERCHIETTO}
+                dimensione={dimCerchietto}
                 selezionato={selezionatoId === p.id}
                 alt={p.nome}
               />
@@ -186,14 +193,14 @@ export default function AreaMappa() {
                 <div
                   className={styles.quadratinoWrap}
                   style={{
-                    left: `${CENTRO_CERCHIETTO + OFFSET_DIAG - 10}px`,
-                    top: `${CENTRO_CERCHIETTO + OFFSET_DIAG - 10}px`,
+                    left: `${centroCerchietto + offsetDiag - rientro}px`,
+                    top: `${centroCerchietto + offsetDiag - rientro}px`,
                   }}
                 >
                   <Quadratino
                     src={risolviAsset(folderPath, oggetto.imgPath)}
                     crop={oggetto.crop}
-                    dimensione={DIM_QUADRATINO}
+                    dimensione={dimQuadratino}
                     coloreBordo={p.colore}
                     alt={oggetto.nome}
                   />

@@ -1,5 +1,6 @@
 import type { LeaderboardSnapshot } from "../lib/events";
 import { risolviAsset } from "../lib/storage";
+import { useViewport } from "../lib/useViewport";
 import Cerchietto from "./Cerchietto";
 import ClassificaPodio from "./ClassificaPodio";
 import styles from "./ScenaLeaderboard.module.css";
@@ -9,9 +10,17 @@ interface Props {
   folderPath: string;
 }
 
-const DIM_CERCHIETTO = 75;
+// Cerchietti come frazione del lato minore dello schermo (vmin), non in px
+// fissi: scalano col proiettore.
+const FRAZIONE_CERCHIETTO = 0.075;
+const FRAZIONE_CERCHIETTO_PODIO = 0.11;
 
 export default function ScenaLeaderboard({ snapshot, folderPath }: Props) {
+  const { w, h } = useViewport();
+  const vmin = Math.min(w, h);
+  const dimCerchietto = Math.round(vmin * FRAZIONE_CERCHIETTO);
+  const dimCerchiettoPodio = Math.round(vmin * FRAZIONE_CERCHIETTO_PODIO);
+
   function labelObiettivo(idx: 0 | 1 | 2): string {
     return (snapshot.obiettivi[idx] ?? "").trim() || `Obiettivo ${idx + 1}`;
   }
@@ -39,7 +48,7 @@ export default function ScenaLeaderboard({ snapshot, folderPath }: Props) {
                 src={risolviAsset(folderPath, r.imgPath)}
                 colore={r.colore}
                 crop={r.crop}
-                dimensione={DIM_CERCHIETTO}
+                dimensione={dimCerchietto}
                 alt={r.nome}
               />
               <span className={styles.nome}>{r.nome}</span>
@@ -73,7 +82,7 @@ export default function ScenaLeaderboard({ snapshot, folderPath }: Props) {
           <ClassificaPodio
             righe={snapshot.righe}
             folderPath={folderPath}
-            dimensioneCerchietto={95}
+            dimensioneCerchietto={dimCerchiettoPodio}
           />
         </div>
       )}

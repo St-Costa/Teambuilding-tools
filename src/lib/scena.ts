@@ -9,6 +9,22 @@ export function clamp01(n: number): number {
   return Math.min(1, Math.max(0, n));
 }
 
+// Dimensione del cerchietto come FRAZIONE del lato maggiore della mappa
+// renderizzata (non un valore in px): usata IDENTICA in regia (AreaMappa) e in
+// proiezione (Scena) così i cerchietti hanno la stessa dimensione relativa alla
+// mappa su entrambi gli schermi, e scalano con la risoluzione. Alza/abbassa
+// questo valore per cerchietti più grandi/piccoli ovunque.
+export const FRAZIONE_CERCHIETTO = 0.072;
+export const RAPPORTO_QUADRATINO = 0.8; // quadratino-oggetto = 80% del cerchietto
+// Piccolo "rientro" diagonale del quadratino verso il centro (proporzionale al
+// cerchietto; equivaleva a -10px sul vecchio cerchietto da ~116px).
+export const RIENTRO_QUADRATINO = 0.086;
+
+/** Diametro del cerchietto dato il rettangolo della mappa renderizzata. */
+export function dimensioneCerchietto(rett: RettangoloContenuto): number {
+  return Math.round(Math.max(rett.larghezza, rett.altezza) * FRAZIONE_CERCHIETTO);
+}
+
 export interface RettangoloContenuto {
   larghezza: number;
   altezza: number;

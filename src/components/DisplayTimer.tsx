@@ -9,18 +9,31 @@ interface Props {
   onEnded?: () => void;
 }
 
-const TICK_MS = 100;
-
 export default function DisplayTimer({ snapshot, onEnded }: Props) {
-  const [now, setNow] = useState(() => Date.now());
+  // Contatore di sola "spinta render": NON è il tempo. Il tempo residuo è
+  // sempre ricalcolato da Date.now() a ogni render (vedi `ms` sotto), così
+  // ogni ridisegno mostra il valore corretto — anche quelli innescati dalle
+  // ri-emissioni 1/sec della regia, indipendentemente dallo stato del rAF.
+  const [, forceRender] = useState(0);
 
+  // requestAnimationFrame invece di setInterval per la fluidità: la finestra di
+  // proiezione di norma NON ha il focus e WebKitGTK throttla pesantemente i
+  // setInterval/setTimeout delle finestre non a fuoco (era la causa dello
+  // "scatto" del timer ogni qualche secondo). Il rAF spinge i ridisegni finché
+  // la finestra è visibile; se anche il rAF venisse rallentato, le ri-emissioni
+  // 1/sec della regia garantiscono comunque l'aggiornamento.
   useEffect(() => {
     if (snapshot.stato !== "running") return;
-    const id = setInterval(() => setNow(Date.now()), TICK_MS);
-    return () => clearInterval(id);
+    let raf = 0;
+    const loop = () => {
+      forceRender((n) => (n + 1) % 1_000_000);
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
   }, [snapshot.stato]);
 
-  const ms = remainingMs(snapshot, now);
+  const ms = remainingMs(snapshot);
 
   useEffect(() => {
     if (snapshot.stato === "running" && ms <= 0) {

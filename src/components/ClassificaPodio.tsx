@@ -19,7 +19,6 @@ export default function ClassificaPodio({ righe, folderPath, dimensioneCerchiett
   const maxTotale = ordinate[0].totale;
 
   const dim = dimensioneCerchietto;
-  const fontNome = Math.round(dim * 0.2);
   const fontPunteggio = Math.round(dim * 0.42);
   const fontCorona = Math.round(dim * 0.55);
 
@@ -50,9 +49,6 @@ export default function ClassificaPodio({ righe, folderPath, dimensioneCerchiett
                   alt={r.nome}
                 />
               </div>
-            </div>
-            <div className={styles.nome} style={{ fontSize: fontNome }}>
-              {r.nome}
             </div>
             <div
               className={`${styles.punteggio} ${r.totale < 0 ? styles.punteggioNegativo : ""}`}

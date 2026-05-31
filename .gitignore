@@ -25,6 +25,10 @@ dist-ssr
 
 # Files not part of the project (kept in this directory for unrelated reasons)
 *.mp3
+# ECCEZIONE: i suoni del timer sono asset del progetto (importati da Vite) e
+# vanno versionati. Metti qui anche eventuali sostituti con lo stesso nome.
+!src/assets/suoni/
+!src/assets/suoni/*.mp3
 
 # User-created ambientazioni (test o personali): non vanno mai nel repo.
 # Gli scenari "factory" da bundlare invece DEVONO andare nel repo, in

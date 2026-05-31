@@ -334,3 +334,93 @@ Più vincitori in parità → tutti ricevono il trattamento.
 - `tauri dev`: bottone "Leaderboard" in toolbar regia, modale full-screen con sezione obiettivi editabili (autosave) + tabella tick + podio. Proiezione mostra tabella + podio sincronizzati. Click su cella malus → ✗ rossa, totale aggiornato (-1). Podio si riordina in tempo reale, vincitore con corona + alone dorato (anche in parità). Mutua esclusione con conflitto verificata. Confermato dall'utente.
 
 ---
+
+## M12 — Fix post-test su proiettore reale (2026-05-31)
+
+Problemi riscontrati provando il build su uno schermo da ~100": elementi troppo
+piccoli, timer "a scatti", suoni di gioco muti nel build (ma presenti in dev).
+
+### D-070 — Dimensioni scalate, non in pixel fissi
+Cerchietti, timer e leaderboard usavano valori in px fissi (o `clamp()` con
+`max` troppo bassi): su un proiettore ad alta risoluzione risultavano minuscoli.
+- **Cerchietti in proiezione** (`Scena.tsx`): diametro = `FRAZIONE_CERCHIETTO`
+  (0.085) × lato maggiore della mappa renderizzata. Scalano con la mappa/schermo.
+  Il "rientro" del quadratino oggetto, prima `-10px` fisso, è ora proporzionale.
+  La regia (`AreaMappa`) resta in px: è solo l'anteprima di controllo, le
+  posizioni sono relative quindi il mismatch di dimensione non rompe nulla.
+- **Timer** (`DisplayTimer.module.css`): `clamp(3rem, 11vmin, 22rem)` (era
+  `clamp(3rem, 8vw, 6rem)` → il max 6rem bloccava la crescita).
+- **Leaderboard** (`ScenaLeaderboard`): cerchietti = frazione di `vmin` via
+  nuovo hook `useViewport`; font/box in CSS passati a `vmin` con max più alti.
+
+### D-071 — Sblocco audio al primo gesto (fix suoni muti nel build)
+I suoni sintetizzati (tick ruota, campanello/sveglia timer) erano muti nel build
+ma funzionavano in dev. Causa: nel WebView di produzione l'`AudioContext` nasce
+`suspended` e `resume()` chiamata da un timer/effetto (fuori dallo stack di un
+gesto utente) viene ignorata dalla policy autoplay. La sintesi Web Audio NON usa
+codec/GStreamer, quindi non era un problema di formato.
+Fix: modulo unico `lib/audio.ts` con un solo `AudioContext` condiviso, sbloccato
+al primo `pointerdown`/`keydown` nella regia (`abilitaAudioAlPrimoGesto`,
+agganciato in `control/App.tsx`). `Ruota` e `PannelloTimer` ora importano da qui.
+
+### D-072 — Suono "Via!" all'avvio del timer
+Nuovo `playInizioTimer` (due note ascendenti). Suona quando il timer entra in
+`running` (da idle o ripresa), per segnalare a tutti che il tempo scorre.
+
+### D-073 — Timer fluido in proiezione (no più "scatti")
+La finestra proiezione non ha il focus → WebKitGTK throttla i suoi
+`setInterval` (causa dello scatto ogni ~secondi). Fix combinato:
+- `DisplayTimer` usa `requestAnimationFrame` per spingere i ridisegni e
+  ricalcola il residuo da `Date.now()` a ogni render (non da uno stato `now`
+  potenzialmente vecchio).
+- La regia (a fuoco, non throttlata) ri-emette lo stato 1 volta/sec mentre il
+  timer scorre (`PannelloTimer`), garantendo l'aggiornamento anche se il rAF
+  della proiezione venisse rallentato. Lo `stage` autorizza la cartella solo al
+  cambio di path, per non lanciare un invoke Tauri ogni secondo.
+
+### Verificato
+- `npx tsc --noEmit` clean; `npm run build` ok.
+- Da validare sul proiettore reale al prossimo test dell'utente.
+
+## M13 — Audio definitivo + rifiniture ruota/leaderboard (2026-05-31)
+
+Iterazione dopo i test su PC reale. La parte audio di M12 (sintesi Web Audio API)
+è SUPERATA: in produzione (WebKitGTK) l'uscita Web Audio è muta.
+
+### D-074 — Beep timer come file MP3 via blob (non Web Audio)
+Web Audio = muto nel build; funziona solo la riproduzione di file media, e in
+particolare da `blob:` in memoria (il protocollo dell'app non risponde alle
+Range request dei media element → play fallisce). I beep timer (inizio/1-min/
+scaduto) sono MP3 sintetizzati offline (`scripts/gen_suoni.py`, in
+`src/assets/suoni/`, versionati via eccezione in `.gitignore`), caricati con
+`fetch → Blob → objectURL`, e sbloccati al primo gesto utente
+(`lib/audio.ts::abilitaAudioAlPrimoGesto`). Nuovo suono "Via!" all'avvio del timer.
+
+### D-075 — Tick ruota: AUDIO NATIVO (Rust/rodio), non webview
+L'audio del webview ha latenza alta e VARIABILE → i tick andavano sempre fuori
+sync (tentati: tick per-attraversamento, treno WAV pre-renderizzato, gating
+sull'evento 'playing', compensazione latenza misurata — tutti insoddisfacenti).
+Soluzione: i tick passano dal backend. Un thread Rust possiede l'`OutputStream`
+di `rodio` e suona un click sintetizzato a ogni comando `play_tick` (Tauri
+command; mittente `mpsc` in `Mutex` nello state). Il frontend chiama `play_tick`
+sull'attraversamento REALE rilevato a schermo (`Ruota.tsx`, rAF su
+`getComputedStyle.transform`) → latenza bassa e costante, click in sync col
+passaggio della freccia. Dipendenza build su Linux: `libasound2-dev` (ALSA).
+`rodio` con `default-features = false` (sintetizziamo i campioni, niente decoder).
+
+### D-076 — Timer fluido in proiezione
+`DisplayTimer` ricalcola il residuo da `Date.now()` a ogni render (rAF) e la
+regia ri-emette lo stato a ~4 Hz mentre scorre (la finestra proiezione non a
+fuoco subisce throttling dei timer locali da WebKitGTK).
+
+### D-077 — Cerchietti: stessa dimensione relativa su regia e proiezione
+Frazione condivisa `FRAZIONE_CERCHIETTO = 0.072` del lato maggiore della mappa
+renderizzata (`lib/scena.ts`), usata identica da `AreaMappa` (regia) e `Scena`
+(proiezione). Timer e leaderboard scalati in `vmin` con cap alti (prima i `max`
+dei `clamp()` li tenevano piccoli su schermi grandi). Podio leaderboard: rimossi
+i nomi sotto i cerchietti (restano in tabella).
+
+### Verificato
+- `npx tsc --noEmit` clean; `npm run tauri build` ok (rodio/cpal compilati).
+- Su PC: tick ruota in sync e affidabili (confermato dall'utente). Beep timer
+  udibili nel build. Dimensioni dinamiche ok.

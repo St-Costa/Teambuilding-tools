@@ -2,8 +2,72 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
+use std::sync::mpsc::{self, Sender};
+use std::sync::Mutex;
+use std::thread;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_fs::FsExt;
+
+// ───────────────────────── Audio nativo (tick ruota) ────────────────────────
+// L'uscita audio del webview (WebKitGTK) ha latenza alta e variabile: i tick
+// della ruota risultavano sempre fuori sync. Qui li suoniamo dal backend con
+// rodio (bassa latenza costante). Il front-end chiama `play_tick` su ogni
+// attraversamento di fetta rilevato a schermo, così il click coincide col
+// passaggio della freccia. Il campione del click è sintetizzato in Rust.
+
+enum AudioCmd {
+    Tick,
+}
+
+// Il mittente verso il thread audio. Mutex perché lo stato Tauri dev'essere
+// Sync (mpsc::Sender non lo è). Option: None se l'audio non è disponibile.
+struct AudioState(Mutex<Option<Sender<AudioCmd>>>);
+
+fn genera_click(sample_rate: u32) -> Vec<f32> {
+    // Click corto: 950 Hz, ~35 ms, decadimento esponenziale veloce.
+    let durata = 0.035f32;
+    let n = (durata * sample_rate as f32) as usize;
+    (0..n)
+        .map(|i| {
+            let t = i as f32 / sample_rate as f32;
+            let env = (-t / 0.008).exp();
+            0.6 * env * (2.0 * std::f32::consts::PI * 950.0 * t).sin()
+        })
+        .collect()
+}
+
+// Avvia un thread dedicato che possiede l'OutputStream (non è Send) e suona un
+// click a ogni messaggio. Gli stream sovrapposti sono gestiti dal mixer di
+// rodio, quindi tick ravvicinati non si tagliano.
+fn avvia_thread_audio() -> Option<Sender<AudioCmd>> {
+    let (tx, rx) = mpsc::channel::<AudioCmd>();
+    thread::spawn(move || {
+        let (_stream, handle) = match rodio::OutputStream::try_default() {
+            Ok(v) => v,
+            Err(_) => return, // nessun dispositivo audio: thread esce, send() falliranno in silenzio
+        };
+        let sample_rate = 22_050u32;
+        let click = genera_click(sample_rate);
+        while let Ok(cmd) = rx.recv() {
+            match cmd {
+                AudioCmd::Tick => {
+                    let src = rodio::buffer::SamplesBuffer::new(1, sample_rate, click.clone());
+                    let _ = handle.play_raw(src);
+                }
+            }
+        }
+    });
+    Some(tx)
+}
+
+#[tauri::command]
+fn play_tick(state: tauri::State<AudioState>) {
+    if let Ok(guard) = state.0.lock() {
+        if let Some(tx) = guard.as_ref() {
+            let _ = tx.send(AudioCmd::Tick);
+        }
+    }
+}
 
 #[tauri::command]
 fn allow_ambientazione_folder(app: AppHandle, path: String) -> Result<(), String> {
@@ -228,6 +292,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
+        .manage(AudioState(Mutex::new(avvia_thread_audio())))
         .setup(|app| {
             if let Ok(config_dir) = app.path().app_config_dir() {
                 let _ = app.fs_scope().allow_directory(&config_dir, true);
@@ -244,6 +309,7 @@ pub fn run() {
             lista_scenari_factory_disponibili,
             installa_scenari_factory,
             ripristina_scenari_factory,
+            play_tick,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {

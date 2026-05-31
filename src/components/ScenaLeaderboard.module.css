@@ -15,7 +15,7 @@
 .titolo {
   margin: 0 0 1.5vh;
   text-align: center;
-  font-size: clamp(2rem, 5vh, 4rem);
+  font-size: clamp(2rem, 6vmin, 6rem);
   font-weight: 800;
   letter-spacing: 0.02em;
   line-height: 1;
@@ -49,7 +49,7 @@
   letter-spacing: 0.06em;
   font-weight: 700;
   opacity: 0.8;
-  font-size: clamp(0.75rem, 1.6vh, 1.2rem);
+  font-size: clamp(0.9rem, 2vmin, 2.2rem);
 }
 
 .cellaPersonaggio {
@@ -60,7 +60,7 @@
 }
 
 .nome {
-  font-size: clamp(1rem, 2.4vh, 2rem);
+  font-size: clamp(1.2rem, 3vmin, 3.4rem);
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
@@ -69,7 +69,7 @@
 
 .cellaObiettivo {
   text-align: center;
-  font-size: clamp(0.85rem, 1.6vh, 1.3rem);
+  font-size: clamp(1rem, 2.3vmin, 2.6rem);
   font-weight: 700;
   word-break: break-word;
 }
@@ -80,9 +80,9 @@
 
 .cellaTick {
   text-align: center;
-  font-size: clamp(1.4rem, 3.6vh, 3rem);
+  font-size: clamp(1.6rem, 4.5vmin, 4.5rem);
   font-weight: 800;
-  height: clamp(2.6rem, 5.5vh, 4.5rem);
+  height: clamp(2.8rem, 7vmin, 6rem);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -129,7 +129,7 @@
 }
 
 .totaleNumero {
-  font-size: clamp(1.4rem, 3.6vh, 3rem);
+  font-size: clamp(1.6rem, 4.5vmin, 4.5rem);
   font-weight: 900;
 }
 
