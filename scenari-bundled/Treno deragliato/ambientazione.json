@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "nome": "Treno deragliato",
   "creataIl": "2026-05-29T09:47:30.172Z",
-  "modificataIl": "2026-05-29T14:42:40.570Z",
+  "modificataIl": "2026-06-01T09:46:49.784Z",
   "mappaPath": "mappa-9ac372a6-96de-4b76-a11a-c7d7711b4a21.png",
   "personaggi": [
     {
@@ -58,8 +58,8 @@
         "offsetY": 1.2776020930363583
       },
       "posizione": {
-        "x": 0.4427887121836344,
-        "y": 0.39833464445891203
+        "x": 0.47388751398235945,
+        "y": 0.39745183143185947
       },
       "posizioneIniziale": {
         "x": 0.4427887121836344,
