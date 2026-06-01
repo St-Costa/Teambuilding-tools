@@ -1,25 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { readFile } from "@tauri-apps/plugin-fs";
 import { eseguiSalvataggio, useAmbientazioneStore } from "../../state/ambientazioneStore";
+import { resetSottofondoCache, useSottofondoStore } from "../../lib/sottofondo";
 import styles from "./PulsanteSottofondo.module.css";
-
-function joinPath(a: string, b: string): string {
-  const sep = a.includes("\\") && !a.includes("/") ? "\\" : "/";
-  return `${a.replace(/[\/\\]+$/, "")}${sep}${b}`;
-}
-
-function mimeDaPath(path: string): string {
-  const m = path.toLowerCase().match(/\.([a-z0-9]+)$/);
-  switch (m?.[1]) {
-    case "mp3": return "audio/mpeg";
-    case "wav": return "audio/wav";
-    case "ogg": return "audio/ogg";
-    case "m4a": case "aac": return "audio/aac";
-    case "flac": return "audio/flac";
-    default: return "audio/mpeg";
-  }
-}
 
 export default function PulsanteSottofondo() {
   const current = useAmbientazioneStore((s) => s.current);
@@ -31,123 +14,47 @@ export default function PulsanteSottofondo() {
   const sottofondoPath = current?.sottofondoPath ?? null;
   const haSottofondo = sottofondoPath !== null;
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const blobUrlRef = useRef<{ key: string; url: string } | null>(null);
-  const [inRiproduzione, setInRiproduzione] = useState(false);
-  const [errore, setErrore] = useState<string | null>(null);
-  const [volume, setVolume] = useState(0.7);
+  const inRiproduzione = useSottofondoStore((s) => s.inRiproduzione);
+  const errore = useSottofondoStore((s) => s.errore);
+  const volume = useSottofondoStore((s) => s.volume);
+  const setVolume = useSottofondoStore((s) => s.setVolume);
+  const avvia = useSottofondoStore((s) => s.avvia);
+  const ferma = useSottofondoStore((s) => s.ferma);
 
-  function cambiaVolume(v: number) {
-    setVolume(v);
-    if (audioRef.current) audioRef.current.volume = v;
-  }
-
-  // Ferma audio quando il sottofondo cambia path o si esce dall'ambientazione.
+  // Se cambia file/cartella (o si esce dall'ambientazione), ferma e invalida cache.
   useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      if (blobUrlRef.current) {
-        URL.revokeObjectURL(blobUrlRef.current.url);
-        blobUrlRef.current = null;
-      }
-    };
-  }, []);
-
-  // Se il path cambia, ferma e invalida cache
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-      setInRiproduzione(false);
-    }
-    if (blobUrlRef.current) {
-      URL.revokeObjectURL(blobUrlRef.current.url);
-      blobUrlRef.current = null;
-    }
+    resetSottofondoCache();
   }, [sottofondoPath, folderPath]);
+
+  // Ferma alla dismissione del componente.
+  useEffect(() => {
+    return () => resetSottofondoCache();
+  }, []);
 
   if (!current || !folderPath) return null;
 
-  async function avviaRiproduzione() {
-    if (!folderPath || !sottofondoPath) return;
-    setErrore(null);
-    try {
-      const key = `${folderPath}::${sottofondoPath}`;
-      let url = blobUrlRef.current?.key === key ? blobUrlRef.current.url : null;
-      if (!url) {
-        if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current.url);
-        const bytes = await readFile(joinPath(folderPath, sottofondoPath));
-        const blob = new Blob([new Uint8Array(bytes)], { type: mimeDaPath(sottofondoPath) });
-        url = URL.createObjectURL(blob);
-        blobUrlRef.current = { key, url };
-      }
-      const audio = new Audio(url);
-      audio.loop = true;
-      audio.volume = volume;
-      audio.onerror = () => {
-        const code = audio.error?.code;
-        const msg =
-          code === 4
-            ? "Formato audio non supportato (manca un codec). Prova un .wav."
-            : `Errore audio (codice ${code ?? "?"})`;
-        setErrore(msg);
-        setInRiproduzione(false);
-      };
-      audio.onended = () => setInRiproduzione(false);
-      audioRef.current = audio;
-      await audio.play();
-      setInRiproduzione(true);
-    } catch (e) {
-      setErrore(`Impossibile riprodurre: ${e instanceof Error ? e.message : String(e)}`);
-      setInRiproduzione(false);
-    }
-  }
-
-  function fermaRiproduzione() {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current = null;
-    }
-    setInRiproduzione(false);
-  }
-
   async function caricaMp3() {
-    setErrore(null);
     try {
       const scelto = await open({
         multiple: false,
         filters: [{ name: "Audio", extensions: ["mp3", "wav", "ogg", "m4a", "aac"] }],
       });
       if (typeof scelto !== "string") return;
-      // Se sta suonando, fermalo (il path cambierà e l'useEffect lo farebbe comunque)
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-        setInRiproduzione(false);
-      }
+      ferma();
       await setSottofondo(scelto);
       await eseguiSalvataggio();
     } catch (e) {
-      setErrore(e instanceof Error ? e.message : String(e));
+      useSottofondoStore.setState({ errore: e instanceof Error ? e.message : String(e) });
     }
   }
 
   async function rimuoviMp3() {
-    setErrore(null);
     try {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-        setInRiproduzione(false);
-      }
+      ferma();
       await setSottofondo(null);
       await eseguiSalvataggio();
     } catch (e) {
-      setErrore(e instanceof Error ? e.message : String(e));
+      useSottofondoStore.setState({ errore: e instanceof Error ? e.message : String(e) });
     }
   }
 
@@ -188,7 +95,7 @@ export default function PulsanteSottofondo() {
             <button
               type="button"
               className={styles.toastChiudi}
-              onClick={() => setErrore(null)}
+              onClick={() => useSottofondoStore.setState({ errore: null })}
               aria-label="Chiudi"
             >
               ×
@@ -206,7 +113,7 @@ export default function PulsanteSottofondo() {
       <button
         type="button"
         className={`${styles.btnPrincipale} ${inRiproduzione ? styles.inPlay : styles.configurato}`}
-        onClick={() => (inRiproduzione ? fermaRiproduzione() : void avviaRiproduzione())}
+        onClick={() => (inRiproduzione ? ferma() : void avvia(folderPath, sottofondoPath))}
         title={inRiproduzione ? "Ferma sottofondo" : "Avvia sottofondo"}
       >
         <span className={styles.icona}>{inRiproduzione ? "■" : "▶"}</span>
@@ -220,7 +127,7 @@ export default function PulsanteSottofondo() {
         max={1}
         step={0.01}
         value={volume}
-        onChange={(e) => cambiaVolume(Number(e.target.value))}
+        onChange={(e) => setVolume(Number(e.target.value))}
         title={`Volume sottofondo: ${Math.round(volume * 100)}%`}
         aria-label="Volume sottofondo"
       />
@@ -230,7 +137,7 @@ export default function PulsanteSottofondo() {
           <button
             type="button"
             className={styles.toastChiudi}
-            onClick={() => setErrore(null)}
+            onClick={() => useSottofondoStore.setState({ errore: null })}
             aria-label="Chiudi"
           >
             ×

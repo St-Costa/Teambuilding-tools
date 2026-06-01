@@ -1,5 +1,6 @@
 import { useAmbientazioneStore } from "../../state/ambientazioneStore";
 import { useLeaderboardStore } from "../../state/leaderboardStore";
+import { useVittoriaStore } from "../../state/vittoriaStore";
 import { risolviAsset } from "../../lib/storage";
 import Cerchietto from "../../components/Cerchietto";
 import ClassificaPodio from "../../components/ClassificaPodio";
@@ -22,6 +23,10 @@ export default function PannelloLeaderboard({ onChiudi }: Props) {
   const toggleTick = useLeaderboardStore((s) => s.toggleTick);
   const chiudi = useLeaderboardStore((s) => s.chiudi);
 
+  const avviaVittoria = useVittoriaStore((s) => s.avvia);
+  const terminaVittoria = useVittoriaStore((s) => s.termina);
+  const vittoriaAttiva = useVittoriaStore((s) => s.attiva);
+
   if (!current || !folderPath) return null;
 
   const righeConTotale: RigaLeaderboardSnap[] = righe.map((r) => {
@@ -42,8 +47,27 @@ export default function PannelloLeaderboard({ onChiudi }: Props) {
     if (haTickAttivi) {
       if (!confirm("Chiudere la leaderboard? I tick attuali verranno persi.")) return;
     }
+    // Non lasciare l'animazione di vittoria orfana sopra una scena senza contesto.
+    terminaVittoria();
     chiudi();
     onChiudi();
+  }
+
+  // Avvia la premiazione: i vincitori sono le righe col punteggio massimo
+  // (stessa logica del podio, ammette pari merito).
+  function handleVittoria() {
+    if (righeConTotale.length === 0) return;
+    const max = Math.max(...righeConTotale.map((r) => r.totale));
+    const vincitori = righeConTotale
+      .filter((r) => r.totale === max)
+      .map((r) => ({
+        personaggioId: r.personaggioId,
+        nome: r.nome,
+        colore: r.colore,
+        imgPath: r.imgPath,
+        crop: r.crop,
+      }));
+    avviaVittoria(vincitori);
   }
 
   function labelObiettivo(idx: 0 | 1 | 2): string {
@@ -56,13 +80,35 @@ export default function PannelloLeaderboard({ onChiudi }: Props) {
       <div className={styles.modale}>
         <header className={styles.header}>
           <h2>Leaderboard</h2>
-          <button
-            type="button"
-            className={styles.btnChiudi}
-            onClick={handleChiudi}
-          >
-            Chiudi
-          </button>
+          <div className={styles.headerAzioni}>
+            {vittoriaAttiva ? (
+              <button
+                type="button"
+                className={styles.btnTerminaVittoria}
+                onClick={() => terminaVittoria()}
+                title="Ferma l'animazione di vittoria sulla proiezione"
+              >
+                ■ Termina animazione
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={styles.btnVittoria}
+                onClick={handleVittoria}
+                disabled={righeConTotale.length === 0}
+                title="Proclama i vincitori con animazione e musica sulla proiezione"
+              >
+                🏆 Proclama vincitori
+              </button>
+            )}
+            <button
+              type="button"
+              className={styles.btnChiudi}
+              onClick={handleChiudi}
+            >
+              Chiudi
+            </button>
+          </div>
         </header>
 
         {inEdit && (

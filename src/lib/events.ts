@@ -4,6 +4,7 @@ import type { FettaCalcolata, Modificatore } from "./ruota";
 
 export const EVT = {
   scenaUpdate: "scena:update",
+  vittoriaBoom: "vittoria:boom",
 } as const;
 
 export type EventName = (typeof EVT)[keyof typeof EVT];
@@ -54,6 +55,28 @@ export interface LeaderboardSnapshot {
   righe: RigaLeaderboardSnap[];
 }
 
+export interface VincitoreSnap {
+  personaggioId: string;
+  nome: string;          // NON renderizzato (cerchi senza nomi), incluso per completezza
+  colore: string;
+  imgPath: string;
+  crop: import("./ambientazione").Crop;
+}
+
+export interface VittoriaSnapshot {
+  vincitori: VincitoreSnap[];   // 1+ (pari merito)
+  trigger: number;              // come ConflittoSnapshot.triggerCount: forza il restart delle animazioni via key
+}
+
+// Singolo scoppio di fuoco d'artificio: la REGIA decide il ritmo (suona il
+// boom e contemporaneamente emette questo evento), la PROIEZIONE disegna
+// l'esplosione → suono e visivo coincidono.
+export interface BoomPayload {
+  id: number;
+  x: number;             // posizione orizzontale normalizzata 0..1
+  colori: string[];      // tinte delle scintille (colori dei vincitori + oro/bianco)
+}
+
 export interface ScenaPayload {
   folderPath: string | null;
   mappaPath: string | null;
@@ -64,10 +87,12 @@ export interface ScenaPayload {
   conflitto: ConflittoSnapshot | null;
   timer: TimerSnapshot;
   leaderboard: LeaderboardSnapshot | null;
+  vittoria: VittoriaSnapshot | null;
 }
 
 export type EventPayloads = {
   [EVT.scenaUpdate]: ScenaPayload;
+  [EVT.vittoriaBoom]: BoomPayload;
 };
 
 export function emit<N extends EventName>(name: N, payload: EventPayloads[N]): Promise<void> {

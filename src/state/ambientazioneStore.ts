@@ -128,6 +128,7 @@ function payloadCorrente(state: AmbientazioneState): ScenaPayload {
       pausedRemainingMs: 0,
     },
     leaderboard: leaderboardSnapshotProvider?.() ?? null,
+    vittoria: vittoriaSnapshotProvider?.() ?? null,
   };
 }
 
@@ -149,6 +150,12 @@ type LeaderboardSnapshotFn = () => import("../lib/events").LeaderboardSnapshot |
 let leaderboardSnapshotProvider: LeaderboardSnapshotFn | null = null;
 export function registraLeaderboardSnapshotProvider(fn: LeaderboardSnapshotFn | null): void {
   leaderboardSnapshotProvider = fn;
+}
+
+type VittoriaSnapshotFn = () => import("../lib/events").VittoriaSnapshot | null;
+let vittoriaSnapshotProvider: VittoriaSnapshotFn | null = null;
+export function registraVittoriaSnapshotProvider(fn: VittoriaSnapshotFn | null): void {
+  vittoriaSnapshotProvider = fn;
 }
 
 export function forceEmitScena(): void {

@@ -14,10 +14,13 @@ import PannelloGioco from "./PannelloGioco";
 import PannelloSoundboard from "./PannelloSoundboard";
 import PannelloAnnotazioni from "./PannelloAnnotazioni";
 import PulsanteSottofondo from "./PulsanteSottofondo";
+import AudioVittoria from "./AudioVittoria";
 import { IconaCasa, IconaMonitor, IconaTrofeo, IconaVS } from "../../components/Icone";
 import { useConflittoStore } from "../../state/conflittoStore";
 import { useLeaderboardStore } from "../../state/leaderboardStore";
 import "../../state/timerStore";
+// Import side-effect: registra il provider snapshot della vittoria nel payload.
+import "../../state/vittoriaStore";
 import styles from "./AmbientazioneAperta.module.css";
 
 export default function AmbientazioneAperta() {
@@ -104,6 +107,7 @@ export default function AmbientazioneAperta() {
 
   return (
     <div className={styles.root}>
+      <AudioVittoria />
       <header className={styles.toolbar}>
         <div className={styles.toolbarSinistra}>
           <PulsanteSottofondo />

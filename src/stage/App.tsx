@@ -6,6 +6,7 @@ import Scena from "../components/Scena";
 import Ruota from "../components/Ruota";
 import DisplayTimer from "../components/DisplayTimer";
 import ScenaLeaderboard from "../components/ScenaLeaderboard";
+import AnimazioneVittoria from "../components/AnimazioneVittoria";
 
 const STATO_INIZIALE: ScenaPayload = {
   folderPath: null,
@@ -22,6 +23,7 @@ const STATO_INIZIALE: ScenaPayload = {
     pausedRemainingMs: 0,
   },
   leaderboard: null,
+  vittoria: null,
 };
 
 export default function App() {
@@ -102,6 +104,15 @@ export default function App() {
             animata={true}
           />
         </div>
+      )}
+      {stato.vittoria !== null && stato.folderPath && (
+        // key={trigger}: ogni "Proclama vincitori" rimonta il componente così
+        // le animazioni CSS (cerchi che salgono, corone che scendono) ripartono.
+        <AnimazioneVittoria
+          key={stato.vittoria.trigger}
+          snapshot={stato.vittoria}
+          folderPath={stato.folderPath}
+        />
       )}
     </>
   );

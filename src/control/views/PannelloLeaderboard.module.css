@@ -40,6 +40,47 @@
   margin: 0;
 }
 
+.headerAzioni {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.btnVittoria {
+  padding: 0.45rem 1rem;
+  border-radius: 5px;
+  border: none;
+  background: linear-gradient(135deg, #ffb300, #ff8f00);
+  color: #1d1d1f;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.btnVittoria:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.btnVittoria:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btnTerminaVittoria {
+  padding: 0.45rem 1rem;
+  border-radius: 5px;
+  border: 1px solid #c62828;
+  background: rgba(198, 40, 40, 0.12);
+  color: #c62828;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.btnTerminaVittoria:hover {
+  background: rgba(198, 40, 40, 0.22);
+}
+
 .btnChiudi {
   padding: 0.45rem 1rem;
   border-radius: 5px;

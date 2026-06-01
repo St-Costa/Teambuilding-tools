@@ -1,0 +1,113 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Fondo radiale scuro per far risaltare raggi, cerchi e fuochi. */
+  background: radial-gradient(circle at 50% 45%, #1a1530 0%, #0a0814 70%, #050308 100%);
+}
+
+/* ── Raggi cinetici rotanti dal centro ── */
+.raggi {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200vmax;
+  height: 200vmax;
+  transform: translate(-50%, -50%);
+  /* Raggi netti e ben distanziati: beam luminosi su fondo scuro, così la
+     rotazione si vede chiaramente (con raggi fitti sembrava uno scintillio
+     fermo). 30° di periodo = 12 raggi distinti. */
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(255, 220, 130, 0.16) 0deg 5deg,
+    transparent 5deg 30deg
+  );
+  animation: ruotaRaggi 24s linear infinite;
+  will-change: transform;
+  pointer-events: none;
+}
+
+@keyframes ruotaRaggi {
+  /* from e to con la STESSA lista di trasformazioni (translate + rotate):
+     su WebKitGTK un from implicito con sola translate non interpola e i raggi
+     restano fermi. */
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* ── Riga dei vincitori ── */
+.vincitori {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4vmin;
+  max-width: 92vw;
+}
+
+.slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.coronaWrap {
+  position: relative;
+  z-index: 2;
+  line-height: 1;
+  color: #ffcc33;
+  filter: drop-shadow(0 0 10px rgba(255, 200, 0, 0.8));
+  /* Scende dall'alto con un piccolo overshoot (stesso feel dell'incoronazione
+     della ruota). marginBottom negativo è impostato inline per appoggiare la
+     corona sul bordo superiore del cerchio. */
+  animation: coronaGiu 0.55s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+.cerchioWrap {
+  /* Sale dal basso. */
+  animation: cerchioSu 0.55s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.85))
+    drop-shadow(0 0 16px rgba(255, 215, 0, 0.8));
+}
+
+@keyframes coronaGiu {
+  0% {
+    opacity: 0;
+    transform: translateY(-180%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cerchioSu {
+  0% {
+    opacity: 0;
+    transform: translateY(160%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Canvas coriandoli + fuochi (sopra tutto, non interattivo) ── */
+.particelle {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
