@@ -11,38 +11,57 @@ import applausoUrl from "../../assets/suoni/applauso.mp3";
 // "metronomo" dei fuochi → a ogni scoppio suona fuoco.mp3 E avvisa la
 // proiezione (evento vittoria:boom) così suono e visivo coincidono.
 //
-// RISORSE AUDIO (importante su WebKitGTK/Ubuntu): gli elementi audio sono
-// creati UNA SOLA VOLTA a livello di modulo e riusati. Creare `new Audio()` a
-// ogni scoppio accendeva una pipeline GStreamer per ogni boom senza mai
-// rilasciarla → dopo qualche animazione la pipeline si congestiona (suoni che
-// tardano a partire, chiusura lenta). Il pool a rotazione gestisce la
-// sovrapposizione con un numero fisso di elementi.
+// RISORSE AUDIO (importante su WebKitGTK/Ubuntu):
+//  1. Caricamento via fetch→blob: nel pacchetto Tauri gli asset sono serviti
+//     dal protocollo custom, e gli elementi media non caricano dall'URL diretto
+//     (usa range-request non gestite) → in dev suonava, nel build no. Stesso
+//     pattern di lib/audio.ts (timer), che nel build funziona.
+//  2. Elementi creati UNA SOLA VOLTA e riusati. Creare `new Audio()` a ogni
+//     scoppio accendeva una pipeline GStreamer per ogni boom senza rilasciarla
+//     → dopo qualche animazione la pipeline si congestiona (suoni che tardano a
+//     partire, chiusura lenta). Il pool a rotazione gestisce la sovrapposizione
+//     con un numero fisso di elementi.
 //
-// NB: gli MP3 sono asset bundled. Finché i file reali non vengono forniti, i
-// play falliscono in silenzio (catch) e l'animazione visiva funziona comunque.
+// NB: i play falliscono in silenzio (catch) se un file manca o non è decodificabile.
 
 const VOL_MUSICA = 0.18;
 const VOL_APPLAUSO = 1.0;
 const VOL_FUOCO = 0.7;
 const FUOCHI_POOL = 6; // elementi riusati a rotazione per gli scoppi sovrapposti
 
-const musica = new Audio(vittoriaUrl);
-musica.preload = "auto";
-musica.volume = VOL_MUSICA;
-
-const applauso = new Audio(applausoUrl);
-applauso.preload = "auto";
-applauso.volume = VOL_APPLAUSO;
-
-const fuochiPool: HTMLAudioElement[] = Array.from({ length: FUOCHI_POOL }, () => {
-  const a = new Audio(fuocoUrl);
-  a.preload = "auto";
-  a.volume = VOL_FUOCO;
-  return a;
-});
+let musica: HTMLAudioElement | null = null;
+let applauso: HTMLAudioElement | null = null;
+const fuochiPool: HTMLAudioElement[] = [];
 let fuocoIdx = 0;
 
-function riavvolgiEPlay(a: HTMLAudioElement, volume: number): void {
+// Precarica i tre suoni come blob in memoria (una sola volta, all'import).
+void (async () => {
+  try {
+    const [mBlob, aBlob, fBlob] = await Promise.all([
+      fetch(vittoriaUrl).then((r) => r.blob()),
+      fetch(applausoUrl).then((r) => r.blob()),
+      fetch(fuocoUrl).then((r) => r.blob()),
+    ]);
+    musica = new Audio(URL.createObjectURL(mBlob));
+    musica.preload = "auto";
+    musica.volume = VOL_MUSICA;
+    applauso = new Audio(URL.createObjectURL(aBlob));
+    applauso.preload = "auto";
+    applauso.volume = VOL_APPLAUSO;
+    const fUrl = URL.createObjectURL(fBlob);
+    for (let i = 0; i < FUOCHI_POOL; i++) {
+      const a = new Audio(fUrl);
+      a.preload = "auto";
+      a.volume = VOL_FUOCO;
+      fuochiPool.push(a);
+    }
+  } catch {
+    // se il caricamento fallisce, la premiazione resterà muta
+  }
+})();
+
+function riavvolgiEPlay(a: HTMLAudioElement | null, volume: number): void {
+  if (!a) return;
   try {
     a.volume = volume;
     a.currentTime = 0;
@@ -53,12 +72,14 @@ function riavvolgiEPlay(a: HTMLAudioElement, volume: number): void {
 }
 
 function suonaFuoco(): void {
+  if (fuochiPool.length === 0) return;
   const a = fuochiPool[fuocoIdx];
-  fuocoIdx = (fuocoIdx + 1) % FUOCHI_POOL;
+  fuocoIdx = (fuocoIdx + 1) % fuochiPool.length;
   riavvolgiEPlay(a, VOL_FUOCO);
 }
 
-function fermaAudio(a: HTMLAudioElement): void {
+function fermaAudio(a: HTMLAudioElement | null): void {
+  if (!a) return;
   try {
     a.pause();
     a.currentTime = 0;
