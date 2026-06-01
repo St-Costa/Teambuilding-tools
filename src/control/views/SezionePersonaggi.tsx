@@ -23,6 +23,7 @@ export default function SezionePersonaggi({ onNuovoPersonaggio }: Props) {
   const rinomina = useAmbientazioneStore((s) => s.rinominaPersonaggio);
   const cambiaColore = useAmbientazioneStore((s) => s.cambiaColorePersonaggio);
   const modificaCrop = useAmbientazioneStore((s) => s.modificaCropPersonaggio);
+  const impostaNpc = useAmbientazioneStore((s) => s.impostaNpcPersonaggio);
   const elimina = useAmbientazioneStore((s) => s.eliminaPersonaggio);
   const assegnaOggetto = useAmbientazioneStore((s) => s.assegnaOggettoAPersonaggio);
   const modalita = useAmbientazioneStore((s) => s.modalita);
@@ -97,6 +98,7 @@ export default function SezionePersonaggi({ onNuovoPersonaggio }: Props) {
                     colore={p.colore}
                     crop={p.crop}
                     dimensione={36}
+                    npc={p.npc}
                     alt={p.nome}
                   />
                   <div className={styles.voceTesto}>
@@ -139,6 +141,14 @@ export default function SezionePersonaggi({ onNuovoPersonaggio }: Props) {
                             );
                           })}
                         </div>
+                        <label className={styles.menuNpc}>
+                          <input
+                            type="checkbox"
+                            checked={p.npc}
+                            onChange={(e) => impostaNpc(p.id, e.target.checked)}
+                          />
+                          NPC (fuori classifica)
+                        </label>
                       </>
                     )}
                     <div className={styles.menuLabel}>Oggetto</div>

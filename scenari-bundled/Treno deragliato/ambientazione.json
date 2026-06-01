@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "nome": "Treno deragliato",
   "creataIl": "2026-05-29T09:47:30.172Z",
-  "modificataIl": "2026-06-01T09:46:49.784Z",
+  "modificataIl": "2026-06-01T11:13:14.089Z",
   "mappaPath": "mappa-9ac372a6-96de-4b76-a11a-c7d7711b4a21.png",
   "personaggi": [
     {
@@ -24,7 +24,8 @@
         "y": 0.6059523123281974
       },
       "oggettoId": null,
-      "oggettoInizialeId": null
+      "oggettoInizialeId": null,
+      "npc": false
     },
     {
       "id": "e96af4bd-b93e-4c70-b671-65a0505c4f25",
@@ -45,7 +46,8 @@
         "y": 0.5124550430862992
       },
       "oggettoId": null,
-      "oggettoInizialeId": null
+      "oggettoInizialeId": null,
+      "npc": false
     },
     {
       "id": "35d010e9-a76f-4d07-950c-9c1da7259ac2",
@@ -58,15 +60,16 @@
         "offsetY": 1.2776020930363583
       },
       "posizione": {
-        "x": 0.47388751398235945,
-        "y": 0.39745183143185947
+        "x": 0.4427887121836344,
+        "y": 0.39833464445891203
       },
       "posizioneIniziale": {
         "x": 0.4427887121836344,
         "y": 0.39833464445891203
       },
       "oggettoId": null,
-      "oggettoInizialeId": null
+      "oggettoInizialeId": null,
+      "npc": false
     },
     {
       "id": "5bf72f00-49ac-41c5-9d0d-a50d08b3d542",
@@ -87,7 +90,8 @@
         "y": 0.5625384436713324
       },
       "oggettoId": null,
-      "oggettoInizialeId": null
+      "oggettoInizialeId": null,
+      "npc": false
     },
     {
       "id": "5a510645-979c-49f4-8048-04395b7a7a8f",
@@ -108,7 +112,30 @@
         "y": 0.5031731923421224
       },
       "oggettoId": null,
-      "oggettoInizialeId": null
+      "oggettoInizialeId": null,
+      "npc": false
+    },
+    {
+      "id": "192a5ce4-cf64-4f47-aed0-13dd99aaa490",
+      "nome": "Fuochista",
+      "colore": "#546E7A",
+      "imgPath": "personaggi/192a5ce4-cf64-4f47-aed0-13dd99aaa490.png",
+      "crop": {
+        "zoom": 1.7777777777777777,
+        "offsetX": -0.01614356407752404,
+        "offsetY": -0.04335174560546875
+      },
+      "posizione": {
+        "x": 0.89158683600294,
+        "y": 0.37371895345965045
+      },
+      "posizioneIniziale": {
+        "x": 0.89158683600294,
+        "y": 0.37371895345965045
+      },
+      "oggettoId": null,
+      "oggettoInizialeId": null,
+      "npc": true
     }
   ],
   "oggetti": [
@@ -193,9 +220,22 @@
       }
     }
   ],
+  "annotazioni": [
+    {
+      "id": "ab3d0869-2f3a-456c-a224-1d3209b23333",
+      "tipo": "simbolo",
+      "contenuto": "🔒",
+      "posizione": {
+        "x": 0.4933885021571039,
+        "y": 0.45922295016990866
+      },
+      "dimensione": 0.04312441865879542,
+      "colore": null
+    }
+  ],
   "obiettivi": [
-    "Obb. personale",
-    "Arrestato l'obiettivo?",
+    "",
+    "",
     "Arrestato"
   ],
   "soundboard": [

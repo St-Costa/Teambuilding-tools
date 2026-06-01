@@ -3,6 +3,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { readFile } from "@tauri-apps/plugin-fs";
 import { eseguiSalvataggio, useAmbientazioneStore } from "../../state/ambientazioneStore";
 import EmojiPicker from "../../components/EmojiPicker";
+import { IconaVolume } from "../../components/Icone";
 import styles from "./PannelloSoundboard.module.css";
 
 function joinPath(a: string, b: string): string {
@@ -125,7 +126,9 @@ export default function PannelloSoundboard() {
 
   return (
     <div className={styles.root}>
-      <span className={styles.etichetta}>Soundboard:</span>
+      <span className={styles.etichetta} title="Soundboard" aria-label="Soundboard">
+        <IconaVolume dimensione={24} />
+      </span>
       {erroreUpload && !inEdit && (
         <div className={styles.toastErrore} role="alert">
           {erroreUpload}

@@ -14,7 +14,7 @@ import styles from "./WizardPersonaggio.module.css";
 interface Props {
   personaggiEsistenti: Personaggio[];
   onAnnulla: () => void;
-  onConferma: (input: { sourceImgPath: string; nome: string; colore: string; crop: Crop }) => Promise<void>;
+  onConferma: (input: { sourceImgPath: string; nome: string; colore: string; crop: Crop; npc: boolean }) => Promise<void>;
 }
 
 type Step = "immagine" | "ritaglio" | "dettagli";
@@ -31,6 +31,7 @@ export default function WizardPersonaggio({
   const [colore, setColore] = useState<string>(
     primoColoreLibero(personaggiEsistenti.map((p) => p.colore)) ?? PALETTE[0].hex,
   );
+  const [npc, setNpc] = useState(false);
   const [erroreNome, setErroreNome] = useState<string | null>(null);
   const [erroreGenerico, setErroreGenerico] = useState<string | null>(null);
   const [inviando, setInviando] = useState(false);
@@ -90,7 +91,7 @@ export default function WizardPersonaggio({
     setInviando(true);
     setErroreGenerico(null);
     try {
-      await onConferma({ sourceImgPath, nome: nome.trim(), colore, crop });
+      await onConferma({ sourceImgPath, nome: nome.trim(), colore, crop, npc });
     } catch (e) {
       setErroreGenerico(stringifyErr(e));
       setInviando(false);
@@ -190,6 +191,14 @@ export default function WizardPersonaggio({
                 );
               })}
             </div>
+            <label className={styles.npc}>
+              <input
+                type="checkbox"
+                checked={npc}
+                onChange={(e) => setNpc(e.target.checked)}
+              />
+              Personaggio NPC (escluso dalla classifica, ma usabile nei conflitti)
+            </label>
           </div>
         )}
 

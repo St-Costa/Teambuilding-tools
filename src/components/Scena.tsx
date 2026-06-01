@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { oggettoDi, type Oggetto, type Personaggio } from "../lib/ambientazione";
+import { oggettoDi, type Annotazione, type Oggetto, type Personaggio } from "../lib/ambientazione";
 import { risolviAsset } from "../lib/storage";
 import {
   dimensioneCerchietto,
@@ -9,6 +9,7 @@ import {
 } from "../lib/scena";
 import Cerchietto from "./Cerchietto";
 import Quadratino from "./Quadratino";
+import AnnotazioneView from "./Annotazione";
 import styles from "./Scena.module.css";
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
   mappaPath: string | null;
   personaggi: Personaggio[];
   oggetti: Oggetto[];
+  annotazioni: Annotazione[];
   nome: string | null;
 }
 
@@ -25,6 +27,7 @@ export default function Scena({
   mappaPath,
   personaggi,
   oggetti,
+  annotazioni,
   nome,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -111,6 +114,7 @@ export default function Scena({
                 colore={p.colore}
                 crop={p.crop}
                 dimensione={dimCerchietto}
+                npc={p.npc}
                 alt={p.nome}
               />
               {oggetto && (
@@ -133,6 +137,22 @@ export default function Scena({
             </div>
           );
         })}
+      {rett &&
+        annotazioni.map((a) => (
+          <div
+            key={a.id}
+            className={styles.annotazioneWrap}
+            style={{
+              left: rett.offsetX + a.posizione.x * rett.larghezza,
+              top: rett.offsetY + a.posizione.y * rett.altezza,
+            }}
+          >
+            <AnnotazioneView
+              annotazione={a}
+              latoMaggiore={Math.max(rett.larghezza, rett.altezza)}
+            />
+          </div>
+        ))}
     </div>
   );
 }

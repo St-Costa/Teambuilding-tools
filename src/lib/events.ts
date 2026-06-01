@@ -1,5 +1,5 @@
 import { emit as tauriEmit, listen as tauriListen, type UnlistenFn } from "@tauri-apps/api/event";
-import type { Oggetto, Personaggio } from "./ambientazione";
+import type { Annotazione, Oggetto, Personaggio } from "./ambientazione";
 import type { FettaCalcolata, Modificatore } from "./ruota";
 
 export const EVT = {
@@ -59,6 +59,7 @@ export interface ScenaPayload {
   mappaPath: string | null;
   personaggi: Personaggio[];
   oggetti: Oggetto[];
+  annotazioni: Annotazione[];
   nome: string | null;
   conflitto: ConflittoSnapshot | null;
   timer: TimerSnapshot;

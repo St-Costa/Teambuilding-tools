@@ -424,3 +424,94 @@ i nomi sotto i cerchietti (restano in tabella).
 - `npx tsc --noEmit` clean; `npm run tauri build` ok (rodio/cpal compilati).
 - Su PC: tick ruota in sync e affidabili (confermato dall'utente). Beep timer
   udibili nel build. Dimensioni dinamiche ok.
+
+---
+
+## M13 — Annotazioni sulla mappa (simboli emoji + testo) (2026-06-01)
+
+### D-078 — Annotazioni: simboli emoji + etichette di testo, posizionabili e ridimensionabili
+Richiesta dell'utente: durante una sessione dal vivo serviva segnare sulla mappa
+una zona resa inaccessibile da una scelta di gioco, ma non c'era modo di farlo.
+Nuovo tipo `Annotazione { id, tipo: "simbolo"|"testo", contenuto, posizione,
+dimensione, colore }` in `lib/ambientazione.ts`. I **simboli sono emoji**
+(nessun file immagine: scalano come testo, stesso approccio della soundboard);
+lista in `lib/scena.ts::EMOJI_ANNOTAZIONI` (~15: 🚫 ⛔ ⚠️ ❌ ✅ frecce 🔥 💀 🚩 ⭐ 🔒 ❓).
+`dimensione` è una **frazione del lato maggiore** della mappa renderizzata (come
+`FRAZIONE_CERCHIETTO`), così `font-size = dimensione × latoMaggiore` è identico in
+regia e proiezione (D-077). Disponibili **sia in edit sia in play** (il pulsante
+in toolbar è gated solo su `mappaPath`), perché il bisogno nasce dal vivo.
+
+### D-079 — Interazione: riuso del pattern drag dei personaggi + resize uniforme dal centro
+Drag con PointerEvents + `setPointerCapture` + batching `requestAnimationFrame`,
+stesso pattern di `AreaMappa` per i personaggi. Selezione tenuta **separata** da
+quella dei personaggi (`annotazioneSelezionataId`): selezionare l'una deseleziona
+l'altra, per non avere due handle attivi insieme. Resize tramite 4 maniglie
+d'angolo: ridimensionamento **uniforme** (un solo scalare `dimensione`, niente
+deformazione asimmetrica — adatto a emoji/testo), calcolato dal rapporto fra la
+distanza puntatore↔centro corrente e quella iniziale. Componente display puro
+condiviso `components/Annotazione.tsx` (come `Cerchietto`/`Quadratino`), usato
+read-only in `Scena` (proiezione) e con overlay maniglie in `AreaMappa` (regia).
+
+### D-080 — Persistenza nel manifest, retrocompatibile senza bump di schemaVersion
+`annotazioni: Annotazione[]` aggiunto a `Ambientazione` e a `ScenaPayload`
+(sync). Letto come **array opzionale** in `validaAmbientazione` (default `[]`):
+le ambientazioni precedenti si aprono senza errori — stesso criterio usato per
+`obiettivi`/`soundboard`, quindi `schemaVersion` resta 1. Le annotazioni
+persistono (non sono temporanee) e si rimuovono a mano; il reset posizioni
+iniziali non le tocca.
+
+> NOTA: D-080 è stato **superato** da D-085 (gioco effimero): le annotazioni
+> aggiunte in modalità "play" NON vengono più salvate; persistono solo quelle
+> fatte in "edit". Vedi M14.
+
+### Verificato
+- `npx tsc --noEmit` clean; `npm run build` ok.
+
+---
+
+## M14 — Rifiniture annotazioni, gioco effimero, NPC (2026-06-01)
+
+### D-081 — Annotazioni testo: doppio-click per modificare in-place, multilinea
+Il testo si modifica con **doppio click direttamente sulla mappa** (textarea
+inline in `AreaMappa`, stato `annotazioneInModificaId` nello store), non da una
+barra esterna. Invio = a-capo (`white-space: pre`, multilinea es. "Cabina
+chiusa\na chiave"); Esc/blur conferma. La bozza è locale e si committa solo
+all'uscita: un testo vuoto elimina l'annotazione (un `contenuto` vuoto non è
+salvabile — `validaAnnotazione` lo boccerebbe al caricamento).
+
+### D-082 — Testo rosso fisso con bordo bianco; eliminazione con Canc
+Colore del testo **non modificabile**: rosso acceso (`#ff2222`) con contorno
+bianco 2px (`-webkit-text-stroke` + `paint-order: stroke fill`). Rimozione di
+simbolo/testo selezionato con il tasto **Canc/Backspace** (listener globale in
+`AreaMappa`, disattivato mentre si edita un testo o il focus è in un campo) —
+niente più pulsante cestino. Pulsanti toolbar a ICONA: "T" per il testo, icona
+immagine per il menu simboli; label "Soundboard:" sostituita dall'icona volume.
+
+### D-085 — GIOCO EFFIMERO: in "play" non si salva nulla
+Decisione del committente: una sessione di gioco non deve mai alterare lo
+scenario salvato. `modifica()` marca "dirty" (→ autosave) **solo in modalità
+"edit"**; in "play" aggiorna stato in memoria + proiezione ma NON scrive su
+disco. Così spostamenti, oggetti e annotazioni fatti dal vivo sono effimeri:
+riaprendo, lo scenario torna al setup. Supera D-080. Lo scenario permanente si
+costruisce solo in "edit". (Causa del bug originale: l'autosave era globale e le
+posizioni tornavano al setup solo se esisteva una `posizioneIniziale` salvata.)
+
+### D-086 — Autosave robusto + flush alla chiusura
+`useAutosave` ora ri-programma il salvataggio debounced a OGNI stato "dirty"
+(non solo sul fronte saved→dirty) e si auto-recupera se monta con modifiche
+pendenti → l'indicatore non resta più bloccato su "in attesa". `chiudi()` fa il
+**flush** del salvataggio in sospeso prima di scartare lo stato (niente perdita
+di modifiche chiudendo la sessione).
+
+### D-087 — Personaggio NPC
+Nuovo flag `npc: boolean` su `Personaggio` (opzionale, default `false` per
+scenari precedenti). Gli NPC sono **esclusi dalla classifica/leaderboard**
+(`leaderboardStore.apri` filtra `!p.npc`) ma restano **selezionabili nei
+conflitti** (ruota, nessun filtro). Sulla mappa hanno il **bordo tratteggiato**:
+disegnato come anello SVG con `stroke-dasharray` controllato (il `border: dashed`
+CSS dava trattini enormi ~ allo spessore del bordo). `Cerchietto` ristrutturato
+in wrapper non-ritagliato (anello + alone selezione) + cerchio interno ritagliato
+(immagine). Checkbox NPC nel wizard di creazione e nel menu ⋯ del personaggio.
+
+### Verificato
+- `npx tsc --noEmit` clean; `npm run build` ok. Provato dal vivo dall'utente.

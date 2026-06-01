@@ -10,11 +10,10 @@
 }
 
 .etichetta {
-  font-weight: 700;
-  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
   opacity: 0.75;
   margin-right: 0.2rem;
-  white-space: nowrap;
 }
 
 .slotWrap {

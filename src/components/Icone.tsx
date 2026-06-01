@@ -116,6 +116,76 @@ export function IconaVS({ dimensione = 24, className }: IconaProps) {
   );
 }
 
+/** Icona "Testo": una T maiuscola, come nei tool di disegno. */
+export function IconaTesto({ dimensione = 24, className }: IconaProps) {
+  return (
+    <svg
+      width={dimensione}
+      height={dimensione}
+      viewBox="0 0 24 24"
+      className={className}
+      aria-hidden="true"
+    >
+      <text
+        x="12"
+        y="13.5"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fontFamily="Georgia, 'Times New Roman', serif"
+        fontWeight="700"
+        fontSize="20"
+        fill="currentColor"
+      >
+        T
+      </text>
+    </svg>
+  );
+}
+
+/** Icona "Volume": altoparlante con onde sonore. */
+export function IconaVolume({ dimensione = 24, className }: IconaProps) {
+  return (
+    <svg
+      width={dimensione}
+      height={dimensione}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={STROKE}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M4 9 H7 L11.5 5 V19 L7 15 H4 Z" fill="currentColor" stroke="none" />
+      <path d="M15 9 a4 4 0 0 1 0 6" />
+      <path d="M17.5 6.5 a7.5 7.5 0 0 1 0 11" />
+    </svg>
+  );
+}
+
+/** Icona "Immagine": cornice con montagnetta e sole, come nei software documenti. */
+export function IconaImmagine({ dimensione = 24, className }: IconaProps) {
+  return (
+    <svg
+      width={dimensione}
+      height={dimensione}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={STROKE}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <rect x="3" y="4.5" width="18" height="15" rx="2" />
+      <circle cx="8.5" cy="9.5" r="1.6" fill="currentColor" stroke="none" />
+      <path d="M4 17 L9.5 11.5 L13 15 L16 12 L20 16.5" />
+    </svg>
+  );
+}
+
 /**
  * Icona "ruota della fortuna": cerchio diviso in 6 spicchi + perno centrale
  * + freccia indicatrice in alto. (Non più usata, mantenuta per riferimento.)

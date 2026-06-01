@@ -33,7 +33,10 @@ export const useLeaderboardStore = create<LeaderboardState>((set, get) => ({
   apri() {
     const amb = useAmbientazioneStore.getState().current;
     if (!amb) return;
-    const righe: RigaSnapInterno[] = amb.personaggi.map((p) => ({
+    // Gli NPC sono esclusi dalla classifica (ma restano nei conflitti/ruota).
+    const righe: RigaSnapInterno[] = amb.personaggi
+      .filter((p) => !p.npc)
+      .map((p) => ({
       personaggioId: p.id,
       nome: p.nome,
       colore: p.colore,

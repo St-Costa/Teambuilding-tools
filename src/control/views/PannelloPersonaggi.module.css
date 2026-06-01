@@ -180,6 +180,19 @@
   padding: 0.4rem 0.6rem 0;
 }
 
+.menuNpc {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.menuNpc input {
+  cursor: pointer;
+}
+
 .menuPalette {
   display: grid;
   grid-template-columns: repeat(6, 1fr);

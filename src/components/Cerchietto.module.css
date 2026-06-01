@@ -1,11 +1,19 @@
 .root {
+  position: relative;
+  border-radius: 50%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* Cerchio interno: contiene e ritaglia l'immagine, e porta il bordo colorato. */
+.cerchio {
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
   border-style: solid;
   overflow: hidden;
-  position: relative;
   background: #ddd;
   box-sizing: border-box;
-  flex-shrink: 0;
 }
 
 .img {
@@ -16,4 +24,13 @@
   pointer-events: none;
   user-select: none;
   display: block;
+}
+
+/* Anello tratteggiato NPC: sopra il cerchio, copre l'intero box (bordo incluso).
+   Il wrapper .root non ritaglia, quindi l'anello non viene tagliato. */
+.anelloNpc {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
 }

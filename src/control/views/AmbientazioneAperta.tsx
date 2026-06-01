@@ -12,6 +12,7 @@ import PannelloTimer from "./PannelloTimer";
 import PannelloLeaderboard from "./PannelloLeaderboard";
 import PannelloGioco from "./PannelloGioco";
 import PannelloSoundboard from "./PannelloSoundboard";
+import PannelloAnnotazioni from "./PannelloAnnotazioni";
 import PulsanteSottofondo from "./PulsanteSottofondo";
 import { IconaCasa, IconaMonitor, IconaTrofeo, IconaVS } from "../../components/Icone";
 import { useConflittoStore } from "../../state/conflittoStore";
@@ -79,9 +80,10 @@ export default function AmbientazioneAperta() {
     setConfermaChiusuraAperta(true);
   }
 
-  function confermaChiusura() {
+  async function confermaChiusura() {
     setConfermaChiusuraAperta(false);
-    chiudi();
+    // chiudi() fa il flush del salvataggio in sospeso prima di scartare lo stato.
+    await chiudi();
   }
 
   async function handleImpostaMappa() {
@@ -113,6 +115,7 @@ export default function AmbientazioneAperta() {
               {current.mappaPath ? "Cambia mappa…" : "Imposta mappa…"}
             </button>
           )}
+          {current.mappaPath && <PannelloAnnotazioni />}
           <button
             className={styles.btnIcona}
             onClick={() => void toggleStageFullscreen()}
@@ -145,12 +148,12 @@ export default function AmbientazioneAperta() {
               apriLeaderboard();
               setLeaderboardAperta(true);
             }}
-            disabled={current.personaggi.length === 0 || conflittoInCorso}
+            disabled={current.personaggi.every((p) => p.npc) || conflittoInCorso}
             title={
               conflittoInCorso
                 ? "Chiudi prima il conflitto"
-                : current.personaggi.length === 0
-                  ? "Serve almeno 1 personaggio"
+                : current.personaggi.every((p) => p.npc)
+                  ? "Serve almeno 1 personaggio non-NPC"
                   : "Mostra la leaderboard finale"
             }
             aria-label="Leaderboard"

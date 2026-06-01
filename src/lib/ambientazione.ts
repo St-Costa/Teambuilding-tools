@@ -22,6 +22,9 @@ export interface Personaggio {
   posizioneIniziale: Posizione | null;
   oggettoId: string | null;
   oggettoInizialeId: string | null;
+  // NPC = personaggio non giocante: escluso dalla classifica/leaderboard ma
+  // selezionabile nei conflitti (ruota). Sulla mappa ha il bordo tratteggiato.
+  npc: boolean;
 }
 
 export interface Oggetto {
@@ -30,6 +33,22 @@ export interface Oggetto {
   imgPath: string;
   crop: Crop;
 }
+
+export type TipoAnnotazione = "simbolo" | "testo";
+
+export interface Annotazione {
+  id: string;
+  tipo: TipoAnnotazione;
+  contenuto: string; // emoji (simbolo) oppure testo digitato (testo)
+  posizione: Posizione; // x,y normalizzate 0–1 = CENTRO (come i personaggi)
+  dimensione: number; // frazione del lato maggiore mappa → guida il font-size
+  colore: string | null; // solo per "testo": colore del testo (null = default)
+}
+
+// Range della dimensione (frazione del lato maggiore della mappa) di
+// un'annotazione: clamp di sicurezza usato sia in validazione sia nel resize.
+export const DIM_ANNOTAZIONE_MIN = 0.01;
+export const DIM_ANNOTAZIONE_MAX = 0.5;
 
 export const NUM_SLOT_SOUNDBOARD = 6;
 
@@ -47,6 +66,7 @@ export interface Ambientazione {
   mappaPath: string | null;
   personaggi: Personaggio[];
   oggetti: Oggetto[];
+  annotazioni: Annotazione[];
   obiettivi: [string, string, string];
   soundboard: SlotSoundboard[];
   sottofondoPath: string | null;
@@ -141,6 +161,8 @@ function validaPersonaggio(raw: unknown, idx: number): Personaggio {
     posizioneIniziale,
     oggettoId,
     oggettoInizialeId,
+    // npc opzionale: assente negli scenari precedenti → false.
+    npc: raw.npc === true,
   };
 }
 
@@ -161,6 +183,35 @@ function validaOggetto(raw: unknown, idx: number): Oggetto {
     nome: raw.nome,
     imgPath: raw.imgPath,
     crop: validaCrop(raw.crop, ctx),
+  };
+}
+
+function validaAnnotazione(raw: unknown, idx: number): Annotazione {
+  const ctx = `annotazione[${idx}]`;
+  if (!isObject(raw)) throw new AmbientazioneCorrotta(`${ctx} non è un oggetto`);
+  if (typeof raw.id !== "string" || raw.id === "") {
+    throw new AmbientazioneCorrotta(`${ctx}: id mancante`);
+  }
+  if (raw.tipo !== "simbolo" && raw.tipo !== "testo") {
+    throw new AmbientazioneCorrotta(`${ctx}: tipo non valido`);
+  }
+  if (typeof raw.contenuto !== "string" || raw.contenuto === "") {
+    throw new AmbientazioneCorrotta(`${ctx}: contenuto mancante`);
+  }
+  if (!isNumeroFinito(raw.dimensione)) {
+    throw new AmbientazioneCorrotta(`${ctx}: dimensione non numerica`);
+  }
+  const colore =
+    typeof raw.colore === "string" && /^#[0-9A-Fa-f]{6}$/.test(raw.colore)
+      ? raw.colore.toUpperCase()
+      : null;
+  return {
+    id: raw.id,
+    tipo: raw.tipo,
+    contenuto: raw.contenuto,
+    posizione: validaPosizione(raw.posizione, ctx),
+    dimensione: Math.min(DIM_ANNOTAZIONE_MAX, Math.max(DIM_ANNOTAZIONE_MIN, raw.dimensione)),
+    colore,
   };
 }
 
@@ -187,6 +238,10 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
   }
   const personaggi = raw.personaggi.map((p, i) => validaPersonaggio(p, i));
   const oggetti = raw.oggetti.map((o, i) => validaOggetto(o, i));
+  // annotazioni: array opzionale, assente nelle ambientazioni precedenti → [].
+  const annotazioni: Annotazione[] = Array.isArray(raw.annotazioni)
+    ? raw.annotazioni.map((a, i) => validaAnnotazione(a, i))
+    : [];
   // obiettivi: array opzionale di 3 stringhe, default vuoti per manifest M5-M8.2.
   const obiettiviRaw = Array.isArray(raw.obiettivi) ? raw.obiettivi : [];
   const obiettivi: [string, string, string] = [
@@ -228,6 +283,7 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
     mappaPath: raw.mappaPath,
     personaggi,
     oggetti,
+    annotazioni,
     obiettivi,
     soundboard,
     sottofondoPath,
@@ -252,6 +308,7 @@ export function nuovoManifest(nome: string): Ambientazione {
     mappaPath: null,
     personaggi: [],
     oggetti: [],
+    annotazioni: [],
     obiettivi: ["", "", ""],
     soundboard: soundboardIniziale(),
     sottofondoPath: null,

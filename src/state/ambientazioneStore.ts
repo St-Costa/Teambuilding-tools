@@ -1,5 +1,14 @@
 import { create } from "zustand";
-import type { Ambientazione, Crop, Oggetto, Personaggio, Posizione } from "../lib/ambientazione";
+import type {
+  Ambientazione,
+  Annotazione,
+  Crop,
+  Oggetto,
+  Personaggio,
+  Posizione,
+  TipoAnnotazione,
+} from "../lib/ambientazione";
+import { DIM_ANNOTAZIONE_MAX, DIM_ANNOTAZIONE_MIN } from "../lib/ambientazione";
 import {
   apriAmbientazione,
   copiaAudioInCartella,
@@ -9,7 +18,12 @@ import {
 } from "../lib/storage";
 import { aggiungiRecente, aggiornaNomeRecente } from "../lib/recents";
 import { EVT, emit, type ScenaPayload } from "../lib/events";
-import { clamp01, nuovoId } from "../lib/scena";
+import {
+  clamp01,
+  nuovoId,
+  DIM_ANNOTAZIONE_SIMBOLO_DEFAULT,
+  DIM_ANNOTAZIONE_TESTO_DEFAULT,
+} from "../lib/scena";
 
 export type SaveStatus = "idle" | "dirty" | "saving" | "saved" | "error";
 export type ModalitaAmbientazione = "play" | "edit";
@@ -21,10 +35,12 @@ interface AmbientazioneState {
   lastSavedAt: number | null;
   lastError: string | null;
   selezionatoId: string | null;
+  annotazioneSelezionataId: string | null;
+  annotazioneInModificaId: string | null;
   modalita: ModalitaAmbientazione;
   apri: (folderPath: string, modalita?: ModalitaAmbientazione) => Promise<void>;
   creaNuova: (folderParent: string, nome: string) => Promise<void>;
-  chiudi: () => void;
+  chiudi: () => Promise<void>;
   modifica: (fn: (draft: Ambientazione) => void) => void;
   impostaMappa: (sourceAbsPath: string) => Promise<void>;
   rimuoviMappa: () => void;
@@ -33,11 +49,13 @@ interface AmbientazioneState {
     nome: string;
     colore: string;
     crop: Crop;
+    npc?: boolean;
   }) => Promise<string>;
   spostaPersonaggio: (id: string, pos: Posizione) => void;
   rinominaPersonaggio: (id: string, nome: string) => void;
   cambiaColorePersonaggio: (id: string, hex: string) => void;
   modificaCropPersonaggio: (id: string, crop: Crop) => void;
+  impostaNpcPersonaggio: (id: string, npc: boolean) => void;
   salvaPosizioneInizialePersonaggio: (id: string) => void;
   ripristinaPosizioneInizialePersonaggio: (id: string) => void;
   eliminaPosizioneInizialePersonaggio: (id: string) => void;
@@ -49,6 +67,18 @@ interface AmbientazioneState {
   setSottofondo: (sourceAbsPath: string | null) => Promise<void>;
   eliminaPersonaggio: (id: string) => void;
   selezionaPersonaggio: (id: string | null) => void;
+  aggiungiAnnotazione: (input: {
+    tipo: TipoAnnotazione;
+    contenuto: string;
+    colore?: string | null;
+  }) => string;
+  spostaAnnotazione: (id: string, pos: Posizione) => void;
+  ridimensionaAnnotazione: (id: string, dimensione: number) => void;
+  modificaTestoAnnotazione: (id: string, contenuto: string) => void;
+  cambiaColoreAnnotazione: (id: string, hex: string | null) => void;
+  eliminaAnnotazione: (id: string) => void;
+  selezionaAnnotazione: (id: string | null) => void;
+  setAnnotazioneInModifica: (id: string | null) => void;
   aggiungiOggetto: (input: {
     sourceImgPath: string;
     nome: string;
@@ -88,6 +118,7 @@ function payloadCorrente(state: AmbientazioneState): ScenaPayload {
     mappaPath: state.current?.mappaPath ?? null,
     personaggi: state.current?.personaggi ?? [],
     oggetti: state.current?.oggetti ?? [],
+    annotazioni: state.current?.annotazioni ?? [],
     nome: state.current?.nome ?? null,
     conflitto: conflittoSnapshotProvider?.() ?? null,
     timer: timerSnapshotProvider?.() ?? {
@@ -135,6 +166,8 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
   lastSavedAt: null,
   lastError: null,
   selezionatoId: null,
+  annotazioneSelezionataId: null,
+  annotazioneInModificaId: null,
   modalita: "edit",
 
   async apri(folderPath, modalita = "edit") {
@@ -157,6 +190,8 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       lastSavedAt: Date.now(),
       lastError: null,
       selezionatoId: null,
+      annotazioneSelezionataId: null,
+      annotazioneInModificaId: null,
       modalita,
     });
     await aggiungiRecente(folderPath, a.nome);
@@ -174,13 +209,24 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       lastSavedAt: Date.now(),
       lastError: null,
       selezionatoId: null,
+      annotazioneSelezionataId: null,
+      annotazioneInModificaId: null,
       modalita: "edit",
     });
     await aggiungiRecente(folderPath, nome);
     notificaProiezione(get());
   },
 
-  chiudi() {
+  async chiudi() {
+    // Flush di un eventuale salvataggio in sospeso PRIMA di azzerare lo stato:
+    // l'autosave è debounced (500ms), quindi le ultime modifiche fatte dal vivo
+    // (tipicamente le annotazioni aggiunte in play, dove non c'è l'indicatore
+    // "salvato" a dare feedback) andrebbero perse chiudendo la sessione. Qui
+    // scriviamo subito su disco lo stato corrente prima di scartarlo.
+    const stato = get().saveStatus;
+    if (stato === "dirty" || stato === "saving") {
+      await eseguiSalvataggio();
+    }
     set({
       current: null,
       folderPath: null,
@@ -188,6 +234,8 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       lastSavedAt: null,
       lastError: null,
       selezionatoId: null,
+      annotazioneSelezionataId: null,
+      annotazioneInModificaId: null,
       modalita: "edit",
     });
     notificaProiezione(get());
@@ -198,7 +246,17 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
     if (!cur) return;
     const next = clone(cur);
     fn(next);
-    set({ current: next, saveStatus: "dirty", lastError: null });
+    // GIOCO EFFIMERO: in modalità "play" le modifiche (spostamenti, oggetti,
+    // annotazioni) aggiornano lo stato in memoria e la proiezione, ma NON
+    // marcano "dirty" → niente autosave, niente scrittura su disco. Lo scenario
+    // si modifica in modo permanente solo in "edit". Così una sessione di gioco
+    // non altera mai lo scenario salvato: riaprendolo torna com'era nel setup.
+    const inPlay = get().modalita === "play";
+    set({
+      current: next,
+      saveStatus: inPlay ? get().saveStatus : "dirty",
+      lastError: null,
+    });
     notificaProiezione(get());
   },
 
@@ -218,7 +276,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
     });
   },
 
-  async aggiungiPersonaggio({ sourceImgPath, nome, colore, crop }) {
+  async aggiungiPersonaggio({ sourceImgPath, nome, colore, crop, npc }) {
     const { folderPath } = get();
     if (!folderPath) throw new Error("Nessuna ambientazione aperta");
     const id = nuovoId();
@@ -233,6 +291,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       posizioneIniziale: null,
       oggettoId: null,
       oggettoInizialeId: null,
+      npc: npc ?? false,
     };
     get().modifica((draft) => {
       draft.personaggi.push(personaggio);
@@ -267,6 +326,13 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
     get().modifica((draft) => {
       const p = draft.personaggi.find((x) => x.id === id);
       if (p) p.crop = crop;
+    });
+  },
+
+  impostaNpcPersonaggio(id, npc) {
+    get().modifica((draft) => {
+      const p = draft.personaggi.find((x) => x.id === id);
+      if (p) p.npc = npc;
     });
   },
 
@@ -373,7 +439,93 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
   },
 
   selezionaPersonaggio(id) {
-    set({ selezionatoId: id });
+    // Selezionare un personaggio deseleziona l'eventuale annotazione attiva,
+    // per non avere due maniglie/handle attivi insieme.
+    set({ selezionatoId: id, annotazioneSelezionataId: id ? null : get().annotazioneSelezionataId });
+  },
+
+  aggiungiAnnotazione({ tipo, contenuto, colore }) {
+    const id = nuovoId();
+    const annotazione: Annotazione = {
+      id,
+      tipo,
+      contenuto,
+      // Posizione iniziale al centro, leggermente sfalsata per ogni nuova
+      // annotazione così non si impilano esattamente sovrapposte.
+      posizione: { x: 0.5, y: 0.5 },
+      dimensione:
+        tipo === "simbolo"
+          ? DIM_ANNOTAZIONE_SIMBOLO_DEFAULT
+          : DIM_ANNOTAZIONE_TESTO_DEFAULT,
+      colore: colore ?? null,
+    };
+    get().modifica((draft) => {
+      // Sfalsa leggermente in base a quante annotazioni esistono già.
+      const n = draft.annotazioni.length;
+      const off = clamp01(0.5 + ((n % 5) - 2) * 0.04);
+      annotazione.posizione = { x: off, y: clamp01(0.5 + (Math.floor(n / 5) % 5) * 0.04) };
+      draft.annotazioni.push(annotazione);
+    });
+    set({ annotazioneSelezionataId: id, selezionatoId: null });
+    return id;
+  },
+
+  spostaAnnotazione(id, pos) {
+    get().modifica((draft) => {
+      const a = draft.annotazioni.find((x) => x.id === id);
+      if (a) a.posizione = { x: clamp01(pos.x), y: clamp01(pos.y) };
+    });
+  },
+
+  ridimensionaAnnotazione(id, dimensione) {
+    const dim = Math.min(DIM_ANNOTAZIONE_MAX, Math.max(DIM_ANNOTAZIONE_MIN, dimensione));
+    get().modifica((draft) => {
+      const a = draft.annotazioni.find((x) => x.id === id);
+      if (a) a.dimensione = dim;
+    });
+  },
+
+  modificaTestoAnnotazione(id, contenuto) {
+    get().modifica((draft) => {
+      const a = draft.annotazioni.find((x) => x.id === id);
+      if (a) a.contenuto = contenuto;
+    });
+  },
+
+  cambiaColoreAnnotazione(id, hex) {
+    get().modifica((draft) => {
+      const a = draft.annotazioni.find((x) => x.id === id);
+      if (a) a.colore = hex ? hex.toUpperCase() : null;
+    });
+  },
+
+  eliminaAnnotazione(id) {
+    get().modifica((draft) => {
+      draft.annotazioni = draft.annotazioni.filter((x) => x.id !== id);
+    });
+    const patch: Partial<AmbientazioneState> = {};
+    if (get().annotazioneSelezionataId === id) patch.annotazioneSelezionataId = null;
+    if (get().annotazioneInModificaId === id) patch.annotazioneInModificaId = null;
+    if (Object.keys(patch).length) set(patch);
+  },
+
+  selezionaAnnotazione(id) {
+    // Cambiare selezione chiude l'eventuale modifica inline in corso.
+    set({
+      annotazioneSelezionataId: id,
+      selezionatoId: id ? null : get().selezionatoId,
+      annotazioneInModificaId: null,
+    });
+  },
+
+  setAnnotazioneInModifica(id) {
+    // Entrare in modifica implica selezionare l'annotazione (e deselezionare
+    // l'eventuale personaggio).
+    set({
+      annotazioneInModificaId: id,
+      annotazioneSelezionataId: id ?? get().annotazioneSelezionataId,
+      selezionatoId: id ? null : get().selezionatoId,
+    });
   },
 
   async aggiungiOggetto({ sourceImgPath, nome, crop }) {

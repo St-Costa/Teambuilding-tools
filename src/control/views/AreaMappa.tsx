@@ -4,12 +4,14 @@ import { risolviAsset } from "../../lib/storage";
 import {
   clamp01,
   dimensioneCerchietto,
+  fontSizeAnnotazione,
   RAPPORTO_QUADRATINO,
   RIENTRO_QUADRATINO,
   rettangoloContain,
 } from "../../lib/scena";
 import Cerchietto from "../../components/Cerchietto";
 import Quadratino from "../../components/Quadratino";
+import AnnotazioneView from "../../components/Annotazione";
 import { oggettoDi } from "../../lib/ambientazione";
 import styles from "./AreaMappa.module.css";
 
@@ -19,6 +21,20 @@ export default function AreaMappa() {
   const selezionatoId = useAmbientazioneStore((s) => s.selezionatoId);
   const seleziona = useAmbientazioneStore((s) => s.selezionaPersonaggio);
   const sposta = useAmbientazioneStore((s) => s.spostaPersonaggio);
+  const annotazioneSelezionataId = useAmbientazioneStore((s) => s.annotazioneSelezionataId);
+  const annotazioneInModificaId = useAmbientazioneStore((s) => s.annotazioneInModificaId);
+  const selezionaAnn = useAmbientazioneStore((s) => s.selezionaAnnotazione);
+  const setInModifica = useAmbientazioneStore((s) => s.setAnnotazioneInModifica);
+  const spostaAnn = useAmbientazioneStore((s) => s.spostaAnnotazione);
+  const ridimensionaAnn = useAmbientazioneStore((s) => s.ridimensionaAnnotazione);
+  const modificaTestoAnn = useAmbientazioneStore((s) => s.modificaTestoAnnotazione);
+  const eliminaAnn = useAmbientazioneStore((s) => s.eliminaAnnotazione);
+
+  // Bozza locale del testo in modifica inline: si scrive qui e si committa solo
+  // all'uscita (blur/Escape), così non finiscono stati intermedi vuoti nel
+  // manifest (che li boccerebbe al caricamento).
+  const [bozza, setBozza] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -27,6 +43,20 @@ export default function AreaMappa() {
   const dragRef = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
   const rafRef = useRef<number | null>(null);
   const pendingPos = useRef<{ x: number; y: number } | null>(null);
+  // Drag (spostamento) di un'annotazione.
+  const dragAnnRef = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
+  const pendingAnnPos = useRef<{ x: number; y: number } | null>(null);
+  const rafAnnRef = useRef<number | null>(null);
+  // Resize (ridimensionamento uniforme dal centro) di un'annotazione.
+  const resizeRef = useRef<{
+    id: string;
+    centerX: number;
+    centerY: number;
+    startDist: number;
+    startDimensione: number;
+  } | null>(null);
+  const pendingDim = useRef<number | null>(null);
+  const rafDimRef = useRef<number | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -51,6 +81,49 @@ export default function AreaMappa() {
       setImgDim({ w: img.naturalWidth, h: img.naturalHeight });
     }
   });
+
+  // Entrando in modifica inline: inizializza la bozza col testo corrente e dà il
+  // focus alla textarea, selezionando tutto (così si può sovrascrivere "Testo").
+  useEffect(() => {
+    if (!annotazioneInModificaId) return;
+    const ann = current?.annotazioni.find((a) => a.id === annotazioneInModificaId);
+    if (!ann) return;
+    setBozza(ann.contenuto);
+    // focus dopo il mount della textarea
+    const t = window.setTimeout(() => {
+      const ta = textareaRef.current;
+      if (ta) {
+        ta.focus();
+        ta.select();
+      }
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [annotazioneInModificaId]);
+
+  // Tasto Canc/Backspace: elimina l'annotazione SELEZIONATA, ma solo se non si
+  // sta modificando un testo (in quel caso il tasto cancella un carattere) e il
+  // focus non è in un campo di input.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Delete" && e.key !== "Backspace") return;
+      if (annotazioneInModificaId) return; // sto editando: lascia gestire al campo
+      const sel = annotazioneSelezionataId;
+      if (!sel) return;
+      const ae = document.activeElement as HTMLElement | null;
+      if (
+        ae &&
+        (ae.tagName === "INPUT" ||
+          ae.tagName === "TEXTAREA" ||
+          ae.isContentEditable)
+      ) {
+        return; // il focus è in un campo editabile altrove
+      }
+      e.preventDefault();
+      eliminaAnn(sel);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [annotazioneSelezionataId, annotazioneInModificaId, eliminaAnn]);
 
   if (!current || !folderPath) return null;
 
@@ -153,8 +226,144 @@ export default function AreaMappa() {
     }
   }
 
+  // --- Annotazioni: spostamento (stesso pattern dei personaggi) ---
+
+  function flushPendingAnnMove() {
+    if (!dragAnnRef.current || !pendingAnnPos.current) {
+      rafAnnRef.current = null;
+      return;
+    }
+    const { id } = dragAnnRef.current;
+    const { x, y } = pendingAnnPos.current;
+    pendingAnnPos.current = null;
+    spostaAnn(id, { x, y });
+    rafAnnRef.current = null;
+  }
+
+  function handleAnnPointerDown(e: React.PointerEvent<HTMLDivElement>, id: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!rett) return;
+    selezionaAnn(id);
+    const ann = current!.annotazioni.find((a) => a.id === id);
+    if (!ann) return;
+    const screen = rettInScreen();
+    if (!screen) return;
+    const centroX = screen.left + ann.posizione.x * screen.width;
+    const centroY = screen.top + ann.posizione.y * screen.height;
+    dragAnnRef.current = {
+      id,
+      offsetX: e.clientX - centroX,
+      offsetY: e.clientY - centroY,
+    };
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+  }
+
+  function handleAnnPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!dragAnnRef.current) return;
+    const screen = rettInScreen();
+    if (!screen) return;
+    const x = (e.clientX - dragAnnRef.current.offsetX - screen.left) / screen.width;
+    const y = (e.clientY - dragAnnRef.current.offsetY - screen.top) / screen.height;
+    pendingAnnPos.current = { x: clamp01(x), y: clamp01(y) };
+    if (rafAnnRef.current === null) {
+      rafAnnRef.current = requestAnimationFrame(flushPendingAnnMove);
+    }
+  }
+
+  function handleAnnPointerUp() {
+    if (dragAnnRef.current && pendingAnnPos.current) {
+      flushPendingAnnMove();
+    }
+    dragAnnRef.current = null;
+    pendingAnnPos.current = null;
+    if (rafAnnRef.current !== null) {
+      cancelAnimationFrame(rafAnnRef.current);
+      rafAnnRef.current = null;
+    }
+  }
+
+  // --- Annotazioni: resize uniforme dal centro tramite maniglie d'angolo ---
+
+  function flushPendingDim() {
+    if (!resizeRef.current || pendingDim.current === null) {
+      rafDimRef.current = null;
+      return;
+    }
+    const { id } = resizeRef.current;
+    const dim = pendingDim.current;
+    pendingDim.current = null;
+    ridimensionaAnn(id, dim);
+    rafDimRef.current = null;
+  }
+
+  function handleResizePointerDown(e: React.PointerEvent<HTMLDivElement>, id: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!rett) return;
+    const ann = current!.annotazioni.find((a) => a.id === id);
+    if (!ann) return;
+    const screen = rettInScreen();
+    if (!screen) return;
+    const centerX = screen.left + ann.posizione.x * screen.width;
+    const centerY = screen.top + ann.posizione.y * screen.height;
+    const startDist = Math.max(1, Math.hypot(e.clientX - centerX, e.clientY - centerY));
+    resizeRef.current = {
+      id,
+      centerX,
+      centerY,
+      startDist,
+      startDimensione: ann.dimensione,
+    };
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+  }
+
+  function handleResizePointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!resizeRef.current) return;
+    const { centerX, centerY, startDist, startDimensione } = resizeRef.current;
+    const dist = Math.hypot(e.clientX - centerX, e.clientY - centerY);
+    // Ridimensionamento uniforme: la nuova dimensione scala col rapporto fra la
+    // distanza puntatore↔centro corrente e quella iniziale. Clamp nello store.
+    pendingDim.current = startDimensione * (dist / startDist);
+    if (rafDimRef.current === null) {
+      rafDimRef.current = requestAnimationFrame(flushPendingDim);
+    }
+  }
+
+  function handleResizePointerUp() {
+    if (resizeRef.current && pendingDim.current !== null) {
+      flushPendingDim();
+    }
+    resizeRef.current = null;
+    pendingDim.current = null;
+    if (rafDimRef.current !== null) {
+      cancelAnimationFrame(rafDimRef.current);
+      rafDimRef.current = null;
+    }
+  }
+
+  // Conclude la modifica inline del testo: se vuoto elimina l'annotazione (un
+  // campo di testo vuoto non avrebbe senso e non è salvabile), altrimenti salva.
+  function concludiModificaTesto() {
+    const id = annotazioneInModificaId;
+    if (!id) return;
+    if (bozza.trim() === "") {
+      eliminaAnn(id);
+    } else {
+      modificaTestoAnn(id, bozza);
+    }
+    setInModifica(null);
+  }
+
   return (
-    <main className={styles.root} ref={containerRef} onClick={() => seleziona(null)}>
+    <main
+      className={styles.root}
+      ref={containerRef}
+      onClick={() => {
+        seleziona(null);
+        selezionaAnn(null);
+      }}
+    >
       <img
         ref={imgRef}
         src={mappaUrl}
@@ -187,6 +396,7 @@ export default function AreaMappa() {
                 crop={p.crop}
                 dimensione={dimCerchietto}
                 selezionato={selezionatoId === p.id}
+                npc={p.npc}
                 alt={p.nome}
               />
               {oggetto && (
@@ -206,6 +416,85 @@ export default function AreaMappa() {
                   />
                 </div>
               )}
+            </div>
+          );
+        })}
+      {rett &&
+        current.annotazioni.map((a) => {
+          const selezionata = annotazioneSelezionataId === a.id;
+          const inModifica = annotazioneInModificaId === a.id && a.tipo === "testo";
+          const latoMaggiore = Math.max(rett.larghezza, rett.altezza);
+          const wrapClass = `${styles.annotazioneWrap}${
+            selezionata && !inModifica ? ` ${styles.annotazioneSelezionata}` : ""
+          }`;
+          // Handler di drag attivi solo quando NON si sta editando il testo:
+          // in modifica la textarea deve ricevere i click per la selezione.
+          const dragHandlers = inModifica
+            ? {}
+            : {
+                onPointerDown: (e: React.PointerEvent<HTMLDivElement>) =>
+                  handleAnnPointerDown(e, a.id),
+                onPointerMove: handleAnnPointerMove,
+                onPointerUp: handleAnnPointerUp,
+                onPointerCancel: handleAnnPointerUp,
+              };
+          return (
+            <div
+              key={a.id}
+              className={wrapClass}
+              style={{
+                left: rett.offsetX + a.posizione.x * rett.larghezza,
+                top: rett.offsetY + a.posizione.y * rett.altezza,
+              }}
+              {...dragHandlers}
+              onClick={(e) => e.stopPropagation()}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                if (a.tipo === "testo") setInModifica(a.id);
+              }}
+              title={
+                a.tipo === "testo" ? "Doppio click per modificare il testo" : "Simbolo"
+              }
+            >
+              {inModifica ? (
+                <textarea
+                  ref={textareaRef}
+                  className={styles.editorTesto}
+                  value={bozza}
+                  rows={Math.max(1, bozza.split("\n").length)}
+                  cols={Math.max(3, ...bozza.split("\n").map((r) => r.length))}
+                  style={{ fontSize: fontSizeAnnotazione(a.dimensione, latoMaggiore) }}
+                  onChange={(e) => setBozza(e.target.value)}
+                  onBlur={concludiModificaTesto}
+                  onKeyDown={(e) => {
+                    // Invio = a-capo (default textarea). Escape = conferma ed esci.
+                    if (e.key === "Escape") {
+                      e.preventDefault();
+                      concludiModificaTesto();
+                    }
+                    // Non far propagare Canc/Backspace al listener globale.
+                    e.stopPropagation();
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
+                  onDoubleClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <AnnotazioneView annotazione={a} latoMaggiore={latoMaggiore} />
+              )}
+              {selezionata &&
+                !inModifica &&
+                (["nw", "ne", "se", "sw"] as const).map((angolo) => (
+                  <div
+                    key={angolo}
+                    className={`${styles.maniglia} ${styles[`maniglia_${angolo}`]}`}
+                    onPointerDown={(e) => handleResizePointerDown(e, a.id)}
+                    onPointerMove={handleResizePointerMove}
+                    onPointerUp={handleResizePointerUp}
+                    onPointerCancel={handleResizePointerUp}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ))}
             </div>
           );
         })}

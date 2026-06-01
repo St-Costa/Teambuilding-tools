@@ -69,6 +69,19 @@
   font-size: 0.9rem;
 }
 
+.npc {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.npc input {
+  cursor: pointer;
+}
+
 .label input {
   padding: 0.5rem 0.7rem;
   font: inherit;

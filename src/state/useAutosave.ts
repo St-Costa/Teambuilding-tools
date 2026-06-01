@@ -21,22 +21,31 @@ export function useAutosave(): void {
         inFlight = false;
         if (staleAfterSave) {
           staleAfterSave = false;
-          const status = useAmbientazioneStore.getState().saveStatus;
-          if (status === "dirty") {
+          if (useAmbientazioneStore.getState().saveStatus === "dirty") {
             void trigger();
           }
         }
       }
     };
 
-    const unsub = useAmbientazioneStore.subscribe((state, prev) => {
-      if (state.saveStatus === "dirty" && prev.saveStatus !== "dirty") {
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(() => {
-          timer = null;
+    // (Ri)programma un salvataggio debounced. Chiamato a OGNI stato "dirty",
+    // non solo sul fronte saved→dirty: così non può restare bloccato in
+    // "dirty" se un edge va perso (es. rimontaggio in HMR, set ravvicinati).
+    const schedule = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        timer = null;
+        if (useAmbientazioneStore.getState().saveStatus === "dirty") {
           void trigger();
-        }, DEBOUNCE_MS);
-      }
+        }
+      }, DEBOUNCE_MS);
+    };
+
+    // Se all'attivazione c'è già roba non salvata, programma subito.
+    if (useAmbientazioneStore.getState().saveStatus === "dirty") schedule();
+
+    const unsub = useAmbientazioneStore.subscribe((state) => {
+      if (state.saveStatus === "dirty") schedule();
     });
 
     return () => {

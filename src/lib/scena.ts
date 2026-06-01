@@ -20,6 +20,37 @@ export const RAPPORTO_QUADRATINO = 0.8; // quadratino-oggetto = 80% del cerchiet
 // cerchietto; equivaleva a -10px sul vecchio cerchietto da ~116px).
 export const RIENTRO_QUADRATINO = 0.086;
 
+// Annotazioni sulla mappa (simboli emoji + etichette di testo). La dimensione
+// è una frazione del lato maggiore della mappa renderizzata, come
+// FRAZIONE_CERCHIETTO, così scala identica in regia e proiezione.
+export const EMOJI_ANNOTAZIONI = [
+  "🚫", // inaccessibile
+  "⛔", // stop
+  "⚠️", // pericolo
+  "❌", // distrutto / eliminato
+  "✅", // ok
+  "⬆️", // freccia su
+  "➡️", // freccia destra
+  "⬇️", // freccia giù
+  "⬅️", // freccia sinistra
+  "🔥", // fuoco
+  "💀", // letale
+  "🚩", // punto di interesse
+  "⭐", // obiettivo
+  "🔒", // bloccato
+  "❓", // mistero
+  "🐺", // lupo
+  "🪨", // carbone / roccia (non esiste un'emoji dedicata al carbone)
+] as const;
+
+export const DIM_ANNOTAZIONE_SIMBOLO_DEFAULT = 0.06;
+export const DIM_ANNOTAZIONE_TESTO_DEFAULT = 0.045;
+
+/** Font-size in px di un'annotazione dato il lato maggiore della mappa. */
+export function fontSizeAnnotazione(dimensione: number, latoMaggiore: number): number {
+  return Math.round(dimensione * latoMaggiore);
+}
+
 /** Diametro del cerchietto dato il rettangolo della mappa renderizzata. */
 export function dimensioneCerchietto(rett: RettangoloContenuto): number {
   return Math.round(Math.max(rett.larghezza, rett.altezza) * FRAZIONE_CERCHIETTO);

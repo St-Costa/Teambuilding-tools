@@ -12,6 +12,7 @@ const STATO_INIZIALE: ScenaPayload = {
   mappaPath: null,
   personaggi: [],
   oggetti: [],
+  annotazioni: [],
   nome: null,
   conflitto: null,
   timer: {
@@ -71,6 +72,7 @@ export default function App() {
         mappaPath={stato.mappaPath}
         personaggi={stato.personaggi}
         oggetti={stato.oggetti}
+        annotazioni={stato.annotazioni}
         nome={stato.nome}
       />
       {!overlayAttivo && <DisplayTimer snapshot={stato.timer} />}

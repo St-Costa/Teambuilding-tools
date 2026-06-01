@@ -1,0 +1,26 @@
+.simbolo,
+.testo {
+  display: inline-block;
+  line-height: 1.05;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Emoji: nessuna decorazione, scala col font-size. */
+.simbolo {
+  white-space: nowrap;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+
+/* Testo: rosso acceso con bordo (contorno) bianco di 2px attorno alle lettere.
+   Colore non modificabile (scelta utente). `white-space: pre` + `text-align:
+   center` → rispetta gli a-capo (\n) e centra le righe. paint-order garantisce
+   che il riempimento rosso stia SOPRA il contorno bianco. */
+.testo {
+  font-weight: 700;
+  white-space: pre;
+  text-align: center;
+  color: #ff2222;
+  -webkit-text-stroke: 2px #ffffff;
+  paint-order: stroke fill;
+}

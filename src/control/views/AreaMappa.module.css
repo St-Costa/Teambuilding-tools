@@ -41,6 +41,90 @@
   z-index: 2;
 }
 
+.annotazioneWrap {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  touch-action: none;
+  z-index: 1;
+}
+
+.annotazioneWrap:active {
+  cursor: grabbing;
+}
+
+/* Riquadro di selezione attorno all'annotazione attiva. */
+.annotazioneSelezionata {
+  outline: 2px dashed rgba(255, 255, 255, 0.9);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Editor inline del testo (doppio click). Stesso aspetto del testo renderizzato
+   — rosso con bordo bianco — ma con sfondo scuro semi-trasparente e cornice
+   tratteggiata per segnalare che è in modifica. */
+.editorTesto {
+  display: block;
+  font-family: inherit;
+  font-weight: 700;
+  line-height: 1.05;
+  text-align: center;
+  white-space: pre;
+  color: #ff2222;
+  -webkit-text-stroke: 2px #ffffff;
+  paint-order: stroke fill;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px dashed rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  padding: 2px 6px;
+  margin: 0;
+  resize: none;
+  overflow: hidden;
+  outline: none;
+  touch-action: none;
+}
+
+/* Maniglie d'angolo per il ridimensionamento. */
+.maniglia {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border: 2px solid #2563eb;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+  touch-action: none;
+  z-index: 2;
+}
+
+.maniglia_nw {
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  cursor: nwse-resize;
+}
+
+.maniglia_ne {
+  right: 0;
+  top: 0;
+  transform: translate(50%, -50%);
+  cursor: nesw-resize;
+}
+
+.maniglia_se {
+  right: 0;
+  bottom: 0;
+  transform: translate(50%, 50%);
+  cursor: nwse-resize;
+}
+
+.maniglia_sw {
+  left: 0;
+  bottom: 0;
+  transform: translate(-50%, 50%);
+  cursor: nesw-resize;
+}
+
 .placeholder {
   flex: 1;
   display: flex;
