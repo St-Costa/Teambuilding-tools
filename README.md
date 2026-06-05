@@ -97,6 +97,17 @@ Le immagini selezionate vengono **copiate** dentro la cartella dello scenario (n
       libasound2-dev
     ```
     > `libasound2-dev` (ALSA) è **necessario** per compilare `rodio` (tick ruota nativi).
+  - **Audio a runtime (Ubuntu/Debian)** — per la riproduzione dei suoni nel
+    webview (sottofondo, soundboard, beep del timer) servono i plugin GStreamer:
+    ```bash
+    sudo apt install gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-libav
+    ```
+    > **Importante:** senza `gstreamer1.0-plugins-bad` manca l'elemento
+    > `fakevideosink` che WebKitGTK usa per i media **solo-audio**. In quel caso,
+    > riprodurre **più suoni insieme** (es. soundboard + sottofondo) fa **crashare
+    > l'intera app** (il WebProcess di WebKit muore di colpo). `libav` serve a
+    > decodificare l'MP3. Sui pacchetti `.deb` prodotti da `tauri build` queste
+    > dipendenze sono già dichiarate e vengono installate in automatico.
 
 ---
 

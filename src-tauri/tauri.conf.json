@@ -48,6 +48,11 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": ["../scenari-bundled/**/*"]
+    "resources": ["../scenari-bundled/**/*"],
+    "linux": {
+      "deb": {
+        "depends": ["gstreamer1.0-plugins-good", "gstreamer1.0-plugins-bad", "gstreamer1.0-libav"]
+      }
+    }
   }
 }

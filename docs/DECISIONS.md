@@ -607,6 +607,27 @@ stateful (wizard a 3 step) non è verificabile senza GUI e il guadagno è solo d
 conteggio righe — rischio sproporzionato per un tool usato dal vivo. Eventuale
 follow-up quando si potrà provare la GUI.
 
+### D-096 — Crash con audio multipli su WebKitGTK: dipendenza GStreamer + riuso elementi
+**Sintomo:** avviando insieme più suoni (2 soundboard + sottofondo) l'**intera
+app si chiudeva di colpo** su Ubuntu. **Causa:** mancava
+`gstreamer1.0-plugins-bad`, che fornisce l'elemento `fakevideosink` usato da
+WebKitGTK per i media **solo-audio**; senza, la pipeline GStreamer fallisce e il
+WebProcess del webview crasha portando giù il processo Tauri. NON era un
+problema di codec (`avdec_mp3`/`libav` erano presenti) né del codice applicativo.
+**Interventi (riduzione del rischio a più livelli):**
+1. Documentata la dipendenza runtime nei **prerequisiti del README**
+   (`gstreamer1.0-plugins-good/-bad`, `gstreamer1.0-libav`) con la spiegazione
+   del sintomo.
+2. Dichiarata come **dipendenza del pacchetto** `.deb` in `tauri.conf.json`
+   (`bundle.linux.deb.depends`): le installazioni finali la tirano in automatico,
+   così l'utente non-tecnico non incontra il crash.
+3. **Irrobustito il codice** della soundboard
+   ([PannelloSoundboard.tsx](../src/control/views/PannelloSoundboard.tsx)): riusa
+   un solo `HTMLAudioElement` per slot invece di crearne uno nuovo a ogni click,
+   evitando l'accumulo di pipeline GStreamer (defense-in-depth, oltre al
+   pacchetto). I beep del timer ([audio.ts](../src/lib/audio.ts)) già riusavano
+   gli elementi.
+
 ### Verificato (intervento qualità)
 - `npm test` (53 passati), `npm run coverage` (ruota.ts ~97%).
 - `npm run lint` (0 error), `npm run format:check` pulito, `npx tsc --noEmit` ok,

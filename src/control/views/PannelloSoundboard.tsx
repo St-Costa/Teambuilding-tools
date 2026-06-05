@@ -41,8 +41,11 @@ export default function PannelloSoundboard() {
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [erroreUpload, setErroreUpload] = useState<string | null>(null);
 
-  // mappa indice → HTMLAudioElement attivo, per fermare il suono precedente.
+  // mappa indice → HTMLAudioElement riusato per quello slot.
   const audioPerSlot = useRef<Record<number, HTMLAudioElement | null>>({});
+  // url attualmente caricato in ciascun elemento audio: serve a decidere se
+  // riusarlo o ricrearlo (quando il file dello slot cambia).
+  const urlPerSlot = useRef<Record<number, string>>({});
   // cache blob URL per slot (path -> objectURL), così non rileggiamo il file ogni click.
   const blobUrlCache = useRef<Record<string, string>>({});
 
@@ -69,23 +72,29 @@ export default function PannelloSoundboard() {
         url = URL.createObjectURL(blob);
         blobUrlCache.current[key] = url;
       }
-      // ferma riproduzione precedente sullo stesso slot
-      const esistente = audioPerSlot.current[idx];
-      if (esistente) {
-        esistente.pause();
-        esistente.currentTime = 0;
+      // Riusa UN solo elemento audio per slot. Creare un `new Audio()` a ogni
+      // click accumulerebbe pipeline GStreamer nel webview: su WebKitGTK è una
+      // causa di crash (il WebProcess muore e con lui l'intera app). Ricreiamo
+      // l'elemento solo se il file dello slot è cambiato (url diverso).
+      let audio = audioPerSlot.current[idx];
+      if (!audio || urlPerSlot.current[idx] !== url) {
+        const el = new Audio(url);
+        el.volume = 1;
+        el.onerror = () => {
+          const code = el.error?.code;
+          const msg =
+            code === 4
+              ? "Formato audio non supportato dal sistema (manca un codec). Prova un .wav o installa gstreamer1.0-libav."
+              : `Errore audio (codice ${code ?? "?"})`;
+          setErroreUpload(msg);
+        };
+        audioPerSlot.current[idx] = el;
+        urlPerSlot.current[idx] = url;
+        audio = el;
+      } else {
+        // riparti dall'inizio (ferma l'eventuale riproduzione in corso)
+        audio.currentTime = 0;
       }
-      const audio = new Audio(url);
-      audio.volume = 1;
-      audio.onerror = () => {
-        const code = audio.error?.code;
-        const msg =
-          code === 4
-            ? "Formato audio non supportato dal sistema (manca un codec). Prova un .wav o installa gstreamer1.0-libav."
-            : `Errore audio (codice ${code ?? "?"})`;
-        setErroreUpload(msg);
-      };
-      audioPerSlot.current[idx] = audio;
       await audio.play();
     } catch (e) {
       setErroreUpload(`Impossibile riprodurre: ${e instanceof Error ? e.message : String(e)}`);
