@@ -71,12 +71,27 @@ fn play_tick(state: tauri::State<AudioState>) {
 
 #[tauri::command]
 fn allow_ambientazione_folder(app: AppHandle, path: String) -> Result<(), String> {
-    app.fs_scope()
-        .allow_directory(&path, true)
-        .map_err(|e| e.to_string())?;
-    app.asset_protocol_scope()
-        .allow_directory(&path, true)
-        .map_err(|e| e.to_string())?;
+    // Validazione prima di allargare lo scope: `canonicalize` risolve i symlink
+    // e normalizza i componenti relativi, e fallisce se il percorso non esiste.
+    // Richiediamo inoltre che sia una directory. Così un percorso inesistente,
+    // un file o un symlink non risolvibile viene rifiutato con un errore chiaro
+    // invece di autorizzare silenziosamente qualcosa di inatteso.
+    let canonico =
+        fs::canonicalize(&path).map_err(|e| format!("percorso non valido ({}): {}", path, e))?;
+    if !canonico.is_dir() {
+        return Err(format!("non è una cartella: {}", canonico.display()));
+    }
+    // Autorizziamo sia il percorso originale — con cui il front-end legge/scrive
+    // i file dell'ambientazione — sia quello canonico, così lo scope combacia
+    // anche quando l'utente arriva alla cartella attraverso un symlink.
+    for p in [Path::new(&path), canonico.as_path()] {
+        app.fs_scope()
+            .allow_directory(p, true)
+            .map_err(|e| e.to_string())?;
+        app.asset_protocol_scope()
+            .allow_directory(p, true)
+            .map_err(|e| e.to_string())?;
+    }
     Ok(())
 }
 
@@ -148,13 +163,16 @@ fn copia_dir_ricorsiva(src: &Path, dst: &Path) -> Result<(), String> {
         let entry = entry.map_err(|e| e.to_string())?;
         let from = entry.path();
         let to = dst.join(entry.file_name());
+        // `DirEntry::file_type()` NON segue i symlink: per un link a una cartella
+        // `is_dir()` è false, quindi non vi ricorriamo — niente cicli infiniti
+        // su symlink che puntano a un antenato. I link vengono ignorati (gli
+        // scenari bundled non ne contengono).
         let ft = entry.file_type().map_err(|e| e.to_string())?;
         if ft.is_dir() {
             copia_dir_ricorsiva(&from, &to)?;
         } else if ft.is_file() {
-            fs::copy(&from, &to).map_err(|e| {
-                format!("copy {} -> {}: {}", from.display(), to.display(), e)
-            })?;
+            fs::copy(&from, &to)
+                .map_err(|e| format!("copy {} -> {}: {}", from.display(), to.display(), e))?;
         }
     }
     Ok(())
@@ -270,8 +288,7 @@ fn ripristina_scenari_factory(app: AppHandle) -> Result<Vec<InstallResult>, Stri
         let nome = entry.file_name().to_string_lossy().to_string();
         let dst = dst_root.join(&nome);
         if dst.exists() {
-            fs::remove_dir_all(&dst)
-                .map_err(|e| format!("rm {}: {}", dst.display(), e))?;
+            fs::remove_dir_all(&dst).map_err(|e| format!("rm {}: {}", dst.display(), e))?;
         }
         copia_dir_ricorsiva(&p, &dst)?;
         let _ = app.fs_scope().allow_directory(&dst, true);
@@ -289,7 +306,7 @@ fn ripristina_scenari_factory(app: AppHandle) -> Result<Vec<InstallResult>, Stri
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let esito = tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(AudioState(Mutex::new(avvia_thread_audio())))
@@ -316,6 +333,13 @@ pub fn run() {
                 window.app_handle().exit(0);
             }
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .run(tauri::generate_context!());
+
+    // Niente panic muto in release: in caso di errore irreversibile all'avvio
+    // logghiamo su stderr ed usciamo con codice non-zero per facilitare la
+    // diagnosi (e segnalare il fallimento a chi lancia il processo).
+    if let Err(e) = esito {
+        eprintln!("Errore irreversibile all'avvio dell'applicazione: {e}");
+        std::process::exit(1);
+    }
 }
