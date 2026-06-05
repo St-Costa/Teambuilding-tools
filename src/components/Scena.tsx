@@ -21,7 +21,6 @@ interface Props {
   nome: string | null;
 }
 
-
 export default function Scena({
   folderPath,
   mappaPath,
@@ -71,9 +70,7 @@ export default function Scena({
     );
   }
 
-  const rett = imgDim
-    ? rettangoloContain(imgDim.w, imgDim.h, container.w, container.h)
-    : null;
+  const rett = imgDim ? rettangoloContain(imgDim.w, imgDim.h, container.w, container.h) : null;
 
   // Dimensioni scalate sulla mappa renderizzata, IDENTICHE alla regia.
   const dimCerchietto = rett ? dimensioneCerchietto(rett) : 0;

@@ -1,10 +1,7 @@
 import { useState } from "react";
 import { useAmbientazioneStore } from "../../state/ambientazioneStore";
 import { risolviAsset } from "../../lib/storage";
-import {
-  validaNomeOggetto,
-  type Oggetto,
-} from "../../lib/ambientazione";
+import { validaNomeOggetto, type Oggetto } from "../../lib/ambientazione";
 import Quadratino from "../../components/Quadratino";
 import EditorRitaglio from "./EditorRitaglio";
 import styles from "./PannelloPersonaggi.module.css";
@@ -99,10 +96,18 @@ export default function SezioneOggetti({ onNuovoOggetto }: Props) {
                 {inEdit && menuApertoPer === o.id && (
                   <div className={styles.menu} onClick={(e) => e.stopPropagation()}>
                     <button onClick={() => handleRinomina(o.id, o.nome)}>Rinomina…</button>
-                    <button onClick={() => { setMenuApertoPer(null); setEditing(o); }}>
+                    <button
+                      onClick={() => {
+                        setMenuApertoPer(null);
+                        setEditing(o);
+                      }}
+                    >
                       Modifica ritaglio…
                     </button>
-                    <button className={styles.menuElimina} onClick={() => handleElimina(o.id, o.nome)}>
+                    <button
+                      className={styles.menuElimina}
+                      onClick={() => handleElimina(o.id, o.nome)}
+                    >
                       Elimina oggetto
                     </button>
                   </div>

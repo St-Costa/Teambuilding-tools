@@ -79,7 +79,9 @@ export default function PannelloConflitto({ onChiudi }: Props) {
 
   const fetteAnteprima = useMemo(
     () =>
-      calcolaFette(snapshotAnteprima.map((s) => ({ id: s.personaggioId, modificatore: s.modificatore }))),
+      calcolaFette(
+        snapshotAnteprima.map((s) => ({ id: s.personaggioId, modificatore: s.modificatore })),
+      ),
     [snapshotAnteprima],
   );
 
@@ -105,7 +107,7 @@ export default function PannelloConflitto({ onChiudi }: Props) {
 
   // ANTEPRIMA snapshot per Ruota: deve avere il formato ConflittoSnapshot
   const anteprimaSnapshot: ConflittoSnapshot = {
-    fase: "risultato",                // niente animazione per la preview
+    fase: "risultato", // niente animazione per la preview
     partecipanti: snapshotAnteprima,
     fette: fetteAnteprima,
     angoloFinale: 0,
@@ -143,9 +145,7 @@ export default function PannelloConflitto({ onChiudi }: Props) {
 
         {step === "partecipanti" && (
           <div className={styles.body}>
-            <p className={styles.hint}>
-              Seleziona almeno 2 personaggi che si contendono l'esito.
-            </p>
+            <p className={styles.hint}>Seleziona almeno 2 personaggi che si contendono l'esito.</p>
             <ul className={styles.listaPartecipanti}>
               {current.personaggi.map((p) => {
                 const selezionato = partecipantiSelezionati.has(p.id);
@@ -175,14 +175,12 @@ export default function PannelloConflitto({ onChiudi }: Props) {
         {step === "modificatori" && (
           <div className={styles.bodyDoppio}>
             <div className={styles.colonnaModificatori}>
-              <p className={styles.hint}>
-                Imposta eventuali modificatori e la loro fonte.
-              </p>
+              <p className={styles.hint}>Imposta eventuali modificatori e la loro fonte.</p>
               {partecipanti.map((p) => {
                 const personaggio = current.personaggi.find((x) => x.id === p.personaggioId);
                 if (!personaggio) return null;
                 const oggettoAttaccato = personaggio.oggettoId
-                  ? current.oggetti.find((o) => o.id === personaggio.oggettoId) ?? null
+                  ? (current.oggetti.find((o) => o.id === personaggio.oggettoId) ?? null)
                   : null;
                 return (
                   <FilaModificatore
@@ -257,11 +255,7 @@ export default function PannelloConflitto({ onChiudi }: Props) {
 
         <footer className={styles.footer}>
           {fase !== "girando" && (
-            <button
-              type="button"
-              className={styles.btnSecondario}
-              onClick={handleChiudi}
-            >
+            <button type="button" className={styles.btnSecondario} onClick={handleChiudi}>
               {fase === "risultato" ? "Chiudi e torna alla mappa" : "Annulla"}
             </button>
           )}
@@ -416,14 +410,18 @@ function FilaModificatore({
                 }}
                 disabled={!oggettoAttaccato}
               />
-              {oggettoAttaccato ? `Oggetto (${oggettoAttaccato.nome})` : "Oggetto (nessuno assegnato)"}
+              {oggettoAttaccato
+                ? `Oggetto (${oggettoAttaccato.nome})`
+                : "Oggetto (nessuno assegnato)"}
             </label>
             <label>
               <input
                 type="radio"
                 name={`fonte-${personaggio.id}`}
                 checked={fonte?.tipo === "testo"}
-                onChange={() => handleFonte({ tipo: "testo", testo: fonte?.tipo === "testo" ? fonte.testo : "" })}
+                onChange={() =>
+                  handleFonte({ tipo: "testo", testo: fonte?.tipo === "testo" ? fonte.testo : "" })
+                }
               />
               Descrizione libera
             </label>

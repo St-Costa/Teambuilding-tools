@@ -171,7 +171,7 @@ describe("angoloDiArresto", () => {
         const f = fette[idx];
         // Dopo rotazione θ oraria, la fetta occupa [start+θ, fine+θ).
         // Il top=0 ci cade se ((-θ) mod 360) ∈ [start, fine).
-        const topNellaFetta = (((-theta) % 360) + 360) % 360;
+        const topNellaFetta = ((-theta % 360) + 360) % 360;
         expect(topNellaFetta).toBeGreaterThanOrEqual(f.startAngolo - ARROTONDA);
         expect(topNellaFetta).toBeLessThan(f.fineAngolo + ARROTONDA);
       }
@@ -195,8 +195,8 @@ describe("angoloDiArresto", () => {
     // rand=0 → offset al margine inferiore; rand=1 → margine superiore.
     const thetaMin = angoloDiArresto(0, fette, { rand: () => 0, margineFetta: margine });
     const thetaMax = angoloDiArresto(0, fette, { rand: () => 1, margineFetta: margine });
-    const offsetMin = (((-thetaMin) % 360) + 360) % 360 - fette[0].startAngolo;
-    const offsetMax = (((-thetaMax) % 360) + 360) % 360 - fette[0].startAngolo;
+    const offsetMin = (((-thetaMin % 360) + 360) % 360) - fette[0].startAngolo;
+    const offsetMax = (((-thetaMax % 360) + 360) % 360) - fette[0].startAngolo;
     expect(offsetMin).toBeCloseTo(width * margine, 6);
     expect(offsetMax).toBeCloseTo(width * (1 - margine), 6);
   });

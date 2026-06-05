@@ -49,11 +49,7 @@ export default function EditorRitaglio({
           <button type="button" className={styles.btnSecondario} onClick={onAnnulla}>
             Annulla
           </button>
-          <button
-            type="button"
-            className={styles.btnPrimario}
-            onClick={() => onConferma(crop)}
-          >
+          <button type="button" className={styles.btnPrimario} onClick={() => onConferma(crop)}>
             Salva modifica
           </button>
         </footer>

@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import {
-  cropIniziale,
-  validaNomeOggetto,
-  type Crop,
-  type Oggetto,
-} from "../../lib/ambientazione";
+import { cropIniziale, validaNomeOggetto, type Crop, type Oggetto } from "../../lib/ambientazione";
 import MaschereCircolare from "../components/MaschereCircolare";
 import styles from "./WizardOggetto.module.css";
 
@@ -20,11 +15,7 @@ type Step = "immagine" | "ritaglio";
 
 const COLORE_NEUTRO = "#888888";
 
-export default function WizardOggetto({
-  oggettiEsistenti,
-  onAnnulla,
-  onConferma,
-}: Props) {
+export default function WizardOggetto({ oggettiEsistenti, onAnnulla, onConferma }: Props) {
   const [step, setStep] = useState<Step>("immagine");
   const [sourceImgPath, setSourceImgPath] = useState<string | null>(null);
   const [crop, setCrop] = useState<Crop>(cropIniziale());
@@ -37,9 +28,7 @@ export default function WizardOggetto({
     try {
       const scelto = await open({
         multiple: false,
-        filters: [
-          { name: "Immagini", extensions: ["png", "jpg", "jpeg", "webp", "gif", "bmp"] },
-        ],
+        filters: [{ name: "Immagini", extensions: ["png", "jpg", "jpeg", "webp", "gif", "bmp"] }],
       });
       if (typeof scelto === "string") {
         setSourceImgPath(scelto);

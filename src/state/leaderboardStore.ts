@@ -18,7 +18,7 @@ interface RigaSnapInterno {
 
 interface LeaderboardState {
   fase: FaseLeaderboard;
-  righe: RigaSnapInterno[];                          // snapshot personaggi al momento di apri()
+  righe: RigaSnapInterno[]; // snapshot personaggi al momento di apri()
   tick: Record<string, [boolean, boolean, boolean]>;
   apri: () => void;
   chiudi: () => void;
@@ -37,12 +37,12 @@ export const useLeaderboardStore = create<LeaderboardState>((set, get) => ({
     const righe: RigaSnapInterno[] = amb.personaggi
       .filter((p) => !p.npc)
       .map((p) => ({
-      personaggioId: p.id,
-      nome: p.nome,
-      colore: p.colore,
-      imgPath: p.imgPath,
-      crop: p.crop,
-    }));
+        personaggioId: p.id,
+        nome: p.nome,
+        colore: p.colore,
+        imgPath: p.imgPath,
+        crop: p.crop,
+      }));
     const tick: Record<string, [boolean, boolean, boolean]> = {};
     for (const r of righe) tick[r.personaggioId] = [false, false, false];
     set({ fase: "aperta", righe, tick });

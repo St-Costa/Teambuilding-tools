@@ -61,10 +61,7 @@ export default function PannelloTimer() {
     statoPrecRef.current = stato;
   }, [stato]);
 
-  const ms = remainingMs(
-    { stato, durationSec, targetEndAt, pausedRemainingMs },
-    Date.now(),
-  );
+  const ms = remainingMs({ stato, durationSec, targetEndAt, pausedRemainingMs }, Date.now());
 
   // markEnded() quando arriva a 0 (regia "autoritativa" — il timerStore
   // accetta solo da running e ignora altrove).
@@ -84,12 +81,7 @@ export default function PannelloTimer() {
       return;
     }
     const prev = prevMsRef.current;
-    if (
-      !oneMinPlayedRef.current &&
-      prev !== null &&
-      prev > 60_000 &&
-      ms <= 60_000
-    ) {
+    if (!oneMinPlayedRef.current && prev !== null && prev > 60_000 && ms <= 60_000) {
       oneMinPlayedRef.current = true;
       playCampanello();
     }
@@ -124,16 +116,9 @@ export default function PannelloTimer() {
     setDuration(minIniz * 60 + sec);
   }
 
-  const iconaToggle =
-    stato === "running" ? "❚❚" : "▶";
-  const titleToggle =
-    stato === "running"
-      ? "Pausa"
-      : stato === "paused"
-        ? "Riprendi"
-        : "Avvia";
-  const onToggle =
-    stato === "running" ? pause : start; // start() gestisce sia idle che paused
+  const iconaToggle = stato === "running" ? "❚❚" : "▶";
+  const titleToggle = stato === "running" ? "Pausa" : stato === "paused" ? "Riprendi" : "Avvia";
+  const onToggle = stato === "running" ? pause : start; // start() gestisce sia idle che paused
 
   return (
     <div className={styles.root}>

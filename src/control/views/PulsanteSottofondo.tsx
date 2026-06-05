@@ -72,9 +72,7 @@ export default function PulsanteSottofondo() {
           <span className={styles.testo}>
             Sottofondo
             {haSottofondo && (
-              <span className={styles.nomeFile}>
-                {sottofondoPath?.split(/[/\\]/).pop()}
-              </span>
+              <span className={styles.nomeFile}>{sottofondoPath?.split(/[/\\]/).pop()}</span>
             )}
           </span>
         </button>
@@ -119,7 +117,9 @@ export default function PulsanteSottofondo() {
         <span className={styles.icona}>{inRiproduzione ? "■" : "▶"}</span>
         <span className={styles.testo}>Sottofondo</span>
       </button>
-      <span className={styles.iconaVol} aria-hidden="true">🔊</span>
+      <span className={styles.iconaVol} aria-hidden="true">
+        🔊
+      </span>
       <input
         type="range"
         className={styles.volume}

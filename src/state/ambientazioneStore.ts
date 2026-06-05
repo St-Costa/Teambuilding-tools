@@ -83,11 +83,7 @@ interface AmbientazioneState {
   eliminaAnnotazione: (id: string) => void;
   selezionaAnnotazione: (id: string | null) => void;
   setAnnotazioneInModifica: (id: string | null) => void;
-  aggiungiOggetto: (input: {
-    sourceImgPath: string;
-    nome: string;
-    crop: Crop;
-  }) => Promise<string>;
+  aggiungiOggetto: (input: { sourceImgPath: string; nome: string; crop: Crop }) => Promise<string>;
   rinominaOggetto: (id: string, nome: string) => void;
   modificaCropOggetto: (id: string, crop: Crop) => void;
   eliminaOggetto: (id: string) => void;
@@ -219,7 +215,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
 
   async creaNuova(folderParent, nome) {
     const sep = folderParent.includes("\\") && !folderParent.includes("/") ? "\\" : "/";
-    const folderPath = `${folderParent.replace(/[\/\\]+$/, "")}${sep}${nome}`;
+    const folderPath = `${folderParent.replace(/[/\\]+$/, "")}${sep}${nome}`;
     const a = await creaAmbientazione(folderPath, nome);
     set({
       current: a,
@@ -488,7 +484,10 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
   selezionaPersonaggio(id) {
     // Selezionare un personaggio deseleziona l'eventuale annotazione attiva,
     // per non avere due maniglie/handle attivi insieme.
-    set({ selezionatoId: id, annotazioneSelezionataId: id ? null : get().annotazioneSelezionataId });
+    set({
+      selezionatoId: id,
+      annotazioneSelezionataId: id ? null : get().annotazioneSelezionataId,
+    });
   },
 
   aggiungiAnnotazione({ tipo, contenuto, colore }) {
@@ -501,9 +500,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       // annotazione così non si impilano esattamente sovrapposte.
       posizione: { x: 0.5, y: 0.5 },
       dimensione:
-        tipo === "simbolo"
-          ? DIM_ANNOTAZIONE_SIMBOLO_DEFAULT
-          : DIM_ANNOTAZIONE_TESTO_DEFAULT,
+        tipo === "simbolo" ? DIM_ANNOTAZIONE_SIMBOLO_DEFAULT : DIM_ANNOTAZIONE_TESTO_DEFAULT,
       colore: colore ?? null,
     };
     get().modifica((draft) => {
@@ -651,7 +648,8 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
 }));
 
 export async function eseguiSalvataggio(): Promise<void> {
-  const { current, folderPath, markSaving, markSaved, markError } = useAmbientazioneStore.getState();
+  const { current, folderPath, markSaving, markSaved, markError } =
+    useAmbientazioneStore.getState();
   if (!current || !folderPath) return;
   markSaving();
   try {

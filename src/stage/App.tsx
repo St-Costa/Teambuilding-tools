@@ -70,9 +70,7 @@ export default function App() {
   const mostraRuota = stato.conflitto !== null && stato.folderPath !== null;
   const mostraLeaderboard = stato.leaderboard !== null && stato.folderPath !== null;
   const mostraPresentazione =
-    stato.presentazione !== null &&
-    stato.presentazionePath !== null &&
-    stato.folderPath !== null;
+    stato.presentazione !== null && stato.presentazionePath !== null && stato.folderPath !== null;
   const overlayAttivo = mostraRuota || mostraLeaderboard || mostraPresentazione;
   return (
     <>
@@ -112,28 +110,31 @@ export default function App() {
           />
         </div>
       )}
-      {mostraPresentazione && stato.folderPath && stato.presentazionePath && stato.presentazione && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "#000",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            overflow: "hidden",
-            zIndex: 1000,
-            padding: "1.5rem",
-            boxSizing: "border-box",
-          }}
-        >
-          <Presentazione
-            folderPath={stato.folderPath}
-            presentazionePath={stato.presentazionePath}
-            pagina={stato.presentazione.paginaCorrente}
-          />
-        </div>
-      )}
+      {mostraPresentazione &&
+        stato.folderPath &&
+        stato.presentazionePath &&
+        stato.presentazione && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "#000",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              zIndex: 1000,
+              padding: "1.5rem",
+              boxSizing: "border-box",
+            }}
+          >
+            <Presentazione
+              folderPath={stato.folderPath}
+              presentazionePath={stato.presentazionePath}
+              pagina={stato.presentazione.paginaCorrente}
+            />
+          </div>
+        )}
       {stato.vittoria !== null && stato.folderPath && (
         // key={trigger}: ogni "Proclama vincitori" rimonta il componente così
         // le animazioni CSS (cerchi che salgono, corone che scendono) ripartono.

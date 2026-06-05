@@ -101,11 +101,7 @@ export default function PannelloLeaderboard({ onChiudi }: Props) {
                 🏆 Proclama vincitori
               </button>
             )}
-            <button
-              type="button"
-              className={styles.btnChiudi}
-              onClick={handleChiudi}
-            >
+            <button type="button" className={styles.btnChiudi} onClick={handleChiudi}>
               Chiudi
             </button>
           </div>
@@ -127,9 +123,7 @@ export default function PannelloLeaderboard({ onChiudi }: Props) {
                     value={current.obiettivi[idx]}
                     onChange={(e) => setObiettivo(idx, e.target.value)}
                     maxLength={60}
-                    placeholder={
-                      idx === 2 ? `es. "Penalità"` : `es. "Obiettivo ${idx + 1}"`
-                    }
+                    placeholder={idx === 2 ? `es. "Penalità"` : `es. "Obiettivo ${idx + 1}"`}
                   />
                 </label>
               ))}

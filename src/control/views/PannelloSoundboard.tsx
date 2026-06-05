@@ -8,18 +8,25 @@ import styles from "./PannelloSoundboard.module.css";
 
 function joinPath(a: string, b: string): string {
   const sep = a.includes("\\") && !a.includes("/") ? "\\" : "/";
-  return `${a.replace(/[\/\\]+$/, "")}${sep}${b}`;
+  return `${a.replace(/[/\\]+$/, "")}${sep}${b}`;
 }
 
 function mimeDaPath(path: string): string {
   const m = path.toLowerCase().match(/\.([a-z0-9]+)$/);
   switch (m?.[1]) {
-    case "mp3": return "audio/mpeg";
-    case "wav": return "audio/wav";
-    case "ogg": return "audio/ogg";
-    case "m4a": case "aac": return "audio/aac";
-    case "flac": return "audio/flac";
-    default: return "audio/mpeg";
+    case "mp3":
+      return "audio/mpeg";
+    case "wav":
+      return "audio/wav";
+    case "ogg":
+      return "audio/ogg";
+    case "m4a":
+    case "aac":
+      return "audio/aac";
+    case "flac":
+      return "audio/flac";
+    default:
+      return "audio/mpeg";
   }
 }
 
@@ -186,10 +193,7 @@ export default function PannelloSoundboard() {
                 </div>
                 <div className={styles.section}>
                   <div className={styles.sectionLabel}>Emoji</div>
-                  <EmojiPicker
-                    selezionata={slot.emoji}
-                    onSeleziona={(e) => setEmoji(idx, e)}
-                  />
+                  <EmojiPicker selezionata={slot.emoji} onSeleziona={(e) => setEmoji(idx, e)} />
                 </div>
                 <div className={styles.section}>
                   <div className={styles.sectionLabel}>Audio</div>

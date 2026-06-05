@@ -18,10 +18,7 @@ export default function Annotazione({ annotazione, latoMaggiore }: Props) {
   // (vedi .testo nel CSS). I simboli (emoji) non hanno colore proprio.
   const stile: CSSProperties = { fontSize };
   return (
-    <span
-      className={annotazione.tipo === "testo" ? styles.testo : styles.simbolo}
-      style={stile}
-    >
+    <span className={annotazione.tipo === "testo" ? styles.testo : styles.simbolo} style={stile}>
       {annotazione.contenuto}
     </span>
   );

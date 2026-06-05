@@ -44,11 +44,7 @@ export default function Cerchietto({
   };
 
   return (
-    <div
-      className={`${styles.root} ${className ?? ""}`}
-      style={stileRoot}
-      aria-label={alt}
-    >
+    <div className={`${styles.root} ${className ?? ""}`} style={stileRoot} aria-label={alt}>
       <div className={styles.cerchio} style={stileCerchio}>
         <img src={src} alt={alt} draggable={false} style={stileImg} className={styles.img} />
       </div>

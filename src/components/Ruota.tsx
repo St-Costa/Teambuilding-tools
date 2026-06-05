@@ -22,11 +22,11 @@ interface Props {
 const VIEW = 100;
 const CX = 50;
 const CY = 50;
-const R = 47;                  // raggio ruota
-const R_FACCIA = 30;            // raggio sulla quale stanno i centri delle facce
-const DIM_FACCIA = 18;          // diametro cerchio faccia
-const DIM_BONUS = 12;           // diametro quadratino bonus
-const R_BONUS_OGGETTO = 36;     // raggio dove sta l'icona oggetto
+const R = 47; // raggio ruota
+const R_FACCIA = 30; // raggio sulla quale stanno i centri delle facce
+const DIM_FACCIA = 18; // diametro cerchio faccia
+const DIM_BONUS = 12; // diametro quadratino bonus
+const R_BONUS_OGGETTO = 36; // raggio dove sta l'icona oggetto
 
 function polar(centro: number, raggio: number, gradi: number): { x: number; y: number } {
   const rad = (gradi - 90) * (Math.PI / 180);
@@ -36,7 +36,13 @@ function polar(centro: number, raggio: number, gradi: number): { x: number; y: n
   };
 }
 
-function arcPath(startDeg: number, endDeg: number, raggio: number, centroX: number, centroY: number): string {
+function arcPath(
+  startDeg: number,
+  endDeg: number,
+  raggio: number,
+  centroX: number,
+  centroY: number,
+): string {
   if (endDeg - startDeg >= 360 - 1e-6) {
     const m = polar(centroX, raggio, 0);
     const o = polar(centroY, raggio, 180);
@@ -64,7 +70,7 @@ export default function Ruota({
 
   // Vincitore da incoronare (solo a risultato): dati per il pannello a destra.
   const vincitoreSnap =
-    fase === "risultato" && vincitoreId ? partecipantePerId.get(vincitoreId) ?? null : null;
+    fase === "risultato" && vincitoreId ? (partecipantePerId.get(vincitoreId) ?? null) : null;
 
   const [visibleAngolo, setVisibleAngolo] = useState(0);
   const [wobbleCount, setWobbleCount] = useState(0);
@@ -131,7 +137,8 @@ export default function Ruota({
       setVisibleAngolo(angoloFinale);
       return;
     }
-    let r1 = 0, r2 = 0;
+    let r1 = 0,
+      r2 = 0;
     r1 = requestAnimationFrame(() => {
       r2 = requestAnimationFrame(() => {
         setVisibleAngolo(angoloFinale);
@@ -144,10 +151,7 @@ export default function Ruota({
   }, [angoloFinale, triggerCount, animata]);
 
   return (
-    <div
-      className={styles.contenitore}
-      style={{ width: dimensione, height: dimensione }}
-    >
+    <div className={styles.contenitore} style={{ width: dimensione, height: dimensione }}>
       <svg viewBox={`0 0 ${VIEW} ${VIEW}`} className={styles.svg}>
         <defs>
           {/* Una clipPath per ogni fetta, in coordinate utente: cerchio per
@@ -207,7 +211,9 @@ export default function Ruota({
             if (e.propertyName === "transform") onSpinFine?.();
           }}
         >
-          {fette.map((f) => renderFetta(f, partecipantePerId, folderPath, vincitoreId, fase, idBase))}
+          {fette.map((f) =>
+            renderFetta(f, partecipantePerId, folderPath, vincitoreId, fase, idBase),
+          )}
         </g>
 
         {/* freccia "premium": slim teardrop con gradient + soft drop shadow.
@@ -321,12 +327,7 @@ function renderFetta(
   );
 }
 
-function renderFaccia(
-  f: FettaCalcolata,
-  p: PartecipanteSnap,
-  idBase: string,
-  folderPath: string,
-) {
+function renderFaccia(f: FettaCalcolata, p: PartecipanteSnap, idBase: string, folderPath: string) {
   const baseEnd = f.startAngolo + f.baseFrazione * 360;
   const midAngolo = (f.startAngolo + baseEnd) / 2;
   const { x, y } = polar(CX, R_FACCIA, midAngolo);
@@ -360,12 +361,7 @@ function renderFaccia(
   );
 }
 
-function renderBonus(
-  f: FettaCalcolata,
-  fonte: FonteSnap,
-  idBase: string,
-  folderPath: string,
-) {
+function renderBonus(f: FettaCalcolata, fonte: FonteSnap, idBase: string, folderPath: string) {
   const baseEnd = f.startAngolo + f.baseFrazione * 360;
   const midAngolo = (baseEnd + f.fineAngolo) / 2;
 
@@ -379,15 +375,7 @@ function renderBonus(
     const ty = y * (1 - z) + fonte.crop.offsetY * dim;
     return (
       <g key={`${f.id}-bonus`}>
-        <rect
-          x={fx}
-          y={fy}
-          width={dim}
-          height={dim}
-          rx={dim * 0.22}
-          ry={dim * 0.22}
-          fill="#fff"
-        />
+        <rect x={fx} y={fy} width={dim} height={dim} rx={dim * 0.22} ry={dim * 0.22} fill="#fff" />
         <g clipPath={`url(#${idBase}-ob-${f.id})`}>
           <image
             href={risolviAsset(folderPath, fonte.imgPath)}
@@ -418,7 +406,7 @@ function renderBonus(
   // Inizia a raggio R_INIZIO (vicino al centro, dopo l'eventuale faccia) e
   // si estende fino a R_FINE (vicino al bordo della ruota). Font calcolato
   // per riempire la lunghezza disponibile.
-  const R_INIZIO = 12;  // partenza vicino al centro
+  const R_INIZIO = 12; // partenza vicino al centro
   const R_FINE = R - 3;
   const lunghezzaDisp = R_FINE - R_INIZIO;
   const testoCorto = fonte.testo.length > 28 ? fonte.testo.slice(0, 27) + "…" : fonte.testo;

@@ -53,9 +53,7 @@ export default function DisplayTimer({ snapshot, onEnded }: Props) {
         : "tempo scaduto";
 
   return (
-    <div
-      className={`${styles.banner} ${snapshot.stato === "ended" ? styles.scaduto : ""}`}
-    >
+    <div className={`${styles.banner} ${snapshot.stato === "ended" ? styles.scaduto : ""}`}>
       <div className={styles.cifre}>{formatMmSs(ms)}</div>
       <div className={styles.etichetta}>{etichetta}</div>
     </div>

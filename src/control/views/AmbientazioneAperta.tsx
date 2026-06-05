@@ -98,9 +98,7 @@ export default function AmbientazioneAperta() {
     try {
       const scelto = await open({
         multiple: false,
-        filters: [
-          { name: "Immagini", extensions: ["png", "jpg", "jpeg", "webp", "gif", "bmp"] },
-        ],
+        filters: [{ name: "Immagini", extensions: ["png", "jpg", "jpeg", "webp", "gif", "bmp"] }],
       });
       if (typeof scelto !== "string") return;
       await impostaMappa(scelto);
@@ -159,7 +157,9 @@ export default function AmbientazioneAperta() {
               apriLeaderboard();
               setLeaderboardAperta(true);
             }}
-            disabled={current.personaggi.every((p) => p.npc) || conflittoInCorso || presentazioneInCorso}
+            disabled={
+              current.personaggi.every((p) => p.npc) || conflittoInCorso || presentazioneInCorso
+            }
             title={
               presentazioneInCorso
                 ? "Chiudi prima la presentazione"
@@ -181,9 +181,16 @@ export default function AmbientazioneAperta() {
               <div className={styles.menuPosizioni}>
                 <button
                   onClick={(e) => {
-                    if (!confirm("Salva la posizione corrente di tutti i personaggi come posizione iniziale?")) return;
+                    if (
+                      !confirm(
+                        "Salva la posizione corrente di tutti i personaggi come posizione iniziale?",
+                      )
+                    )
+                      return;
                     salvaTutte();
-                    (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
+                    (
+                      e.currentTarget.closest("details") as HTMLDetailsElement | null
+                    )?.removeAttribute("open");
                   }}
                   disabled={current.personaggi.length === 0}
                 >
@@ -192,7 +199,9 @@ export default function AmbientazioneAperta() {
                 <button
                   onClick={(e) => {
                     ripristinaTutte();
-                    (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
+                    (
+                      e.currentTarget.closest("details") as HTMLDetailsElement | null
+                    )?.removeAttribute("open");
                   }}
                   disabled={!current.personaggi.some((p) => p.posizioneIniziale !== null)}
                 >
@@ -217,7 +226,9 @@ export default function AmbientazioneAperta() {
       {erroreMappa && (
         <div className={styles.banner}>
           {erroreMappa}
-          <button onClick={() => setErroreMappa(null)} aria-label="Chiudi">×</button>
+          <button onClick={() => setErroreMappa(null)} aria-label="Chiudi">
+            ×
+          </button>
         </div>
       )}
 
@@ -255,22 +266,18 @@ export default function AmbientazioneAperta() {
         />
       )}
 
-      {conflittoAperto && (
-        <PannelloConflitto onChiudi={() => setConflittoAperto(false)} />
-      )}
+      {conflittoAperto && <PannelloConflitto onChiudi={() => setConflittoAperto(false)} />}
 
-      {leaderboardAperta && (
-        <PannelloLeaderboard onChiudi={() => setLeaderboardAperta(false)} />
-      )}
+      {leaderboardAperta && <PannelloLeaderboard onChiudi={() => setLeaderboardAperta(false)} />}
 
       {confermaChiusuraAperta && (
         <div className={styles.confermaBackdrop}>
           <div className={styles.confermaModale}>
             <h2>Tornare alla schermata iniziale?</h2>
             <p>
-              Lo stato corrente dello scenario (posizioni dei personaggi, timer,
-              leaderboard, oggetti assegnati) <strong>non viene salvato</strong>:
-              alla riapertura lo scenario ripartirà dalle posizioni iniziali.
+              Lo stato corrente dello scenario (posizioni dei personaggi, timer, leaderboard,
+              oggetti assegnati) <strong>non viene salvato</strong>: alla riapertura lo scenario
+              ripartirà dalle posizioni iniziali.
             </p>
             <div className={styles.confermaBottoni}>
               <button
@@ -281,11 +288,7 @@ export default function AmbientazioneAperta() {
               >
                 Annulla
               </button>
-              <button
-                type="button"
-                className={styles.confermaPrimario}
-                onClick={confermaChiusura}
-              >
+              <button type="button" className={styles.confermaPrimario} onClick={confermaChiusura}>
                 Sì, esci
               </button>
             </div>

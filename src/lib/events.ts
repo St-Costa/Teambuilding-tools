@@ -10,7 +10,13 @@ export const EVT = {
 export type EventName = (typeof EVT)[keyof typeof EVT];
 
 export type FonteSnap =
-  | { tipo: "oggetto"; oggettoId: string; nome: string; imgPath: string; crop: import("./ambientazione").Crop }
+  | {
+      tipo: "oggetto";
+      oggettoId: string;
+      nome: string;
+      imgPath: string;
+      crop: import("./ambientazione").Crop;
+    }
   | { tipo: "testo"; testo: string };
 
 export interface PartecipanteSnap {
@@ -28,9 +34,9 @@ export interface ConflittoSnapshot {
   partecipanti: PartecipanteSnap[];
   fette: FettaCalcolata[];
   angoloFinale: number;
-  vincitoreId: string | null;     // null in fase "pronto"
+  vincitoreId: string | null; // null in fase "pronto"
   durataSpinMs: number;
-  triggerCount: number;           // incrementato a ogni gira(), serve a far ripartire CSS transition
+  triggerCount: number; // incrementato a ogni gira(), serve a far ripartire CSS transition
 }
 
 export interface TimerSnapshot {
@@ -57,15 +63,15 @@ export interface LeaderboardSnapshot {
 
 export interface VincitoreSnap {
   personaggioId: string;
-  nome: string;          // NON renderizzato (cerchi senza nomi), incluso per completezza
+  nome: string; // NON renderizzato (cerchi senza nomi), incluso per completezza
   colore: string;
   imgPath: string;
   crop: import("./ambientazione").Crop;
 }
 
 export interface VittoriaSnapshot {
-  vincitori: VincitoreSnap[];   // 1+ (pari merito)
-  trigger: number;              // come ConflittoSnapshot.triggerCount: forza il restart delle animazioni via key
+  vincitori: VincitoreSnap[]; // 1+ (pari merito)
+  trigger: number; // come ConflittoSnapshot.triggerCount: forza il restart delle animazioni via key
 }
 
 // Singolo scoppio di fuoco d'artificio: la REGIA decide il ritmo (suona il
@@ -73,8 +79,8 @@ export interface VittoriaSnapshot {
 // l'esplosione → suono e visivo coincidono.
 export interface BoomPayload {
   id: number;
-  x: number;             // posizione orizzontale normalizzata 0..1
-  colori: string[];      // tinte delle scintille (colori dei vincitori + oro/bianco)
+  x: number; // posizione orizzontale normalizzata 0..1
+  colori: string[]; // tinte delle scintille (colori dei vincitori + oro/bianco)
 }
 
 export interface PresentazioneSnapshot {

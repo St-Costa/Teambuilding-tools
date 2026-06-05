@@ -344,12 +344,12 @@ export function nuovoManifest(nome: string): Ambientazione {
   };
 }
 
-const NOME_INVALIDO = /[\/\\:*?"<>|]/;
+const NOME_INVALIDO = /[/\\:*?"<>|]/;
 
 export function validaNome(nome: string): string | null {
   const trimmed = nome.trim();
   if (trimmed === "") return "Il nome non può essere vuoto.";
-  if (NOME_INVALIDO.test(trimmed)) return "Il nome non può contenere: / \\ : * ? \" < > |";
+  if (NOME_INVALIDO.test(trimmed)) return 'Il nome non può contenere: / \\ : * ? " < > |';
   if (trimmed.length > 100) return "Il nome è troppo lungo (massimo 100 caratteri).";
   return null;
 }
@@ -384,10 +384,7 @@ export function validaNomeOggetto(
   return null;
 }
 
-export function oggettoDi(
-  personaggio: Personaggio,
-  oggetti: Oggetto[],
-): Oggetto | null {
+export function oggettoDi(personaggio: Personaggio, oggetti: Oggetto[]): Oggetto | null {
   if (!personaggio.oggettoId) return null;
   return oggetti.find((o) => o.id === personaggio.oggettoId) ?? null;
 }

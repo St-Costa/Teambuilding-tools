@@ -23,7 +23,7 @@ const MANIFEST_TMP = "ambientazione.json.tmp";
 
 function joinPath(folder: string, ...parts: string[]): string {
   const sep = folder.includes("\\") && !folder.includes("/") ? "\\" : "/";
-  const trimmed = folder.replace(/[\/\\]+$/, "");
+  const trimmed = folder.replace(/[/\\]+$/, "");
   return [trimmed, ...parts].join(sep);
 }
 
@@ -43,10 +43,7 @@ export async function autorizzaCartella(folderPath: string): Promise<void> {
   }
 }
 
-export async function creaAmbientazione(
-  folderPath: string,
-  nome: string,
-): Promise<Ambientazione> {
+export async function creaAmbientazione(folderPath: string, nome: string): Promise<Ambientazione> {
   await autorizzaCartella(folderPath);
 
   await wrapIO("creazione cartella", async () => {
@@ -89,10 +86,7 @@ export async function salvaAmbientazione(
   return aggiornata;
 }
 
-async function scriviManifest(
-  folderPath: string,
-  ambientazione: Ambientazione,
-): Promise<void> {
+async function scriviManifest(folderPath: string, ambientazione: Ambientazione): Promise<void> {
   const finalePath = joinPath(folderPath, MANIFEST);
   const tmpPath = joinPath(folderPath, MANIFEST_TMP);
   const json = JSON.stringify(ambientazione, null, 2);
@@ -115,7 +109,7 @@ export async function cartellaEsiste(folderPath: string): Promise<boolean> {
 const ESTENSIONI_IMMAGINE = new Set(["png", "jpg", "jpeg", "webp", "gif", "bmp"]);
 
 function estensioneDi(path: string): string {
-  const ultimo = path.split(/[\/\\]/).pop() ?? "";
+  const ultimo = path.split(/[/\\]/).pop() ?? "";
   const dot = ultimo.lastIndexOf(".");
   if (dot === -1 || dot === ultimo.length - 1) return "png";
   return ultimo.slice(dot + 1).toLowerCase();
@@ -187,9 +181,7 @@ export async function leggiBytesPresentazione(
   folderPath: string,
   relativePath: string,
 ): Promise<Uint8Array> {
-  return wrapIO("lettura presentazione", () =>
-    readFile(joinPath(folderPath, relativePath)),
-  );
+  return wrapIO("lettura presentazione", () => readFile(joinPath(folderPath, relativePath)));
 }
 
 export async function eliminaAmbientazione(folderPath: string): Promise<void> {

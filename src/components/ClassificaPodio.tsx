@@ -31,10 +31,7 @@ export default function ClassificaPodio({ righe, folderPath, dimensioneCerchiett
             key={r.personaggioId}
             className={`${styles.entry} ${vincitore ? styles.entryVincitore : ""}`}
           >
-            <div
-              className={styles.cerchiettoWrap}
-              style={{ width: dim, height: dim }}
-            >
+            <div className={styles.cerchiettoWrap} style={{ width: dim, height: dim }}>
               {vincitore && (
                 <div className={styles.corona} style={{ color: "#ffcc33" }} aria-hidden="true">
                   <IconaCorona dimensione={fontCorona} />

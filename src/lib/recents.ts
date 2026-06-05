@@ -1,4 +1,11 @@
-import { BaseDirectory, exists, mkdir, readTextFile, rename, writeTextFile } from "@tauri-apps/plugin-fs";
+import {
+  BaseDirectory,
+  exists,
+  mkdir,
+  readTextFile,
+  rename,
+  writeTextFile,
+} from "@tauri-apps/plugin-fs";
 import { autorizzaCartella } from "./storage";
 
 const FILE = "recents.json";
@@ -51,7 +58,7 @@ export async function listaRecenti(): Promise<RecentEntryConStato[]> {
   const voci = await leggiGrezzo();
   const conStato: RecentEntryConStato[] = [];
   for (const v of voci) {
-    let esiste = false;
+    let esiste: boolean;
     try {
       await autorizzaCartella(v.path);
       esiste = await exists(v.path);

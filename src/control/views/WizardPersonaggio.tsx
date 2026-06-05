@@ -14,16 +14,18 @@ import styles from "./WizardPersonaggio.module.css";
 interface Props {
   personaggiEsistenti: Personaggio[];
   onAnnulla: () => void;
-  onConferma: (input: { sourceImgPath: string; nome: string; colore: string; crop: Crop; npc: boolean }) => Promise<void>;
+  onConferma: (input: {
+    sourceImgPath: string;
+    nome: string;
+    colore: string;
+    crop: Crop;
+    npc: boolean;
+  }) => Promise<void>;
 }
 
 type Step = "immagine" | "ritaglio" | "dettagli";
 
-export default function WizardPersonaggio({
-  personaggiEsistenti,
-  onAnnulla,
-  onConferma,
-}: Props) {
+export default function WizardPersonaggio({ personaggiEsistenti, onAnnulla, onConferma }: Props) {
   const [step, setStep] = useState<Step>("immagine");
   const [sourceImgPath, setSourceImgPath] = useState<string | null>(null);
   const [crop, setCrop] = useState<Crop>(cropIniziale());
@@ -36,17 +38,13 @@ export default function WizardPersonaggio({
   const [erroreGenerico, setErroreGenerico] = useState<string | null>(null);
   const [inviando, setInviando] = useState(false);
 
-  const coloriUsati = new Set(
-    personaggiEsistenti.map((p) => p.colore.toUpperCase()),
-  );
+  const coloriUsati = new Set(personaggiEsistenti.map((p) => p.colore.toUpperCase()));
 
   async function scegliImmagine() {
     try {
       const scelto = await open({
         multiple: false,
-        filters: [
-          { name: "Immagini", extensions: ["png", "jpg", "jpeg", "webp", "gif", "bmp"] },
-        ],
+        filters: [{ name: "Immagini", extensions: ["png", "jpg", "jpeg", "webp", "gif", "bmp"] }],
       });
       if (typeof scelto === "string") {
         setSourceImgPath(scelto);
@@ -131,22 +129,14 @@ export default function WizardPersonaggio({
 
         {step === "ritaglio" && previewUrl && (
           <div className={styles.contenuto}>
-            <MaschereCircolare
-              src={previewUrl}
-              colore={colore}
-              crop={crop}
-              onChange={setCrop}
-            />
+            <MaschereCircolare src={previewUrl} colore={colore} crop={crop} onChange={setCrop} />
           </div>
         )}
 
         {step === "dettagli" && previewUrl && (
           <div className={styles.contenuto}>
             <div className={styles.previewDettagli}>
-              <div
-                className={styles.cerchioPreview}
-                style={{ borderColor: colore }}
-              >
+              <div className={styles.cerchioPreview} style={{ borderColor: colore }}>
                 <img
                   src={previewUrl}
                   alt=""
@@ -192,11 +182,7 @@ export default function WizardPersonaggio({
               })}
             </div>
             <label className={styles.npc}>
-              <input
-                type="checkbox"
-                checked={npc}
-                onChange={(e) => setNpc(e.target.checked)}
-              />
+              <input type="checkbox" checked={npc} onChange={(e) => setNpc(e.target.checked)} />
               Personaggio NPC (escluso dalla classifica, ma usabile nei conflitti)
             </label>
           </div>

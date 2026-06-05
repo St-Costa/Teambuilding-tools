@@ -2,10 +2,7 @@ import { useState } from "react";
 import { useAmbientazioneStore } from "../../state/ambientazioneStore";
 import { risolviAsset } from "../../lib/storage";
 import { PALETTE, nomeColore } from "../../lib/colori";
-import {
-  validaNomePersonaggio,
-  type Personaggio,
-} from "../../lib/ambientazione";
+import { validaNomePersonaggio, type Personaggio } from "../../lib/ambientazione";
 import Cerchietto from "../../components/Cerchietto";
 import Quadratino from "../../components/Quadratino";
 import EditorRitaglio from "./EditorRitaglio";
@@ -51,7 +48,9 @@ export default function SezionePersonaggi({ onNuovoPersonaggio }: Props) {
 
   function handleElimina(id: string, nome: string) {
     setMenuApertoPer(null);
-    const ok = confirm(`Eliminare il personaggio "${nome}"? Questa operazione non si può annullare.`);
+    const ok = confirm(
+      `Eliminare il personaggio "${nome}"? Questa operazione non si può annullare.`,
+    );
     if (ok) elimina(id);
   }
 
@@ -82,7 +81,7 @@ export default function SezionePersonaggi({ onNuovoPersonaggio }: Props) {
         <ul className={styles.lista}>
           {current.personaggi.map((p) => {
             const oggettoAssegnato = p.oggettoId
-              ? current.oggetti.find((o) => o.id === p.oggettoId) ?? null
+              ? (current.oggetti.find((o) => o.id === p.oggettoId) ?? null)
               : null;
             return (
               <li
@@ -122,13 +121,19 @@ export default function SezionePersonaggi({ onNuovoPersonaggio }: Props) {
                     {inEdit && (
                       <>
                         <button onClick={() => handleRinomina(p.id, p.nome)}>Rinomina…</button>
-                        <button onClick={() => { setMenuApertoPer(null); setEditing(p); }}>
+                        <button
+                          onClick={() => {
+                            setMenuApertoPer(null);
+                            setEditing(p);
+                          }}
+                        >
                           Modifica ritaglio…
                         </button>
                         <div className={styles.menuLabel}>Cambia colore</div>
                         <div className={styles.menuPalette}>
                           {PALETTE.map((c) => {
-                            const usato = coloriUsati.has(c.hex.toUpperCase()) && c.hex !== p.colore;
+                            const usato =
+                              coloriUsati.has(c.hex.toUpperCase()) && c.hex !== p.colore;
                             return (
                               <button
                                 key={c.hex}
@@ -198,7 +203,10 @@ export default function SezionePersonaggi({ onNuovoPersonaggio }: Props) {
                       </div>
                     )}
                     {inEdit && (
-                      <button className={styles.menuElimina} onClick={() => handleElimina(p.id, p.nome)}>
+                      <button
+                        className={styles.menuElimina}
+                        onClick={() => handleElimina(p.id, p.nome)}
+                      >
                         Elimina personaggio
                       </button>
                     )}

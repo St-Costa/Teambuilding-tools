@@ -13,9 +13,7 @@ import {
   useAmbientazioneStore,
 } from "./ambientazioneStore";
 
-export type Fonte =
-  | { tipo: "oggetto"; oggettoId: string }
-  | { tipo: "testo"; testo: string };
+export type Fonte = { tipo: "oggetto"; oggettoId: string } | { tipo: "testo"; testo: string };
 
 export interface PartecipanteConflitto {
   personaggioId: string;
@@ -112,10 +110,7 @@ export const useConflittoStore = create<ConflittoState>((set, get) => ({
     const { partecipanti } = get();
     if (partecipanti.some((p) => p.personaggioId === personaggioId)) return;
     set({
-      partecipanti: [
-        ...partecipanti,
-        { personaggioId, modificatore: null, fonte: null },
-      ],
+      partecipanti: [...partecipanti, { personaggioId, modificatore: null, fonte: null }],
     });
     forceEmitScena();
   },

@@ -59,7 +59,9 @@ export default function IndicatoreSalvataggio() {
 
   return (
     <div className={`${styles.root} ${styles.saved}`}>
-      <span className={styles.check} aria-hidden="true">✓</span>
+      <span className={styles.check} aria-hidden="true">
+        ✓
+      </span>
       <span>Salvato {lastSavedAt ? tempoRelativo(lastSavedAt) : ""}</span>
     </div>
   );

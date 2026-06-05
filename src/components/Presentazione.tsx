@@ -213,9 +213,7 @@ export default function Presentazione({
         // lenta e fa arrivare la pagina in ritardo rispetto alla regia. Il JPEG
         // si produce e decodifica molto più in fretta; su slide di regole la
         // differenza di qualità è impercettibile.
-        const blob = await new Promise<Blob | null>((res) =>
-          off.toBlob(res, "image/jpeg", 0.9),
-        );
+        const blob = await new Promise<Blob | null>((res) => off.toBlob(res, "image/jpeg", 0.9));
         if (!blob) return null;
         const url = URL.createObjectURL(blob);
         urlCacheRef.current.set(num, url);

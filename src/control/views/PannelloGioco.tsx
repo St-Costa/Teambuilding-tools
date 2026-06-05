@@ -71,7 +71,9 @@ export default function PannelloGioco() {
                           onClick={() => handleAssegna(p.id, null)}
                           title="Rimuovi oggetto dal personaggio"
                         >
-                          <span className={styles.iconaRimuovi} aria-hidden="true">⊘</span>
+                          <span className={styles.iconaRimuovi} aria-hidden="true">
+                            ⊘
+                          </span>
                           <span className={styles.popoverNome}>Rimuovi oggetto</span>
                         </button>
                       )}

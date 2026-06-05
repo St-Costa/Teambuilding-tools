@@ -59,9 +59,7 @@ export default function ScenaLeaderboard({ snapshot, folderPath }: Props) {
                 className={`${styles.cellaTick} ${r.tick[idx] ? (idx === 2 ? styles.cellaTickMalusOn : styles.cellaTickOn) : ""}`}
               >
                 {r.tick[idx] && (
-                  <span
-                    className={`${styles.checkmark} ${idx === 2 ? styles.checkmarkMalus : ""}`}
-                  >
+                  <span className={`${styles.checkmark} ${idx === 2 ? styles.checkmarkMalus : ""}`}>
                     {idx === 2 ? "✗" : "✓"}
                   </span>
                 )}

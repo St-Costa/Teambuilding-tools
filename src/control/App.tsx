@@ -17,7 +17,7 @@ interface InstallResult {
 
 function joinPath(a: string, b: string): string {
   const sep = a.includes("\\") && !a.includes("/") ? "\\" : "/";
-  return `${a.replace(/[\/\\]+$/, "")}${sep}${b}`;
+  return `${a.replace(/[/\\]+$/, "")}${sep}${b}`;
 }
 
 export default function App() {

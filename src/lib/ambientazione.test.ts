@@ -69,9 +69,7 @@ describe("validaAmbientazione — backward compatibility (D-032)", () => {
   it("npc assente o non-true → false", () => {
     const a = validaAmbientazione(manifestRaw({ personaggi: [personaggioRaw()] }));
     expect(a.personaggi[0].npc).toBe(false);
-    const b = validaAmbientazione(
-      manifestRaw({ personaggi: [personaggioRaw({ npc: true })] }),
-    );
+    const b = validaAmbientazione(manifestRaw({ personaggi: [personaggioRaw({ npc: true })] }));
     expect(b.personaggi[0].npc).toBe(true);
   });
 
@@ -146,9 +144,7 @@ describe("validaAmbientazione — manifest corrotti", () => {
   });
 
   it("lancia su nome mancante o vuoto", () => {
-    expect(() => validaAmbientazione(manifestRaw({ nome: "   " }))).toThrow(
-      AmbientazioneCorrotta,
-    );
+    expect(() => validaAmbientazione(manifestRaw({ nome: "   " }))).toThrow(AmbientazioneCorrotta);
   });
 
   it("lancia su personaggio con colore non esadecimale", () => {
@@ -160,7 +156,9 @@ describe("validaAmbientazione — manifest corrotti", () => {
   it("lancia su crop con campi non numerici", () => {
     expect(() =>
       validaAmbientazione(
-        manifestRaw({ personaggi: [personaggioRaw({ crop: { zoom: "x", offsetX: 0, offsetY: 0 } })] }),
+        manifestRaw({
+          personaggi: [personaggioRaw({ crop: { zoom: "x", offsetX: 0, offsetY: 0 } })],
+        }),
       ),
     ).toThrow(AmbientazioneCorrotta);
   });

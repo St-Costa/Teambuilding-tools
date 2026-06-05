@@ -23,7 +23,13 @@ type RGB = [number, number, number];
 
 function parseHex(hex: string): RGB {
   const h = hex.replace("#", "").trim();
-  const n = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+  const n =
+    h.length === 3
+      ? h
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : h;
   const r = parseInt(n.slice(0, 2), 16);
   const g = parseInt(n.slice(2, 4), 16);
   const b = parseInt(n.slice(4, 6), 16);
@@ -63,8 +69,8 @@ interface Particella {
   y: number;
   vx: number;
   vy: number;
-  life: number;   // residua, in secondi
-  max: number;    // durata totale, per il fade
+  life: number; // residua, in secondi
+  max: number; // durata totale, per il fade
   colore: string;
   size: number;
   rot: number;
@@ -72,9 +78,9 @@ interface Particella {
   tipo: "coriandolo" | "scintilla";
 }
 
-const CAP_PARTICELLE = 400;       // tetto fps-safe su WebKitGTK / proiettori grandi
-const GRAVITA = 480;              // px/s² (su canvas in px logici)
-const CORIANDOLI_AL_SEC = 70;     // emissione continua dal bordo superiore
+const CAP_PARTICELLE = 400; // tetto fps-safe su WebKitGTK / proiettori grandi
+const GRAVITA = 480; // px/s² (su canvas in px logici)
+const CORIANDOLI_AL_SEC = 70; // emissione continua dal bordo superiore
 
 export default function AnimazioneVittoria({ snapshot, folderPath }: Props) {
   const { w, h } = useViewport();
@@ -231,7 +237,10 @@ export default function AnimazioneVittoria({ snapshot, folderPath }: Props) {
             <div key={v.personaggioId} className={styles.slot}>
               <div
                 className={styles.coronaWrap}
-                style={{ animationDelay: `${delayCorona}s`, marginBottom: -Math.round(dimCorona * 0.42) }}
+                style={{
+                  animationDelay: `${delayCorona}s`,
+                  marginBottom: -Math.round(dimCorona * 0.42),
+                }}
                 aria-hidden="true"
               >
                 <IconaCorona dimensione={dimCorona} />

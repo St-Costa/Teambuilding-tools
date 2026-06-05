@@ -131,8 +131,8 @@ export default function MaschereCircolare({
         </button>
       </div>
       <p className={styles.suggerimento}>
-        Trascina l'immagine per spostarla, usa la rotellina del mouse o lo slider per
-        ingrandire o rimpicciolire.
+        Trascina l'immagine per spostarla, usa la rotellina del mouse o lo slider per ingrandire o
+        rimpicciolire.
       </p>
     </div>
   );

@@ -81,7 +81,12 @@ export function IconaCorona({ dimensione = 24, className }: IconaProps) {
       className={className}
       aria-hidden="true"
     >
-      <path d="M3 8 L7 13 L12 6 L17 13 L21 8 L19.5 18 H4.5 Z" stroke="currentColor" strokeWidth="0.8" strokeLinejoin="round" />
+      <path
+        d="M3 8 L7 13 L12 6 L17 13 L21 8 L19.5 18 H4.5 Z"
+        stroke="currentColor"
+        strokeWidth="0.8"
+        strokeLinejoin="round"
+      />
       <circle cx="3" cy="8" r="1.4" />
       <circle cx="12" cy="6" r="1.4" />
       <circle cx="21" cy="8" r="1.4" />

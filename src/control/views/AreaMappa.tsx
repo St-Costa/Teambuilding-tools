@@ -110,12 +110,7 @@ export default function AreaMappa() {
       const sel = annotazioneSelezionataId;
       if (!sel) return;
       const ae = document.activeElement as HTMLElement | null;
-      if (
-        ae &&
-        (ae.tagName === "INPUT" ||
-          ae.tagName === "TEXTAREA" ||
-          ae.isContentEditable)
-      ) {
+      if (ae && (ae.tagName === "INPUT" || ae.tagName === "TEXTAREA" || ae.isContentEditable)) {
         return; // il focus è in un campo editabile altrove
       }
       e.preventDefault();
@@ -139,9 +134,7 @@ export default function AreaMappa() {
   }
 
   const mappaUrl = risolviAsset(folderPath, current.mappaPath);
-  const rett = imgDim
-    ? rettangoloContain(imgDim.w, imgDim.h, container.w, container.h)
-    : null;
+  const rett = imgDim ? rettangoloContain(imgDim.w, imgDim.h, container.w, container.h) : null;
 
   // Dimensioni scalate sulla mappa renderizzata, IDENTICHE alla proiezione
   // (stessa frazione in lib/scena) → stessa dimensione relativa alla mappa.
@@ -452,9 +445,7 @@ export default function AreaMappa() {
                 e.stopPropagation();
                 if (a.tipo === "testo") setInModifica(a.id);
               }}
-              title={
-                a.tipo === "testo" ? "Doppio click per modificare il testo" : "Simbolo"
-              }
+              title={a.tipo === "testo" ? "Doppio click per modificare il testo" : "Simbolo"}
             >
               {inModifica ? (
                 <textarea

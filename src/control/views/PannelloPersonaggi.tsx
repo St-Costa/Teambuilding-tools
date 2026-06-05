@@ -7,10 +7,7 @@ interface Props {
   onNuovoOggetto: () => void;
 }
 
-export default function PannelloPersonaggi({
-  onNuovoPersonaggio,
-  onNuovoOggetto,
-}: Props) {
+export default function PannelloPersonaggi({ onNuovoPersonaggio, onNuovoOggetto }: Props) {
   return (
     <aside className={styles.root}>
       <SezionePersonaggi onNuovoPersonaggio={onNuovoPersonaggio} />

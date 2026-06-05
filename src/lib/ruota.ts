@@ -27,10 +27,10 @@ export interface PartecipanteInput {
 
 export interface FettaCalcolata {
   id: string;
-  baseFrazione: number;    // 0..1
-  bonusFrazione: number;   // 0..1 (0 se nessun modificatore)
-  totaleFrazione: number;  // = baseFrazione + bonusFrazione
-  startAngolo: number;     // gradi, cumulativo
+  baseFrazione: number; // 0..1
+  bonusFrazione: number; // 0..1 (0 se nessun modificatore)
+  totaleFrazione: number; // = baseFrazione + bonusFrazione
+  startAngolo: number; // gradi, cumulativo
   fineAngolo: number;
 }
 
@@ -114,6 +114,6 @@ export function angoloDiArresto(
   const offsetFrac = margineFetta + rand() * (1 - 2 * margineFetta);
   const offset = width * offsetFrac;
   // angolo target normalizzato (0..360) tale che (target + start + offset) ≡ 0 (mod 360)
-  const baseTarget = ((-f.startAngolo - offset) % 360 + 360) % 360;
+  const baseTarget = (((-f.startAngolo - offset) % 360) + 360) % 360;
   return giriPieni * 360 + baseTarget;
 }

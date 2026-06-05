@@ -105,7 +105,9 @@ export default function SelezioneAmbientazione() {
   }
 
   async function handleElimina(path: string, nome: string) {
-    const ok = confirm(`Sei sicuro di voler eliminare l'ambientazione "${nome}"?\n\nLa cartella e tutti i file verranno cancellati definitivamente dal disco.`);
+    const ok = confirm(
+      `Sei sicuro di voler eliminare l'ambientazione "${nome}"?\n\nLa cartella e tutti i file verranno cancellati definitivamente dal disco.`,
+    );
     if (!ok) return;
     try {
       await eliminaAmbientazione(path);
@@ -146,17 +148,16 @@ export default function SelezioneAmbientazione() {
     <div className={styles.root}>
       <h1>Ambientazioni</h1>
 
-      <button
-        className={styles.btnNuova}
-        onClick={() => setCreazioneAperta(true)}
-      >
+      <button className={styles.btnNuova} onClick={() => setCreazioneAperta(true)}>
         + Nuova ambientazione
       </button>
 
       {errore && (
         <div className={styles.errore}>
           {errore}
-          <button onClick={() => setErrore(null)} className={styles.chiudiErrore}>×</button>
+          <button onClick={() => setErrore(null)} className={styles.chiudiErrore}>
+            ×
+          </button>
         </div>
       )}
 
@@ -169,8 +170,7 @@ export default function SelezioneAmbientazione() {
             .filter((r) => r.esiste)
             .map((v) => {
               const mappaPath = mappePerPath[v.path];
-              const mappaUrl =
-                mappaPath ? risolviAsset(v.path, mappaPath) : null;
+              const mappaUrl = mappaPath ? risolviAsset(v.path, mappaPath) : null;
               return (
                 <div key={v.path} className={styles.tile}>
                   <button
@@ -230,9 +230,7 @@ export default function SelezioneAmbientazione() {
             disabled={ripristinoInCorso}
             title="Ricopia gli scenari pre-installati dal bundle del tool, sovrascrivendo eventuali modifiche"
           >
-            {ripristinoInCorso
-              ? "Ripristino in corso…"
-              : "Ripristina scenari pre-installati"}
+            {ripristinoInCorso ? "Ripristino in corso…" : "Ripristina scenari pre-installati"}
           </button>
         </div>
       )}
@@ -278,14 +276,13 @@ function ModaleCreazione({
 
     // Se siamo in dev (parentFissato presente) saltiamo il dialog: il nuovo
     // scenario viene creato direttamente in <repo>/scenari-bundled/<nome>/.
-    const parent =
-      parentFissato ?? (await open({ directory: true, multiple: false }));
+    const parent = parentFissato ?? (await open({ directory: true, multiple: false }));
     if (typeof parent !== "string") return;
 
     try {
       await autorizzaCartella(parent);
       const sep = parent.includes("\\") && !parent.includes("/") ? "\\" : "/";
-      const target = `${parent.replace(/[\/\\]+$/, "")}${sep}${nome.trim()}`;
+      const target = `${parent.replace(/[/\\]+$/, "")}${sep}${nome.trim()}`;
       const giaPresente = await exists(target);
       if (giaPresente) {
         const ok = confirm(
