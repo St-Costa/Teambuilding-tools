@@ -515,3 +515,103 @@ in wrapper non-ritagliato (anello + alone selezione) + cerchio interno ritagliat
 
 ### Verificato
 - `npx tsc --noEmit` clean; `npm run build` ok. Provato dal vivo dall'utente.
+
+---
+
+## Qualità — test, tooling, hardening (2026-06-05)
+
+Intervento trasversale di qualità del repository, a **funzionalità invariata**.
+Aree concordate con l'utente: test automatici, tooling & CI, sicurezza/robustezza,
+refactor & performance (refactor moderati a comportamento invariato).
+
+### D-088 — Test automatici con Vitest sulla logica pura
+Introdotto **Vitest** (config dedicata `vitest.config.ts`, ambiente `node`) con
+53 test, senza mock né dipendenze Tauri/DOM, sulla logica pura:
+- `lib/ruota.ts` (wheel-math): rinormalizzazione fette, incrementi `+1`/`+2`
+  assoluti **prima** della rinormalizzazione, vincitore pesato ai confini e in
+  distribuzione, angolo di arresto dentro la fetta vincente. Copertura ~97%.
+- `lib/scena.ts`, `lib/ambientazione.ts` (validazione + backward-compat D-032),
+  `state/timerStore.ts` (`remainingMs`, `formatMmSs`).
+Le funzioni accettavano già un `rand` iniettabile / erano deterministiche: nessun
+cambiamento al codice di produzione per renderle testabili. Script: `npm test`,
+`npm run coverage`.
+
+### D-089 — ESLint (flat config) + Prettier
+Aggiunti ESLint 9 (flat config: `typescript-eslint`, `react-hooks`,
+`react-refresh`, `eslint-config-prettier`) e Prettier (`.prettierrc.json`).
+Le regole **"React Compiler"** introdotte da `eslint-plugin-react-hooks` v7
+(`purity` / `set-state-in-effect` / `refs`) sono declassate a **warning**:
+segnalano pattern che in questo codice funzionano, e promuoverle a error
+richiederebbe refactor di rendering fuori scope. `npm run lint` esce pulito
+(0 error, alcuni warning informativi). Correzioni a basso rischio applicate:
+`no-useless-escape` (rimosso `\/` ridondante in classi di caratteri) e una
+assegnazione morta in `recents.ts`. Script: `lint`, `format`, `format:check`.
+
+### D-090 — CI GitHub Actions
+`.github/workflows/ci.yml`: job **frontend** (lint, format:check, tsc, test,
+build) e job **Rust** (`cargo fmt --check`, `clippy -D warnings`, build) con le
+dipendenze di sistema WebKitGTK/ALSA e cache di cargo/target. Trigger su push e
+PR verso `main`.
+
+### D-091 — Hardening Rust (avvio + autorizzazione cartelle)
+- `allow_ambientazione_folder`: ora **valida** il percorso con
+  `fs::canonicalize` (risolve symlink, normalizza, fallisce se inesistente) e
+  richiede che sia una directory **prima** di allargare lo scope fs/asset. Per
+  non rompere lo scope matching del front-end (che usa il path originale), si
+  autorizzano sia il path originale sia quello canonico.
+- `copia_dir_ricorsiva`: documentato che `DirEntry::file_type()` non segue i
+  symlink → niente ricorsione ciclica.
+- `run()`: niente `expect()`/panic muto in release — in caso di errore d'avvio
+  logga su stderr ed esce con codice 1.
+
+### D-092 — CSP: lasciata `null`, irrobustimento rinviato a verifica GUI
+La spec di rischio (CLAUDE.md §9) e l'idea iniziale prevedevano una Content
+Security Policy restrittiva. **Decisione: per ora `security.csp` resta `null`.**
+Motivi:
+1. Il worker di **pdf.js** è caricato come asset bundled e
+   [Presentazione.tsx](../src/components/Presentazione.tsx) annota esplicitamente
+   che funziona *grazie* a `csp:null`; una CSP errata può rompere il rendering
+   del PDF. Anche immagini (asset protocol), audio (blob) e pagine PDF
+   (canvas→blob) dipendono da scheme specifici.
+2. L'app è **locale**: carica solo file locali e asset bundled, nessun contenuto
+   remoto; le annotazioni di testo sono renderizzate da React (già escaped).
+   La superficie XSS è quindi minima e il guadagno marginale.
+3. Una CSP che tocca questi percorsi va **verificata dal vivo su Ubuntu**
+   (proiezione + PDF + audio), cosa non possibile in CI/headless.
+Candidato da testare quando si potrà provare la GUI:
+`default-src 'self'; img-src 'self' asset: http://asset.localhost data: blob:;
+media-src 'self' asset: http://asset.localhost blob:; script-src 'self' blob:;
+worker-src 'self' blob:; style-src 'self' 'unsafe-inline';
+connect-src 'self' ipc: http://ipc.localhost asset: http://asset.localhost`.
+Se pdf.js richiedesse `'unsafe-eval'`, valutare se il beneficio residuo
+giustifica l'eccezione o se restare su `null`.
+
+### D-093 — Messaggi d'errore leggibili all'apertura scenario
+`stringifyErr` in `SelezioneAmbientazione` riconosce `CartellaNonValida`,
+`AmbientazioneCorrotta` e `IOError` e mostra un messaggio chiaro in italiano
+(dettaglio tecnico tra parentesi). La UI già catturava e mostrava gli errori
+senza bloccarsi: qui si migliora solo la comprensibilità per il conduttore.
+
+### D-094 — DOMMatrix per l'angolo dello spin
+In `Ruota.tsx` il parsing a regex di `getComputedStyle().transform` è sostituito
+da `DOMMatrix` (gestisce `matrix`/`matrix3d`/`none`). L'angolo 2D resta
+`atan2(b, a)`: wobble della freccia e tick audio invariati.
+
+### D-095 — Estratto il registro snapshot-provider; split di PannelloConflitto NON fatto
+Il wiring cross-store (provider di conflitto/timer/leaderboard/vittoria/
+presentazione + `leggiSnapshot`) è estratto da `ambientazioneStore.ts` a
+`state/snapshotProviders.ts`, separando il wiring dalla logica dello store; le
+`registra*` sono ri-esportate da `ambientazioneStore` (API invariata). **Non**
+si è spezzato `PannelloConflitto.tsx` (456 righe): dividere un componente
+stateful (wizard a 3 step) non è verificabile senza GUI e il guadagno è solo di
+conteggio righe — rischio sproporzionato per un tool usato dal vivo. Eventuale
+follow-up quando si potrà provare la GUI.
+
+### Verificato (intervento qualità)
+- `npm test` (53 passati), `npm run coverage` (ruota.ts ~97%).
+- `npm run lint` (0 error), `npm run format:check` pulito, `npx tsc --noEmit` ok,
+  `npm run build` ok.
+- `cargo fmt --check`, `cargo clippy -- -D warnings`, `cargo build` ok.
+- NON verificato dal vivo via GUI (ambiente headless): le modifiche a
+  comportamento invariato vanno riprovate dall'utente in una sessione reale
+  (apertura scenario, ruota con `+1`/`+2`, PDF, audio, timer, leaderboard).

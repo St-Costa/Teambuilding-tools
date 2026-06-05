@@ -117,6 +117,28 @@ npm run dev       # solo frontend Vite (senza shell Tauri)
 npm run build     # type-check (tsc) + build frontend (vite)
 ```
 
+### Qualità del codice
+
+```bash
+npm test           # test (Vitest) della logica pura: ruota, scena, validazione, timer
+npm run coverage   # come sopra, con report di copertura
+npm run lint       # ESLint (flat config TS/React)
+npm run format     # Prettier: riscrive i file formattati
+npm run format:check  # Prettier: solo controllo (usato in CI)
+```
+
+Per il backend Rust, dalla cartella `src-tauri/`:
+
+```bash
+cargo fmt --all                 # formatta
+cargo clippy --all-targets -- -D warnings   # lint
+cargo test                      # test Rust (se presenti)
+```
+
+Gli stessi controlli girano in **CI** (GitHub Actions, `.github/workflows/ci.yml`)
+su ogni push e PR verso `main`: lint, formattazione, type-check, test e build sia
+del frontend sia del backend Rust.
+
 ### Build di produzione
 
 ```bash
