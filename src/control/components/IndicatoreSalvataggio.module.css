@@ -59,7 +59,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .retry {
@@ -77,9 +79,19 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .dirty { color: #ffd84d; }
-  .saving { color: #8fb0ff; }
-  .saved { color: #65d18a; }
-  .errore { color: #ff7c7c; }
-  .retry:hover { background: rgba(255, 255, 255, 0.08); }
+  .dirty {
+    color: #ffd84d;
+  }
+  .saving {
+    color: #8fb0ff;
+  }
+  .saved {
+    color: #65d18a;
+  }
+  .errore {
+    color: #ff7c7c;
+  }
+  .retry:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
 }

@@ -16,7 +16,9 @@
   border: 3px solid transparent;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.05);
-  transition: border-color 0.3s, background 0.3s;
+  transition:
+    border-color 0.3s,
+    background 0.3s;
 }
 
 .cardVincitore {
@@ -31,7 +33,12 @@
   flex-direction: column;
   align-items: center;
   color: #fff;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
 }
 
 .nome {

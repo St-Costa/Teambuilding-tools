@@ -139,7 +139,10 @@
   opacity: 0.75;
 }
 
-.btnPrimario, .btnSecondario, .btnRimuovi, .btnAnteprima {
+.btnPrimario,
+.btnSecondario,
+.btnRimuovi,
+.btnAnteprima {
   padding: 0.4rem 0.7rem;
   border-radius: 6px;
   border: 1px solid currentColor;
@@ -172,7 +175,8 @@
   background: rgba(220, 50, 50, 0.12);
 }
 
-.btnSecondario:hover, .btnAnteprima:hover {
+.btnSecondario:hover,
+.btnAnteprima:hover {
   background: rgba(127, 127, 127, 0.12);
 }
 

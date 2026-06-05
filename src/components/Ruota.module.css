@@ -19,7 +19,9 @@
    per l'incoronazione finale. */
 .fetta {
   opacity: 1;
-  transition: opacity 0.45s ease, filter 0.45s ease;
+  transition:
+    opacity 0.45s ease,
+    filter 0.45s ease;
 }
 
 /* Fetta vincente a risultato: resta piena e si illumina. */
@@ -27,14 +29,18 @@
   opacity: 1;
   filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.95))
     drop-shadow(0 0 10px rgba(255, 215, 0, 0.85));
-  transition: opacity 0.45s ease, filter 0.45s ease;
+  transition:
+    opacity 0.45s ease,
+    filter 0.45s ease;
 }
 
 /* Le altre fette a risultato: leggermente più scure/spente. */
 .altraFetta {
   opacity: 0.55;
   filter: saturate(0.85) brightness(0.78);
-  transition: opacity 0.45s ease, filter 0.45s ease;
+  transition:
+    opacity 0.45s ease,
+    filter 0.45s ease;
 }
 
 /* ── Pannello "incoronazione" a destra della ruota ── */
@@ -61,19 +67,37 @@
 }
 
 @keyframes coronaGiu {
-  0% { opacity: 0; transform: translateY(-140%); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(-140%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes cerchioSu {
-  0% { opacity: 0; transform: translateY(140%); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(140%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes puntaWobble {
-  0% { transform: rotate(0deg); }
-  35% { transform: rotate(-11deg); }
-  100% { transform: rotate(0deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  35% {
+    transform: rotate(-11deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
 }
 
 .puntaWobble {

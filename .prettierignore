@@ -5,3 +5,5 @@ src-tauri/gen
 package-lock.json
 *.md
 src/assets
+# Contenuti/dati, non codice: i manifest degli scenari non vanno riformattati.
+scenari-bundled

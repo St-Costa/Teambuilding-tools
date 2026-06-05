@@ -43,7 +43,12 @@
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   font-weight: 700;
   font-size: clamp(3rem, min(12vw, 60vh), 18rem);
   text-align: center;

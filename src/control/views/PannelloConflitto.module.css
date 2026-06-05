@@ -187,7 +187,8 @@
   gap: 0.5rem;
 }
 
-.selectOggetto, .inputTesto {
+.selectOggetto,
+.inputTesto {
   padding: 0.4rem 0.6rem;
   border: 1px solid rgba(127, 127, 127, 0.5);
   border-radius: 5px;
@@ -233,7 +234,8 @@
   flex: 1;
 }
 
-.btnPrimario, .btnSecondario {
+.btnPrimario,
+.btnSecondario {
   padding: 0.5rem 1rem;
   border-radius: 5px;
   border: 1px solid currentColor;

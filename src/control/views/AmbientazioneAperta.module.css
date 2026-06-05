@@ -204,7 +204,8 @@
   gap: 0.7rem;
 }
 
-.confermaPrimario, .confermaSecondario {
+.confermaPrimario,
+.confermaSecondario {
   padding: 0.6rem 1.2rem;
   border-radius: 6px;
   border: 1px solid currentColor;

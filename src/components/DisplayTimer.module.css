@@ -15,7 +15,12 @@
   align-items: center;
   gap: 0.1rem;
   color: #fff;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   user-select: none;
   pointer-events: none;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
@@ -50,7 +55,13 @@
 }
 
 @keyframes pulseScaduto {
-  0% { opacity: 1; }
-  50% { opacity: 0.4; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
 }

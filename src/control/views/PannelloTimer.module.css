@@ -28,12 +28,19 @@
 }
 
 @keyframes blinkScaduto {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
-.btnToggle, .btnReset {
+.btnToggle,
+.btnReset {
   width: 3.2rem;
   height: 3.2rem;
   padding: 0;
@@ -54,7 +61,8 @@
   font-size: 1.35rem;
 }
 
-.btnToggle:hover, .btnReset:hover {
+.btnToggle:hover,
+.btnReset:hover {
   background: rgba(127, 127, 127, 0.1);
 }
 
