@@ -25,6 +25,17 @@ import {
   DIM_ANNOTAZIONE_SIMBOLO_DEFAULT,
   DIM_ANNOTAZIONE_TESTO_DEFAULT,
 } from "../lib/scena";
+import { leggiSnapshot } from "./snapshotProviders";
+// Le funzioni di registrazione dei provider vivono in ./snapshotProviders ma
+// vengono ri-esportate qui: gli altri store le importano da "./ambientazioneStore"
+// (API pubblica invariata) per registrarsi al proprio boot.
+export {
+  registraConflittoSnapshotProvider,
+  registraTimerSnapshotProvider,
+  registraLeaderboardSnapshotProvider,
+  registraVittoriaSnapshotProvider,
+  registraPresentazioneSnapshotProvider,
+} from "./snapshotProviders";
 
 export type SaveStatus = "idle" | "dirty" | "saving" | "saved" | "error";
 export type ModalitaAmbientazione = "play" | "edit";
@@ -113,6 +124,7 @@ function emitThrottled(payload: ScenaPayload): void {
 }
 
 function payloadCorrente(state: AmbientazioneState): ScenaPayload {
+  const snap = leggiSnapshot();
   return {
     folderPath: state.folderPath,
     mappaPath: state.current?.mappaPath ?? null,
@@ -120,50 +132,13 @@ function payloadCorrente(state: AmbientazioneState): ScenaPayload {
     oggetti: state.current?.oggetti ?? [],
     annotazioni: state.current?.annotazioni ?? [],
     nome: state.current?.nome ?? null,
-    conflitto: conflittoSnapshotProvider?.() ?? null,
-    timer: timerSnapshotProvider?.() ?? {
-      stato: "idle",
-      durationSec: 300,
-      targetEndAt: null,
-      pausedRemainingMs: 0,
-    },
-    leaderboard: leaderboardSnapshotProvider?.() ?? null,
-    vittoria: vittoriaSnapshotProvider?.() ?? null,
+    conflitto: snap.conflitto,
+    timer: snap.timer,
+    leaderboard: snap.leaderboard,
+    vittoria: snap.vittoria,
     presentazionePath: state.current?.presentazionePath ?? null,
-    presentazione: presentazioneSnapshotProvider?.() ?? null,
+    presentazione: snap.presentazione,
   };
-}
-
-// Wiring leggero verso conflittoStore/timerStore senza creare un import
-// circolare: i due store si registrano qui al boot e forniscono snapshot.
-type ConflittoSnapshotFn = () => import("../lib/events").ConflittoSnapshot | null;
-let conflittoSnapshotProvider: ConflittoSnapshotFn | null = null;
-export function registraConflittoSnapshotProvider(fn: ConflittoSnapshotFn | null): void {
-  conflittoSnapshotProvider = fn;
-}
-
-type TimerSnapshotFn = () => import("../lib/events").TimerSnapshot;
-let timerSnapshotProvider: TimerSnapshotFn | null = null;
-export function registraTimerSnapshotProvider(fn: TimerSnapshotFn | null): void {
-  timerSnapshotProvider = fn;
-}
-
-type LeaderboardSnapshotFn = () => import("../lib/events").LeaderboardSnapshot | null;
-let leaderboardSnapshotProvider: LeaderboardSnapshotFn | null = null;
-export function registraLeaderboardSnapshotProvider(fn: LeaderboardSnapshotFn | null): void {
-  leaderboardSnapshotProvider = fn;
-}
-
-type VittoriaSnapshotFn = () => import("../lib/events").VittoriaSnapshot | null;
-let vittoriaSnapshotProvider: VittoriaSnapshotFn | null = null;
-export function registraVittoriaSnapshotProvider(fn: VittoriaSnapshotFn | null): void {
-  vittoriaSnapshotProvider = fn;
-}
-
-type PresentazioneSnapshotFn = () => import("../lib/events").PresentazioneSnapshot | null;
-let presentazioneSnapshotProvider: PresentazioneSnapshotFn | null = null;
-export function registraPresentazioneSnapshotProvider(fn: PresentazioneSnapshotFn | null): void {
-  presentazioneSnapshotProvider = fn;
 }
 
 export function forceEmitScena(): void {
