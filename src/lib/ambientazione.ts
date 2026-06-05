@@ -70,6 +70,11 @@ export interface Ambientazione {
   obiettivi: [string, string, string];
   soundboard: SlotSoundboard[];
   sottofondoPath: string | null;
+  // Presentazione delle regole: PDF mostrato sulla proiezione a inizio gioco.
+  presentazionePath: string | null; // path relativo es. "presentazione/<id>.pdf"
+  // Note per pagina (chiave = numero pagina 1-based). Mappa sparsa: esistono solo
+  // per le pagine annotate, e il n° pagine non è noto al momento dell'edit del JSON.
+  notePresentazione: Record<number, string>;
 }
 
 export class AmbientazioneCorrotta extends Error {
@@ -275,6 +280,12 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
     typeof raw.sottofondoPath === "string" && raw.sottofondoPath.length > 0
       ? raw.sottofondoPath
       : null;
+  // presentazione: campi opzionali, assenti nelle ambientazioni precedenti.
+  const presentazionePath =
+    typeof raw.presentazionePath === "string" && raw.presentazionePath.length > 0
+      ? raw.presentazionePath
+      : null;
+  const notePresentazione = validaNotePresentazione(raw.notePresentazione);
   return {
     schemaVersion: SCHEMA_VERSION,
     nome: raw.nome,
@@ -287,7 +298,23 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
     obiettivi,
     soundboard,
     sottofondoPath,
+    presentazionePath,
+    notePresentazione,
   };
+}
+
+// Le note presentazione in JSON hanno chiavi stringa (es. "1","2"): accettiamo
+// solo chiavi intere >= 1 con valore stringa non vuota, scartando il resto.
+function validaNotePresentazione(raw: unknown): Record<number, string> {
+  const out: Record<number, string> = {};
+  if (!isObject(raw)) return out;
+  for (const [k, v] of Object.entries(raw)) {
+    const n = Number(k);
+    if (Number.isInteger(n) && n >= 1 && typeof v === "string" && v !== "") {
+      out[n] = v;
+    }
+  }
+  return out;
 }
 
 function soundboardIniziale(): SlotSoundboard[] {
@@ -312,6 +339,8 @@ export function nuovoManifest(nome: string): Ambientazione {
     obiettivi: ["", "", ""],
     soundboard: soundboardIniziale(),
     sottofondoPath: null,
+    presentazionePath: null,
+    notePresentazione: {},
   };
 }
 

@@ -13,11 +13,13 @@ import PannelloLeaderboard from "./PannelloLeaderboard";
 import PannelloGioco from "./PannelloGioco";
 import PannelloSoundboard from "./PannelloSoundboard";
 import PannelloAnnotazioni from "./PannelloAnnotazioni";
+import PannelloPresentazione from "./PannelloPresentazione";
 import PulsanteSottofondo from "./PulsanteSottofondo";
 import AudioVittoria from "./AudioVittoria";
 import { IconaCasa, IconaMonitor, IconaTrofeo, IconaVS } from "../../components/Icone";
 import { useConflittoStore } from "../../state/conflittoStore";
 import { useLeaderboardStore } from "../../state/leaderboardStore";
+import { usePresentazioneStore } from "../../state/presentazioneStore";
 import "../../state/timerStore";
 // Import side-effect: registra il provider snapshot della vittoria nel payload.
 import "../../state/vittoriaStore";
@@ -45,8 +47,10 @@ export default function AmbientazioneAperta() {
   const apriLeaderboard = useLeaderboardStore((s) => s.apri);
   const conflittoFase = useConflittoStore((s) => s.fase);
   const leaderboardFaseStore = useLeaderboardStore((s) => s.fase);
+  const presentazioneFase = usePresentazioneStore((s) => s.fase);
   const conflittoInCorso = conflittoFase !== "chiuso";
   const leaderboardInCorso = leaderboardFaseStore === "aperta";
+  const presentazioneInCorso = presentazioneFase === "attiva";
 
   useEffect(() => {
     let cancellato = false;
@@ -128,19 +132,22 @@ export default function AmbientazioneAperta() {
           >
             <IconaMonitor dimensione={30} />
           </button>
+          <PannelloPresentazione />
           <button
             className={styles.btnIcona}
             onClick={() => {
               avviaConflitto();
               setConflittoAperto(true);
             }}
-            disabled={current.personaggi.length < 2 || leaderboardInCorso}
+            disabled={current.personaggi.length < 2 || leaderboardInCorso || presentazioneInCorso}
             title={
-              leaderboardInCorso
-                ? "Chiudi prima la leaderboard"
-                : current.personaggi.length < 2
-                  ? "Servono almeno 2 personaggi"
-                  : "Apri la ruota della fortuna (Conflitto)"
+              presentazioneInCorso
+                ? "Chiudi prima la presentazione"
+                : leaderboardInCorso
+                  ? "Chiudi prima la leaderboard"
+                  : current.personaggi.length < 2
+                    ? "Servono almeno 2 personaggi"
+                    : "Apri la ruota della fortuna (Conflitto)"
             }
             aria-label="Conflitto"
           >
@@ -152,13 +159,15 @@ export default function AmbientazioneAperta() {
               apriLeaderboard();
               setLeaderboardAperta(true);
             }}
-            disabled={current.personaggi.every((p) => p.npc) || conflittoInCorso}
+            disabled={current.personaggi.every((p) => p.npc) || conflittoInCorso || presentazioneInCorso}
             title={
-              conflittoInCorso
-                ? "Chiudi prima il conflitto"
-                : current.personaggi.every((p) => p.npc)
-                  ? "Serve almeno 1 personaggio non-NPC"
-                  : "Mostra la leaderboard finale"
+              presentazioneInCorso
+                ? "Chiudi prima la presentazione"
+                : conflittoInCorso
+                  ? "Chiudi prima il conflitto"
+                  : current.personaggi.every((p) => p.npc)
+                    ? "Serve almeno 1 personaggio non-NPC"
+                    : "Mostra la leaderboard finale"
             }
             aria-label="Leaderboard"
           >

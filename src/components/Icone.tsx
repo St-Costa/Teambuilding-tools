@@ -186,6 +186,29 @@ export function IconaImmagine({ dimensione = 24, className }: IconaProps) {
   );
 }
 
+/** Icona "Presentazione": schermo su cavalletto con un triangolo "play". */
+export function IconaPresentazione({ dimensione = 24, className }: IconaProps) {
+  return (
+    <svg
+      width={dimensione}
+      height={dimensione}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={STROKE}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <rect x="3" y="3.5" width="18" height="12" rx="1.8" />
+      <path d="M12 15.5 L12 18" />
+      <path d="M8.5 21 L12 18 L15.5 21" />
+      <path d="M10 7 L15 9.5 L10 12 Z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 /**
  * Icona "ruota della fortuna": cerchio diviso in 6 spicchi + perno centrale
  * + freccia indicatrice in alto. (Non più usata, mantenuta per riferimento.)

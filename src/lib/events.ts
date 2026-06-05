@@ -77,6 +77,11 @@ export interface BoomPayload {
   colori: string[];      // tinte delle scintille (colori dei vincitori + oro/bianco)
 }
 
+export interface PresentazioneSnapshot {
+  paginaCorrente: number; // 1-based
+  numPagine: number; // 0 finché il PDF non è stato aperto
+}
+
 export interface ScenaPayload {
   folderPath: string | null;
   mappaPath: string | null;
@@ -88,6 +93,11 @@ export interface ScenaPayload {
   timer: TimerSnapshot;
   leaderboard: LeaderboardSnapshot | null;
   vittoria: VittoriaSnapshot | null;
+  // Presentazione: path sempre presente (la proiezione lo usa per readFile),
+  // ma l'overlay si mostra solo quando `presentazione !== null`. La nota NON
+  // entra qui: la proiezione mostra solo la pagina, le note restano in regia.
+  presentazionePath: string | null;
+  presentazione: PresentazioneSnapshot | null;
 }
 
 export type EventPayloads = {

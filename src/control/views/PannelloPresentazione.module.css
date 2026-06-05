@@ -1,0 +1,224 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+}
+
+.modale {
+  background: #fff;
+  color: #1d1d1f;
+  border-radius: 12px;
+  width: min(820px, 95vw);
+  max-height: 92vh;
+  overflow: auto;
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (prefers-color-scheme: dark) {
+  .modale {
+    background: #2c2c2e;
+    color: #f5f5f7;
+  }
+}
+
+.header {
+  padding: 1rem 1.5rem 0.5rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header h2 {
+  margin: 0;
+}
+
+.contatore {
+  font-size: 0.95rem;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.body {
+  padding: 1rem 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.25rem;
+}
+
+/* Quando non c'è ancora un PDF caricato (solo edit): una colonna sola. */
+.bodyVuoto {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.colonnaAnteprima {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.anteprima {
+  width: 100%;
+  height: 320px;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.navigazione {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.btnNav {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid rgba(127, 127, 127, 0.5);
+  background: transparent;
+  color: inherit;
+  font-size: 1.3rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnNav:hover:not(:disabled) {
+  background: rgba(127, 127, 127, 0.12);
+}
+
+.btnNav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.posizione {
+  min-width: 86px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.colonnaNota {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.etichettaNota {
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.notaTextarea {
+  flex: 1;
+  min-height: 240px;
+  resize: vertical;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(127, 127, 127, 0.5);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 1.4;
+}
+
+/* In play la nota è in sola lettura ma deve restare ben leggibile. */
+.notaLettura {
+  flex: 1;
+  min-height: 240px;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  border-radius: 8px;
+  background: rgba(127, 127, 127, 0.06);
+  white-space: pre-wrap;
+  line-height: 1.5;
+  font-size: 1.05rem;
+  overflow: auto;
+}
+
+.notaVuota {
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(127, 127, 127, 0.2);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.btnPrimario,
+.btnSecondario {
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  border: 1px solid currentColor;
+  font: inherit;
+  cursor: pointer;
+}
+
+.btnPrimario {
+  background: #1d1d1f;
+  color: #fff;
+  border-color: #1d1d1f;
+}
+
+.btnSecondario {
+  background: transparent;
+  color: inherit;
+}
+
+.btnSecondario:hover:not(:disabled) {
+  background: rgba(127, 127, 127, 0.1);
+}
+
+.btnPericolo {
+  color: #c0392b;
+}
+
+@media (prefers-color-scheme: dark) {
+  .btnPrimario {
+    background: #f5f5f7;
+    color: #1d1d1f;
+    border-color: #f5f5f7;
+  }
+  .btnPericolo {
+    color: #ff7a6b;
+  }
+}
+
+.errore {
+  margin: 0 1.5rem 1rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  background: rgba(192, 57, 43, 0.12);
+  color: #c0392b;
+  font-size: 0.9rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .errore {
+    color: #ff7a6b;
+  }
+}

@@ -13,6 +13,7 @@ import {
   apriAmbientazione,
   copiaAudioInCartella,
   copiaImmagineInCartella,
+  copiaPresentazioneInCartella,
   creaAmbientazione,
   salvaAmbientazione,
 } from "../lib/storage";
@@ -65,6 +66,9 @@ interface AmbientazioneState {
   setSoundboardEmoji: (indice: number, emoji: string) => void;
   setSoundboardAudio: (indice: number, sourceAbsPath: string | null) => Promise<void>;
   setSottofondo: (sourceAbsPath: string | null) => Promise<void>;
+  impostaPresentazione: (sourceAbsPath: string) => Promise<void>;
+  rimuoviPresentazione: () => void;
+  setNotaPagina: (pagina: number, testo: string) => void;
   eliminaPersonaggio: (id: string) => void;
   selezionaPersonaggio: (id: string | null) => void;
   aggiungiAnnotazione: (input: {
@@ -129,6 +133,8 @@ function payloadCorrente(state: AmbientazioneState): ScenaPayload {
     },
     leaderboard: leaderboardSnapshotProvider?.() ?? null,
     vittoria: vittoriaSnapshotProvider?.() ?? null,
+    presentazionePath: state.current?.presentazionePath ?? null,
+    presentazione: presentazioneSnapshotProvider?.() ?? null,
   };
 }
 
@@ -156,6 +162,12 @@ type VittoriaSnapshotFn = () => import("../lib/events").VittoriaSnapshot | null;
 let vittoriaSnapshotProvider: VittoriaSnapshotFn | null = null;
 export function registraVittoriaSnapshotProvider(fn: VittoriaSnapshotFn | null): void {
   vittoriaSnapshotProvider = fn;
+}
+
+type PresentazioneSnapshotFn = () => import("../lib/events").PresentazioneSnapshot | null;
+let presentazioneSnapshotProvider: PresentazioneSnapshotFn | null = null;
+export function registraPresentazioneSnapshotProvider(fn: PresentazioneSnapshotFn | null): void {
+  presentazioneSnapshotProvider = fn;
 }
 
 export function forceEmitScena(): void {
@@ -435,6 +447,34 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
     const relativo = await copiaAudioInCartella(folderPath, sourceAbsPath, "audio", "sottofondo");
     get().modifica((draft) => {
       draft.sottofondoPath = relativo;
+    });
+  },
+
+  async impostaPresentazione(sourceAbsPath) {
+    const { folderPath } = get();
+    if (!folderPath) throw new Error("Nessuna ambientazione aperta");
+    const relativo = await copiaPresentazioneInCartella(folderPath, sourceAbsPath, nuovoId());
+    get().modifica((draft) => {
+      // Cambiando PDF le vecchie note non hanno più senso (pagine diverse).
+      draft.presentazionePath = relativo;
+      draft.notePresentazione = {};
+    });
+  },
+
+  rimuoviPresentazione() {
+    get().modifica((draft) => {
+      draft.presentazionePath = null;
+      draft.notePresentazione = {};
+    });
+  },
+
+  setNotaPagina(pagina, testo) {
+    get().modifica((draft) => {
+      if (testo.trim() === "") {
+        delete draft.notePresentazione[pagina];
+      } else {
+        draft.notePresentazione[pagina] = testo;
+      }
     });
   },
 

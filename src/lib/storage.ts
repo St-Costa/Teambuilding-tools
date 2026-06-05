@@ -2,6 +2,7 @@ import {
   copyFile,
   exists,
   mkdir,
+  readFile,
   readTextFile,
   remove,
   rename,
@@ -158,6 +159,37 @@ export async function copiaAudioInCartella(
   );
   await wrapIO("copia audio", () => copyFile(sourceAbsPath, dest));
   return relativo;
+}
+
+const ESTENSIONI_PRESENTAZIONE = new Set(["pdf"]);
+
+export async function copiaPresentazioneInCartella(
+  folderPath: string,
+  sourceAbsPath: string,
+  baseId: string,
+): Promise<string> {
+  const ext = estensioneDi(sourceAbsPath);
+  const safeExt = ESTENSIONI_PRESENTAZIONE.has(ext) ? ext : "pdf";
+  const relativo = `presentazione/${baseId}.${safeExt}`;
+  const dest = joinPath(folderPath, relativo);
+
+  await wrapIO("creazione cartella presentazione", () =>
+    mkdir(joinPath(folderPath, "presentazione"), { recursive: true }),
+  );
+  await wrapIO("copia presentazione", () => copyFile(sourceAbsPath, dest));
+  return relativo;
+}
+
+// Legge i byte del PDF (richiede il permesso fs:allow-read-file). Li passiamo a
+// pdf.js come { data } invece di usare l'asset URL: più robusto su WebKitGTK
+// (niente range-request sul custom protocol) e identico sulle tre piattaforme.
+export async function leggiBytesPresentazione(
+  folderPath: string,
+  relativePath: string,
+): Promise<Uint8Array> {
+  return wrapIO("lettura presentazione", () =>
+    readFile(joinPath(folderPath, relativePath)),
+  );
 }
 
 export async function eliminaAmbientazione(folderPath: string): Promise<void> {

@@ -7,6 +7,7 @@ import Ruota from "../components/Ruota";
 import DisplayTimer from "../components/DisplayTimer";
 import ScenaLeaderboard from "../components/ScenaLeaderboard";
 import AnimazioneVittoria from "../components/AnimazioneVittoria";
+import Presentazione from "../components/Presentazione";
 
 const STATO_INIZIALE: ScenaPayload = {
   folderPath: null,
@@ -24,6 +25,8 @@ const STATO_INIZIALE: ScenaPayload = {
   },
   leaderboard: null,
   vittoria: null,
+  presentazionePath: null,
+  presentazione: null,
 };
 
 export default function App() {
@@ -66,7 +69,11 @@ export default function App() {
   // renderizzati quando l'overlay si chiude (no reset di imgDim/container).
   const mostraRuota = stato.conflitto !== null && stato.folderPath !== null;
   const mostraLeaderboard = stato.leaderboard !== null && stato.folderPath !== null;
-  const overlayAttivo = mostraRuota || mostraLeaderboard;
+  const mostraPresentazione =
+    stato.presentazione !== null &&
+    stato.presentazionePath !== null &&
+    stato.folderPath !== null;
+  const overlayAttivo = mostraRuota || mostraLeaderboard || mostraPresentazione;
   return (
     <>
       <Scena
@@ -102,6 +109,28 @@ export default function App() {
             folderPath={stato.folderPath}
             dimensione={Math.min(window.innerWidth * 0.72, window.innerHeight * 0.7)}
             animata={true}
+          />
+        </div>
+      )}
+      {mostraPresentazione && stato.folderPath && stato.presentazionePath && stato.presentazione && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "#000",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden",
+            zIndex: 1000,
+            padding: "1.5rem",
+            boxSizing: "border-box",
+          }}
+        >
+          <Presentazione
+            folderPath={stato.folderPath}
+            presentazionePath={stato.presentazionePath}
+            pagina={stato.presentazione.paginaCorrente}
           />
         </div>
       )}
