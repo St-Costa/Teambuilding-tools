@@ -8,7 +8,12 @@ import {
   rimuoviRecente,
   type RecentEntryConStato,
 } from "../../lib/recents";
-import { validaNome } from "../../lib/ambientazione";
+import {
+  validaNome,
+  AmbientazioneCorrotta,
+  CartellaNonValida,
+  IOError,
+} from "../../lib/ambientazione";
 import { exists } from "@tauri-apps/plugin-fs";
 import {
   apriAmbientazione,
@@ -333,7 +338,18 @@ function ModaleCreazione({
   );
 }
 
+// Traduce gli errori noti in messaggi comprensibili per il conduttore
+// (non-tecnico), conservando il dettaglio tecnico tra parentesi per la diagnosi.
 function stringifyErr(e: unknown): string {
+  if (e instanceof CartellaNonValida) {
+    return "Questa cartella non contiene un'ambientazione valida. Scegli la cartella giusta oppure creane una nuova.";
+  }
+  if (e instanceof AmbientazioneCorrotta) {
+    return `Questa ambientazione è danneggiata e non può essere aperta (dettaglio: ${e.dettaglio}).`;
+  }
+  if (e instanceof IOError) {
+    return `Non riesco ad accedere ai file dell'ambientazione (dettaglio: ${e.causa}).`;
+  }
   if (e instanceof Error) return e.message;
   return String(e);
 }
