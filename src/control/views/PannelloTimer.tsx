@@ -69,26 +69,26 @@ export default function PannelloTimer() {
     if (stato === "running" && ms <= 0) markEnded();
   }, [ms, stato, markEnded]);
 
-  // Campanello SOLO quando il timer attraversa il minuto residuo dall'alto:
-  // se parti già sotto i 60s NON deve suonare. Rilevo l'attraversamento
-  // confrontando il valore precedente (>60s) con quello corrente (≤60s).
-  const oneMinPlayedRef = useRef(false);
+  // Campanello SOLO quando il timer attraversa i 30s residui dall'alto:
+  // se parti già sotto i 30s NON deve suonare. Rilevo l'attraversamento
+  // confrontando il valore precedente (>30s) con quello corrente (≤30s).
+  const thirtySecPlayedRef = useRef(false);
   const prevMsRef = useRef<number | null>(null);
   useEffect(() => {
     if (stato !== "running") {
-      oneMinPlayedRef.current = false;
+      thirtySecPlayedRef.current = false;
       prevMsRef.current = null;
       return;
     }
     const prev = prevMsRef.current;
-    if (!oneMinPlayedRef.current && prev !== null && prev > 60_000 && ms <= 60_000) {
-      oneMinPlayedRef.current = true;
+    if (!thirtySecPlayedRef.current && prev !== null && prev > 30_000 && ms <= 30_000) {
+      thirtySecPlayedRef.current = true;
       playCampanello();
     }
     prevMsRef.current = ms;
   }, [stato, ms]);
 
-  // Allo scadere: ferma il campanello del minuto PRIMA di far partire la
+  // Allo scadere: ferma il campanello dei 30s PRIMA di far partire la
   // sveglia, poi sveglia in loop finché non si esce da "ended" (reset/avvio).
   useEffect(() => {
     if (stato !== "ended") return;
@@ -98,7 +98,7 @@ export default function PannelloTimer() {
   }, [stato]);
 
   // Al reset (idle) ferma eventuali suoni ancora in coda (es. il campanello da
-  // 1 minuto che dura a lungo), così non restano a suonare dopo lo stop.
+  // 30s che dura a lungo), così non restano a suonare dopo lo stop.
   useEffect(() => {
     if (stato === "idle") fermaTimerSuoni();
   }, [stato]);
