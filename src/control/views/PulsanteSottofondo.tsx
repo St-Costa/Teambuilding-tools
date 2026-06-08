@@ -15,6 +15,7 @@ export default function PulsanteSottofondo() {
   const haSottofondo = sottofondoPath !== null;
 
   const inRiproduzione = useSottofondoStore((s) => s.inRiproduzione);
+  const caricamento = useSottofondoStore((s) => s.caricamento);
   const errore = useSottofondoStore((s) => s.errore);
   const volume = useSottofondoStore((s) => s.volume);
   const setVolume = useSottofondoStore((s) => s.setVolume);
@@ -111,10 +112,11 @@ export default function PulsanteSottofondo() {
       <button
         type="button"
         className={`${styles.btnPrincipale} ${inRiproduzione ? styles.inPlay : styles.configurato}`}
+        disabled={caricamento}
         onClick={() => (inRiproduzione ? ferma() : void avvia(folderPath, sottofondoPath))}
-        title={inRiproduzione ? "Ferma sottofondo" : "Avvia sottofondo"}
+        title={caricamento ? "Caricamento…" : inRiproduzione ? "Ferma sottofondo" : "Avvia sottofondo"}
       >
-        <span className={styles.icona}>{inRiproduzione ? "■" : "▶"}</span>
+        <span className={styles.icona}>{caricamento ? "…" : inRiproduzione ? "■" : "▶"}</span>
         <span className={styles.testo}>Sottofondo</span>
       </button>
       <span className={styles.iconaVol} aria-hidden="true">

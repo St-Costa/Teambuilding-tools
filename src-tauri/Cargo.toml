@@ -21,4 +21,9 @@ serde_json = "1"
 # Audio nativo per i tick della ruota: l'audio del webview (WebKitGTK) ha
 # latenza alta/variabile, quindi i tick passano dal backend (bassa latenza
 # costante). Niente decoder di formati: sintetizziamo i campioni in Rust.
-rodio = { version = "0.20", default-features = false }
+rodio = { version = "0.20", default-features = false, features = [
+  "symphonia-mp3",    # MP3
+  "symphonia-vorbis", # OGG Vorbis (include il container OGG)
+  "symphonia-flac",   # FLAC
+  "wav",              # WAV (hound)
+] }

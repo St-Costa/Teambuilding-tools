@@ -102,11 +102,18 @@ export default function Ruota({
     function step() {
       const computed = window.getComputedStyle(el!).transform;
       let angolo = 0;
-      // DOMMatrix interpreta direttamente la stringa CSS (matrix/matrix3d) ed
-      // è più robusto del parsing a regex; l'angolo di rotazione 2D è atan2(b,a).
       if (computed && computed !== "none") {
-        const m = new DOMMatrix(computed);
-        angolo = (Math.atan2(m.b, m.a) * 180) / Math.PI;
+        try {
+          // DOMMatrix interpreta direttamente la stringa CSS; atan2(b,a) dà
+          // l'angolo di rotazione 2D. Fallback regex se DOMMatrix lancia.
+          const m = new DOMMatrix(computed);
+          angolo = (Math.atan2(m.b, m.a) * 180) / Math.PI;
+        } catch {
+          const match = computed.match(/matrix\(\s*([^,]+),\s*([^,]+)/);
+          if (match) {
+            angolo = (Math.atan2(parseFloat(match[2]), parseFloat(match[1])) * 180) / Math.PI;
+          }
+        }
       }
       const angoloNorm = ((angolo % 360) + 360) % 360;
       const angoloRel = (360 - angoloNorm) % 360;

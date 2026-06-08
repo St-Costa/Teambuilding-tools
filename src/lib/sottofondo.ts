@@ -1,46 +1,19 @@
 import { create } from "zustand";
-import { readFile } from "@tauri-apps/plugin-fs";
+import { invoke } from "@tauri-apps/api/core";
+import { joinPath } from "./path";
 
-// Controller del sottofondo musicale (finestra REGIA). Estratto da
-// PulsanteSottofondo in uno store condiviso così che anche l'animazione di
-// vittoria possa metterlo in pausa e riprenderlo (ducking) senza che il
-// pulsante esponga il suo HTMLAudioElement interno.
-//
-// L'elemento audio e la cache del blob vivono a livello di modulo (imperativi);
-// lo store espone solo lo stato reattivo per la UI.
+// Controller del sottofondo musicale. Come il tick della ruota, il sottofondo
+// gira nel backend Rust (rodio) invece che nel webview: WebKitGTK + GStreamer
+// causava crash del WebProcess. invoke() è fire-and-forget per i comandi di
+// controllo; solo avvia() attende la risposta per intercettare errori di formato.
 
-function joinPath(a: string, b: string): string {
-  const sep = a.includes("\\") && !a.includes("/") ? "\\" : "/";
-  return `${a.replace(/[/\\]+$/, "")}${sep}${b}`;
-}
-
-function mimeDaPath(path: string): string {
-  const m = path.toLowerCase().match(/\.([a-z0-9]+)$/);
-  switch (m?.[1]) {
-    case "mp3":
-      return "audio/mpeg";
-    case "wav":
-      return "audio/wav";
-    case "ogg":
-      return "audio/ogg";
-    case "m4a":
-    case "aac":
-      return "audio/aac";
-    case "flac":
-      return "audio/flac";
-    default:
-      return "audio/mpeg";
-  }
-}
-
-let audio: HTMLAudioElement | null = null;
-let blobCache: { key: string; url: string } | null = null;
-// True quando il sottofondo è stato messo in pausa dalla vittoria: serve a
-// riprenderlo solo se era effettivamente in riproduzione.
+// True quando la vittoria ha messo in pausa il sottofondo: serve a riprenderlo
+// solo se era effettivamente in riproduzione al momento della pausa.
 let sospesoPerVittoria = false;
 
 interface SottofondoState {
   inRiproduzione: boolean;
+  caricamento: boolean;
   errore: string | null;
   volume: number;
   setVolume: (v: number) => void;
@@ -54,80 +27,55 @@ interface SottofondoState {
 
 export const useSottofondoStore = create<SottofondoState>((set, get) => ({
   inRiproduzione: false,
+  caricamento: false,
   errore: null,
   volume: 0.7,
 
   setVolume(v) {
     set({ volume: v });
-    if (audio) audio.volume = v;
+    void invoke("imposta_volume_sottofondo", { volume: v }).catch(() => undefined);
   },
 
   async avvia(folderPath, sottofondoPath) {
-    set({ errore: null });
+    if (get().caricamento || get().inRiproduzione) return;
+    set({ errore: null, caricamento: true });
     try {
-      const key = `${folderPath}::${sottofondoPath}`;
-      let url = blobCache?.key === key ? blobCache.url : null;
-      if (!url) {
-        if (blobCache) URL.revokeObjectURL(blobCache.url);
-        const bytes = await readFile(joinPath(folderPath, sottofondoPath));
-        const blob = new Blob([new Uint8Array(bytes)], { type: mimeDaPath(sottofondoPath) });
-        url = URL.createObjectURL(blob);
-        blobCache = { key, url };
-      }
-      const el = new Audio(url);
-      el.loop = true;
-      el.volume = get().volume;
-      el.onerror = () => {
-        const code = el.error?.code;
-        const msg =
-          code === 4
-            ? "Formato audio non supportato (manca un codec). Prova un .wav."
-            : `Errore audio (codice ${code ?? "?"})`;
-        set({ errore: msg, inRiproduzione: false });
-      };
-      el.onended = () => set({ inRiproduzione: false });
-      audio = el;
-      sospesoPerVittoria = false;
-      await el.play();
+      await invoke("avvia_sottofondo", {
+        path: joinPath(folderPath, sottofondoPath),
+        volume: get().volume,
+      });
       set({ inRiproduzione: true });
     } catch (e) {
       set({
-        errore: `Impossibile riprodurre: ${e instanceof Error ? e.message : String(e)}`,
+        errore: e instanceof Error ? e.message : String(e),
         inRiproduzione: false,
       });
+    } finally {
+      set({ caricamento: false });
     }
   },
 
   ferma() {
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-      audio = null;
-    }
-    sospesoPerVittoria = false;
-    set({ inRiproduzione: false });
+    void invoke("ferma_sottofondo").catch(() => undefined);
+    set({ inRiproduzione: false, errore: null });
   },
 
   pausaPerVittoria() {
-    if (audio && get().inRiproduzione && !audio.paused) {
-      audio.pause();
+    if (get().inRiproduzione) {
       sospesoPerVittoria = true;
+      void invoke("pausa_sottofondo").catch(() => undefined);
     }
   },
 
   riprendiDaVittoria() {
-    if (audio && sospesoPerVittoria) {
-      void audio.play().catch(() => undefined);
+    if (sospesoPerVittoria) {
       sospesoPerVittoria = false;
+      void invoke("riprendi_sottofondo").catch(() => undefined);
     }
   },
 }));
 
-/** Da chiamare quando cambia il file/cartella del sottofondo: ferma e invalida la cache. */
+/** Da chiamare quando cambia il file/cartella del sottofondo: ferma la riproduzione. */
 export function resetSottofondoCache(): void {
   useSottofondoStore.getState().ferma();
-  if (blobCache) {
-    URL.revokeObjectURL(blobCache.url);
-    blobCache = null;
-  }
 }

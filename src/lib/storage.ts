@@ -17,15 +17,10 @@ import {
   nuovoManifest,
   validaAmbientazione,
 } from "./ambientazione";
+import { joinPath } from "./path";
 
 const MANIFEST = "ambientazione.json";
 const MANIFEST_TMP = "ambientazione.json.tmp";
-
-function joinPath(folder: string, ...parts: string[]): string {
-  const sep = folder.includes("\\") && !folder.includes("/") ? "\\" : "/";
-  const trimmed = folder.replace(/[/\\]+$/, "");
-  return [trimmed, ...parts].join(sep);
-}
 
 async function wrapIO<T>(op: string, fn: () => Promise<T>): Promise<T> {
   try {

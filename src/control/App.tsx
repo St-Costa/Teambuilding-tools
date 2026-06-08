@@ -5,7 +5,7 @@ import { useAmbientazioneStore } from "../state/ambientazioneStore";
 import { useAutosave } from "../state/useAutosave";
 import { aggiungiRecente, listaRecenti } from "../lib/recents";
 import { apriAmbientazione, autorizzaCartella } from "../lib/storage";
-import { abilitaAudioAlPrimoGesto } from "../lib/audio";
+import { joinPath } from "../lib/path";
 import SelezioneAmbientazione from "./views/SelezioneAmbientazione";
 import AmbientazioneAperta from "./views/AmbientazioneAperta";
 
@@ -15,19 +15,9 @@ interface InstallResult {
   copiato: boolean;
 }
 
-function joinPath(a: string, b: string): string {
-  const sep = a.includes("\\") && !a.includes("/") ? "\\" : "/";
-  return `${a.replace(/[/\\]+$/, "")}${sep}${b}`;
-}
-
 export default function App() {
   const current = useAmbientazioneStore((s) => s.current);
   useAutosave();
-
-  // Sblocca l'audio sintetizzato (tick ruota, beep timer) al primo gesto:
-  // necessario perché nel build di produzione l'AudioContext nasce sospeso e
-  // resume() funziona solo dentro lo stack di un gesto utente.
-  useEffect(() => abilitaAudioAlPrimoGesto(), []);
 
   useEffect(() => {
     void (async () => {

@@ -61,13 +61,18 @@ export default function AreaMappa() {
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      const r = entries[0]?.contentRect;
-      if (r) setContainer({ w: r.width, h: r.height });
-    });
-    ro.observe(el);
+    const cb = (entries?: ResizeObserverEntry[]) => {
+      const r = entries?.[0]?.contentRect ?? el.getBoundingClientRect();
+      setContainer({ w: r.width, h: r.height });
+    };
     setContainer({ w: el.clientWidth, h: el.clientHeight });
-    return () => ro.disconnect();
+    if (typeof ResizeObserver !== "undefined") {
+      const ro = new ResizeObserver(cb);
+      ro.observe(el);
+      return () => ro.disconnect();
+    }
+    window.addEventListener("resize", () => cb());
+    return () => window.removeEventListener("resize", () => cb());
   }, []);
 
   useEffect(() => {

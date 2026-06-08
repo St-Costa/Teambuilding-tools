@@ -1,3 +1,4 @@
+use rodio::Source;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fs;
@@ -67,6 +68,377 @@ fn play_tick(state: tauri::State<AudioState>) {
             let _ = tx.send(AudioCmd::Tick);
         }
     }
+}
+
+// ─────────────────────── Audio nativo (sottofondo) ──────────────────────────
+// Stessa motivazione del tick: WebKitGTK + GStreamer è instabile e causa crash
+// del WebProcess. Il sottofondo gira in un thread dedicato con rodio, che usa
+// ALSA/PipeWire direttamente senza passare per il webview.
+
+enum SottofondoCmd {
+    Avvia { path: String, volume: f32 },
+    Ferma,
+    SetVolume(f32),
+    Pausa,
+    Riprendi,
+}
+
+struct SottofondoState(Mutex<Option<Sender<SottofondoCmd>>>);
+
+fn avvia_thread_sottofondo() -> Option<Sender<SottofondoCmd>> {
+    let (tx, rx) = mpsc::channel::<SottofondoCmd>();
+    thread::spawn(move || {
+        let (_stream, handle) = match rodio::OutputStream::try_default() {
+            Ok(v) => v,
+            Err(_) => return,
+        };
+        let mut sink: Option<rodio::Sink> = None;
+        let mut path_corrente: Option<String> = None;
+        let mut in_pausa = false;
+
+        loop {
+            // Svuota tutti i comandi pendenti prima di gestire il loop.
+            loop {
+                match rx.try_recv() {
+                    Ok(SottofondoCmd::Avvia { path, volume }) => {
+                        sink = None; // drop → stop automatico del vecchio sink
+                        path_corrente = None;
+                        in_pausa = false;
+                        if let Ok(s) = rodio::Sink::try_new(&handle) {
+                            s.set_volume(volume);
+                            if let Ok(f) = fs::File::open(&path) {
+                                if let Ok(dec) =
+                                    rodio::Decoder::new(std::io::BufReader::new(f))
+                                {
+                                    s.append(dec);
+                                    sink = Some(s);
+                                    path_corrente = Some(path);
+                                }
+                            }
+                        }
+                    }
+                    Ok(SottofondoCmd::Ferma) => {
+                        sink = None;
+                        path_corrente = None;
+                        in_pausa = false;
+                    }
+                    Ok(SottofondoCmd::SetVolume(v)) => {
+                        if let Some(ref s) = sink {
+                            s.set_volume(v);
+                        }
+                    }
+                    Ok(SottofondoCmd::Pausa) => {
+                        if let Some(ref s) = sink {
+                            s.pause();
+                            in_pausa = true;
+                        }
+                    }
+                    Ok(SottofondoCmd::Riprendi) => {
+                        if let Some(ref s) = sink {
+                            s.play();
+                            in_pausa = false;
+                        }
+                    }
+                    Err(mpsc::TryRecvError::Empty) => break,
+                    Err(mpsc::TryRecvError::Disconnected) => return,
+                }
+            }
+
+            // Loop automatico: quando il sink si svuota, ricarica il file.
+            // Il gap è al massimo 10 ms (durata del sleep), impercettibile per
+            // un sottofondo musicale.
+            if !in_pausa {
+                if let (Some(ref s), Some(ref path)) = (&sink, &path_corrente) {
+                    if s.empty() {
+                        if let Ok(f) = fs::File::open(path) {
+                            if let Ok(dec) =
+                                rodio::Decoder::new(std::io::BufReader::new(f))
+                            {
+                                s.append(dec);
+                            }
+                        }
+                    }
+                }
+            }
+
+            thread::sleep(std::time::Duration::from_millis(10));
+        }
+    });
+    Some(tx)
+}
+
+fn invia_sott(state: &tauri::State<SottofondoState>, cmd: SottofondoCmd) {
+    if let Ok(guard) = state.0.lock() {
+        if let Some(tx) = guard.as_ref() {
+            let _ = tx.send(cmd);
+        }
+    }
+}
+
+#[tauri::command]
+fn avvia_sottofondo(
+    path: String,
+    volume: f32,
+    state: tauri::State<SottofondoState>,
+) -> Result<(), String> {
+    // Valida il file prima di inviare al thread: così l'errore torna subito al
+    // frontend invece di sparire silenziosamente nel thread.
+    let meta = fs::metadata(&path).map_err(|_| "File audio non trovato.".to_string())?;
+    if !meta.is_file() {
+        return Err("Il percorso non punta a un file audio.".into());
+    }
+    // Prova ad aprire e riconoscere il formato: fallisce subito se non supportato.
+    let f = fs::File::open(&path).map_err(|e| e.to_string())?;
+    rodio::Decoder::new(std::io::BufReader::new(f))
+        .map_err(|e| format!("Formato audio non supportato: {e}"))?;
+    invia_sott(&state, SottofondoCmd::Avvia { path, volume });
+    Ok(())
+}
+
+#[tauri::command]
+fn ferma_sottofondo(state: tauri::State<SottofondoState>) {
+    invia_sott(&state, SottofondoCmd::Ferma);
+}
+
+#[tauri::command]
+fn imposta_volume_sottofondo(volume: f32, state: tauri::State<SottofondoState>) {
+    invia_sott(&state, SottofondoCmd::SetVolume(volume));
+}
+
+#[tauri::command]
+fn pausa_sottofondo(state: tauri::State<SottofondoState>) {
+    invia_sott(&state, SottofondoCmd::Pausa);
+}
+
+#[tauri::command]
+fn riprendi_sottofondo(state: tauri::State<SottofondoState>) {
+    invia_sott(&state, SottofondoCmd::Riprendi);
+}
+
+// ───────────────────────── Audio nativo (suoni di gioco) ───────────────────
+// Beep timer, vittoria e soundboard: stessa motivazione del tick e del
+// sottofondo — WebKitGTK + GStreamer è instabile. Tutto l'audio di gioco gira
+// in un thread dedicato con rodio. I file bundled sono incorporati nel
+// binario a compile time (include_bytes!), così non ci sono percorsi con hash
+// Vite né problemi di resource_dir in dev vs release.
+
+static BEEP_INIZIO_BYTES: &[u8] = include_bytes!("../../public/suoni/timer-inizio.mp3");
+static CAMPANA_BYTES: &[u8] = include_bytes!("../../public/suoni/timer-1min.mp3");
+static SVEGLIA_BYTES: &[u8] = include_bytes!("../../public/suoni/timer-scaduto.mp3");
+static VITTORIA_BYTES: &[u8] = include_bytes!("../../public/suoni/vittoria.mp3");
+static APPLAUSO_BYTES: &[u8] = include_bytes!("../../public/suoni/applauso.mp3");
+static FUOCO_BYTES: &[u8] = include_bytes!("../../public/suoni/fuoco.mp3");
+
+enum SuoniGiocoCmd {
+    BeepInizio,
+    Campana,
+    StopCampana,
+    Sveglia,
+    StopSveglia,
+    FermaTimer,
+    Vittoria,
+    Applauso,
+    StopVittoria,
+    Fuoco,
+    Soundboard { path: String, volume: f32 },
+}
+
+struct SuoniGiocoState(Mutex<Option<Sender<SuoniGiocoCmd>>>);
+
+fn avvia_thread_suoni_gioco() -> Option<Sender<SuoniGiocoCmd>> {
+    let (tx, rx) = mpsc::channel::<SuoniGiocoCmd>();
+    thread::spawn(move || {
+        let (_stream, handle) = match rodio::OutputStream::try_default() {
+            Ok(v) => v,
+            Err(_) => return,
+        };
+
+        // Suoni con ciclo di vita controllato: campana, sveglia (loop),
+        // vittoria e applauso (stoppabili prima della fine naturale).
+        // I one-shot brevi (beep inizio, fuoco, soundboard) usano play_raw
+        // senza Sink: la riproduzione prosegue fino a fine sorgente.
+        let mut campana_sink: Option<rodio::Sink> = None;
+        let mut sveglia_sink: Option<rodio::Sink> = None;
+        let mut vittoria_sink: Option<rodio::Sink> = None;
+        let mut applauso_sink: Option<rodio::Sink> = None;
+
+        loop {
+            loop {
+                match rx.try_recv() {
+                    Ok(SuoniGiocoCmd::BeepInizio) => {
+                        let cur = std::io::Cursor::new(BEEP_INIZIO_BYTES);
+                        if let Ok(dec) = rodio::Decoder::new(cur) {
+                            let _ = handle.play_raw(dec.convert_samples());
+                        }
+                    }
+                    Ok(SuoniGiocoCmd::Campana) => {
+                        let _ = campana_sink.take(); // ferma eventuale campana precedente
+                        if let Ok(s) = rodio::Sink::try_new(&handle) {
+                            if let Ok(dec) =
+                                rodio::Decoder::new(std::io::Cursor::new(CAMPANA_BYTES))
+                            {
+                                s.append(dec);
+                                campana_sink = Some(s);
+                            }
+                        }
+                    }
+                    Ok(SuoniGiocoCmd::StopCampana) => {
+                        let _ = campana_sink.take();
+                    }
+                    Ok(SuoniGiocoCmd::Sveglia) => {
+                        let _ = sveglia_sink.take();
+                        if let Ok(s) = rodio::Sink::try_new(&handle) {
+                            if let Ok(dec) =
+                                rodio::Decoder::new(std::io::Cursor::new(SVEGLIA_BYTES))
+                            {
+                                s.append(dec);
+                                sveglia_sink = Some(s);
+                            }
+                        }
+                    }
+                    Ok(SuoniGiocoCmd::StopSveglia) => {
+                        let _ = sveglia_sink.take();
+                    }
+                    Ok(SuoniGiocoCmd::FermaTimer) => {
+                        let _ = campana_sink.take();
+                        let _ = sveglia_sink.take();
+                    }
+                    Ok(SuoniGiocoCmd::Vittoria) => {
+                        let _ = vittoria_sink.take();
+                        if let Ok(s) = rodio::Sink::try_new(&handle) {
+                            if let Ok(dec) =
+                                rodio::Decoder::new(std::io::Cursor::new(VITTORIA_BYTES))
+                            {
+                                s.set_volume(0.18);
+                                s.append(dec);
+                                vittoria_sink = Some(s);
+                            }
+                        }
+                    }
+                    Ok(SuoniGiocoCmd::Applauso) => {
+                        let _ = applauso_sink.take();
+                        if let Ok(s) = rodio::Sink::try_new(&handle) {
+                            if let Ok(dec) =
+                                rodio::Decoder::new(std::io::Cursor::new(APPLAUSO_BYTES))
+                            {
+                                s.append(dec);
+                                applauso_sink = Some(s);
+                            }
+                        }
+                    }
+                    Ok(SuoniGiocoCmd::StopVittoria) => {
+                        let _ = vittoria_sink.take();
+                        let _ = applauso_sink.take();
+                    }
+                    Ok(SuoniGiocoCmd::Fuoco) => {
+                        let cur = std::io::Cursor::new(FUOCO_BYTES);
+                        if let Ok(dec) = rodio::Decoder::new(cur) {
+                            let _ = handle.play_raw(dec.amplify(0.7_f32).convert_samples());
+                        }
+                    }
+                    Ok(SuoniGiocoCmd::Soundboard { path, volume }) => {
+                        if let Ok(f) = fs::File::open(&path) {
+                            if let Ok(dec) =
+                                rodio::Decoder::new(std::io::BufReader::new(f))
+                            {
+                                let _ =
+                                    handle.play_raw(dec.amplify(volume).convert_samples());
+                            }
+                        }
+                    }
+                    Err(mpsc::TryRecvError::Empty) => break,
+                    Err(mpsc::TryRecvError::Disconnected) => return,
+                }
+            }
+
+            // Loop automatico sveglia: quando il Sink si svuota ricarichiamo il file.
+            // Gap massimo 10 ms, impercettibile come beep di allarme.
+            if let Some(ref s) = sveglia_sink {
+                if s.empty() {
+                    if let Ok(dec) =
+                        rodio::Decoder::new(std::io::Cursor::new(SVEGLIA_BYTES))
+                    {
+                        s.append(dec);
+                    }
+                }
+            }
+
+            thread::sleep(std::time::Duration::from_millis(10));
+        }
+    });
+    Some(tx)
+}
+
+fn invia_gioco(state: &tauri::State<SuoniGiocoState>, cmd: SuoniGiocoCmd) {
+    if let Ok(guard) = state.0.lock() {
+        if let Some(tx) = guard.as_ref() {
+            let _ = tx.send(cmd);
+        }
+    }
+}
+
+#[tauri::command]
+fn play_beep_inizio(state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::BeepInizio);
+}
+
+#[tauri::command]
+fn play_campana(state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::Campana);
+}
+
+#[tauri::command]
+fn stop_campana(state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::StopCampana);
+}
+
+#[tauri::command]
+fn play_sveglia(state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::Sveglia);
+}
+
+#[tauri::command]
+fn stop_sveglia(state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::StopSveglia);
+}
+
+#[tauri::command]
+fn ferma_timer_suoni(state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::FermaTimer);
+}
+
+#[tauri::command]
+fn play_vittoria_suono(state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::Vittoria);
+}
+
+#[tauri::command]
+fn play_applauso(state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::Applauso);
+}
+
+#[tauri::command]
+fn stop_vittoria_suoni(state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::StopVittoria);
+}
+
+#[tauri::command]
+fn play_fuoco(state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::Fuoco);
+}
+
+#[tauri::command]
+fn play_soundboard_slot(
+    path: String,
+    volume: f32,
+    state: tauri::State<SuoniGiocoState>,
+) -> Result<(), String> {
+    let meta = fs::metadata(&path).map_err(|_| "File audio non trovato.".to_string())?;
+    if !meta.is_file() {
+        return Err("Il percorso non punta a un file audio.".into());
+    }
+    invia_gioco(&state, SuoniGiocoCmd::Soundboard { path, volume });
+    Ok(())
 }
 
 #[tauri::command]
@@ -310,6 +682,8 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(AudioState(Mutex::new(avvia_thread_audio())))
+        .manage(SottofondoState(Mutex::new(avvia_thread_sottofondo())))
+        .manage(SuoniGiocoState(Mutex::new(avvia_thread_suoni_gioco())))
         .setup(|app| {
             if let Ok(config_dir) = app.path().app_config_dir() {
                 let _ = app.fs_scope().allow_directory(&config_dir, true);
@@ -327,6 +701,22 @@ pub fn run() {
             installa_scenari_factory,
             ripristina_scenari_factory,
             play_tick,
+            avvia_sottofondo,
+            ferma_sottofondo,
+            imposta_volume_sottofondo,
+            pausa_sottofondo,
+            riprendi_sottofondo,
+            play_beep_inizio,
+            play_campana,
+            stop_campana,
+            play_sveglia,
+            stop_sveglia,
+            ferma_timer_suoni,
+            play_vittoria_suono,
+            play_applauso,
+            stop_vittoria_suoni,
+            play_fuoco,
+            play_soundboard_slot,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {

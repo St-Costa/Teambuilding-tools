@@ -120,9 +120,13 @@ export default function Presentazione({
     const aggiorna = () =>
       setDim({ w: Math.floor(el.clientWidth), h: Math.floor(el.clientHeight) });
     aggiorna();
-    const ro = new ResizeObserver(aggiorna);
-    ro.observe(el);
-    return () => ro.disconnect();
+    if (typeof ResizeObserver !== "undefined") {
+      const ro = new ResizeObserver(aggiorna);
+      ro.observe(el);
+      return () => ro.disconnect();
+    }
+    window.addEventListener("resize", aggiorna);
+    return () => window.removeEventListener("resize", aggiorna);
   }, []);
 
   // Ottiene il documento dalla cache di modulo (aperto una sola volta).
