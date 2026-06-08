@@ -104,6 +104,8 @@ export interface ScenaPayload {
   // entra qui: la proiezione mostra solo la pagina, le note restano in regia.
   presentazionePath: string | null;
   presentazione: PresentazioneSnapshot | null;
+  immagineFissaPath: string | null;
+  immagineFissaVisibile: boolean;
 }
 
 export type EventPayloads = {

@@ -75,6 +75,8 @@ export interface Ambientazione {
   // Note per pagina (chiave = numero pagina 1-based). Mappa sparsa: esistono solo
   // per le pagine annotate, e il n° pagine non è noto al momento dell'edit del JSON.
   notePresentazione: Record<number, string>;
+  // Immagine fissa: copre tutta la proiezione (sotto il timer) quando attivata.
+  immagineFissaPath: string | null;
 }
 
 export class AmbientazioneCorrotta extends Error {
@@ -286,6 +288,10 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
       ? raw.presentazionePath
       : null;
   const notePresentazione = validaNotePresentazione(raw.notePresentazione);
+  const immagineFissaPath =
+    typeof raw.immagineFissaPath === "string" && raw.immagineFissaPath.length > 0
+      ? raw.immagineFissaPath
+      : null;
   return {
     schemaVersion: SCHEMA_VERSION,
     nome: raw.nome,
@@ -300,6 +306,7 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
     sottofondoPath,
     presentazionePath,
     notePresentazione,
+    immagineFissaPath,
   };
 }
 
@@ -341,6 +348,7 @@ export function nuovoManifest(nome: string): Ambientazione {
     sottofondoPath: null,
     presentazionePath: null,
     notePresentazione: {},
+    immagineFissaPath: null,
   };
 }
 

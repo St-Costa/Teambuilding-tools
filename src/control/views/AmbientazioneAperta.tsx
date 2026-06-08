@@ -15,6 +15,7 @@ import PannelloSoundboard from "./PannelloSoundboard";
 import PannelloAnnotazioni from "./PannelloAnnotazioni";
 import PannelloPresentazione from "./PannelloPresentazione";
 import PulsanteSottofondo from "./PulsanteSottofondo";
+import PulsanteImmagineFissa from "./PulsanteImmagineFissa";
 import AudioVittoria from "./AudioVittoria";
 import { IconaCasa, IconaMonitor, IconaTrofeo, IconaVS } from "../../components/Icone";
 import { useConflittoStore } from "../../state/conflittoStore";
@@ -112,6 +113,7 @@ export default function AmbientazioneAperta() {
       <AudioVittoria />
       <header className={styles.toolbar}>
         <div className={styles.toolbarSinistra}>
+          <PulsanteImmagineFissa />
           <PulsanteSottofondo />
         </div>
         <PannelloSoundboard />

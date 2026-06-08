@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { listen, EVT, type ScenaPayload } from "../lib/events";
-import { autorizzaCartella } from "../lib/storage";
+import { autorizzaCartella, risolviAsset } from "../lib/storage";
 import Scena from "../components/Scena";
 import Ruota from "../components/Ruota";
 import DisplayTimer from "../components/DisplayTimer";
@@ -27,6 +27,8 @@ const STATO_INIZIALE: ScenaPayload = {
   vittoria: null,
   presentazionePath: null,
   presentazione: null,
+  immagineFissaPath: null,
+  immagineFissaVisibile: false,
 };
 
 export default function App() {
@@ -71,6 +73,9 @@ export default function App() {
   const mostraLeaderboard = stato.leaderboard !== null && stato.folderPath !== null;
   const mostraPresentazione =
     stato.presentazione !== null && stato.presentazionePath !== null && stato.folderPath !== null;
+  // L'immagine fissa NON rientra in overlayAttivo: il timer rimane visibile sopra di essa.
+  const mostraImmagineFissa =
+    stato.immagineFissaVisibile && stato.immagineFissaPath !== null && stato.folderPath !== null;
   const overlayAttivo = mostraRuota || mostraLeaderboard || mostraPresentazione;
   return (
     <>
@@ -82,6 +87,25 @@ export default function App() {
         annotazioni={stato.annotazioni}
         nome={stato.nome}
       />
+      {mostraImmagineFissa && stato.folderPath && stato.immagineFissaPath && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 900,
+            background: "#000",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <img
+            src={risolviAsset(stato.folderPath, stato.immagineFissaPath)}
+            alt=""
+            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+          />
+        </div>
+      )}
       {!overlayAttivo && <DisplayTimer snapshot={stato.timer} />}
       {mostraLeaderboard && stato.folderPath && stato.leaderboard && (
         <ScenaLeaderboard snapshot={stato.leaderboard} folderPath={stato.folderPath} />
