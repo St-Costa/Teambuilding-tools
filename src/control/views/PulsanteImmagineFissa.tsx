@@ -47,11 +47,11 @@ export default function PulsanteImmagineFissa() {
           type="button"
           className={`${styles.btnPrincipale} ${haImmagine ? styles.configurato : styles.daConfigurare}`}
           onClick={() => void caricaImmagine()}
-          title={haImmagine ? "Cambia immagine fissa" : "Carica immagine da proiettare"}
+          title={haImmagine ? "Cambia screensaver" : "Carica immagine screensaver"}
         >
           <span className={styles.icona}>🖼</span>
           <span className={styles.testo}>
-            Immagine
+            Screensaver
             {haImmagine && (
               <span className={styles.nomeFile}>
                 {immagineFissaPath?.split(/[/\\]/).pop()}
@@ -82,10 +82,10 @@ export default function PulsanteImmagineFissa() {
         type="button"
         className={`${styles.btnPrincipale} ${immagineFissaVisibile ? styles.inPlay : styles.configurato}`}
         onClick={() => setImmagineFissaVisibile(!immagineFissaVisibile)}
-        title={immagineFissaVisibile ? "Nascondi immagine" : "Mostra immagine sullo schermo"}
+        title={immagineFissaVisibile ? "Nascondi screensaver" : "Mostra screensaver sullo schermo"}
       >
         <span className={styles.icona}>{immagineFissaVisibile ? "✕" : "🖼"}</span>
-        <span className={styles.testo}>Immagine</span>
+        <span className={styles.testo}>Screensaver</span>
       </button>
     </div>
   );
