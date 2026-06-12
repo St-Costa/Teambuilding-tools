@@ -20,11 +20,18 @@ export default function PannelloSoundboard() {
 
   if (!current || !folderPath) return null;
 
-  const slotVisibili = current.soundboard
+  // In play: solo slot con audio. In edit: solo slot con audio + eventuale pulsante "+".
+  const slotConfigurati = current.soundboard
     .map((slot, idx) => ({ slot, idx }))
-    .filter(({ slot }) => inEdit || slot.audioPath !== null);
+    .filter(({ slot }) => slot.audioPath !== null);
 
-  if (slotVisibili.length === 0) return null;
+  const primoSlotVuoto = inEdit
+    ? current.soundboard
+        .map((slot, idx) => ({ slot, idx }))
+        .find(({ slot }) => slot.audioPath === null) ?? null
+    : null;
+
+  if (slotConfigurati.length === 0 && !primoSlotVuoto) return null;
 
   async function suona(idx: number) {
     if (!current || !folderPath) return;
@@ -84,102 +91,127 @@ export default function PannelloSoundboard() {
           </button>
         </div>
       )}
-      {slotVisibili.map(({ slot, idx }) => {
-        const haAudio = slot.audioPath !== null;
-        const cliccabile = inEdit || haAudio;
-        return (
-          <div key={slot.id} className={styles.slotWrap}>
-            <button
-              type="button"
-              className={`${styles.slot} ${haAudio ? styles.slotPieno : styles.slotVuoto}`}
-              onClick={() => {
-                if (inEdit) {
-                  setEditingIdx(editingIdx === idx ? null : idx);
-                } else if (haAudio) {
-                  void suona(idx);
-                }
-              }}
-              disabled={!cliccabile}
-              title={
-                inEdit
-                  ? haAudio
-                    ? "Modifica slot"
-                    : "Configura slot"
-                  : haAudio
-                    ? "Riproduci suono"
-                    : "Slot vuoto"
+      {slotConfigurati.map(({ slot, idx }) => (
+        <div key={slot.id} className={styles.slotWrap}>
+          <button
+            type="button"
+            className={`${styles.slot} ${styles.slotPieno}`}
+            onClick={() => {
+              if (inEdit) {
+                setEditingIdx(editingIdx === idx ? null : idx);
+              } else {
+                void suona(idx);
               }
-              aria-label={`Slot ${idx + 1}`}
-            >
-              <span className={styles.emoji}>{slot.emoji}</span>
-            </button>
-            {inEdit && editingIdx === idx && (
-              <div className={styles.popover} onClick={(e) => e.stopPropagation()}>
-                <div className={styles.popoverHeader}>
-                  <span>Slot {idx + 1}</span>
+            }}
+            title={inEdit ? "Modifica slot" : "Riproduci suono"}
+            aria-label={`Slot ${idx + 1}`}
+          >
+            <span className={styles.emoji}>{slot.emoji}</span>
+          </button>
+          {inEdit && editingIdx === idx && (
+            <div className={styles.popover} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.popoverHeader}>
+                <span>Slot {idx + 1}</span>
+                <button
+                  type="button"
+                  className={styles.btnChiudi}
+                  onClick={() => setEditingIdx(null)}
+                  aria-label="Chiudi"
+                >
+                  ×
+                </button>
+              </div>
+              <div className={styles.section}>
+                <div className={styles.sectionLabel}>Emoji</div>
+                <EmojiPicker selezionata={slot.emoji} onSeleziona={(e) => setEmoji(idx, e)} />
+              </div>
+              <div className={styles.section}>
+                <div className={styles.sectionLabel}>Audio</div>
+                <div className={styles.audioRiga}>
+                  <span className={styles.audioPath} title={slot.audioPath ?? ""}>
+                    {slot.audioPath?.split(/[/\\]/).pop() ?? ""}
+                  </span>
                   <button
                     type="button"
-                    className={styles.btnChiudi}
-                    onClick={() => setEditingIdx(null)}
-                    aria-label="Chiudi"
+                    className={styles.btnSecondario}
+                    onClick={() => void caricaAudio(idx)}
                   >
-                    ×
+                    Sostituisci
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.btnRimuovi}
+                    onClick={() => void rimuoviAudio(idx)}
+                    title="Rimuovi l'audio (lo slot torna vuoto)"
+                  >
+                    Rimuovi
                   </button>
                 </div>
-                <div className={styles.section}>
-                  <div className={styles.sectionLabel}>Emoji</div>
-                  <EmojiPicker selezionata={slot.emoji} onSeleziona={(e) => setEmoji(idx, e)} />
-                </div>
-                <div className={styles.section}>
-                  <div className={styles.sectionLabel}>Audio</div>
-                  {haAudio ? (
-                    <div className={styles.audioRiga}>
-                      <span className={styles.audioPath} title={slot.audioPath ?? ""}>
-                        {slot.audioPath?.split(/[/\\]/).pop() ?? ""}
-                      </span>
-                      <button
-                        type="button"
-                        className={styles.btnSecondario}
-                        onClick={() => void caricaAudio(idx)}
-                      >
-                        Sostituisci
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.btnRimuovi}
-                        onClick={() => void rimuoviAudio(idx)}
-                        title="Rimuovi l'audio (lo slot torna vuoto)"
-                      >
-                        Rimuovi
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      className={styles.btnPrimario}
-                      onClick={() => void caricaAudio(idx)}
-                    >
-                      Carica MP3…
-                    </button>
-                  )}
-                </div>
-                {haAudio && (
-                  <div className={styles.anteprima}>
-                    <button
-                      type="button"
-                      className={styles.btnAnteprima}
-                      onClick={() => void suona(idx)}
-                    >
-                      ▶ Ascolta
-                    </button>
-                  </div>
-                )}
-                {erroreUpload && <div className={styles.errore}>{erroreUpload}</div>}
               </div>
+              <div className={styles.anteprima}>
+                <button
+                  type="button"
+                  className={styles.btnAnteprima}
+                  onClick={() => void suona(idx)}
+                >
+                  ▶ Ascolta
+                </button>
+              </div>
+              {erroreUpload && <div className={styles.errore}>{erroreUpload}</div>}
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Pulsante "+" per aggiungere un nuovo slot (solo edit, solo se c'è un slot vuoto) */}
+      {primoSlotVuoto && (
+        <div className={styles.slotWrap}>
+          <button
+            type="button"
+            className={`${styles.slot} ${styles.slotVuoto}`}
+            onClick={() => setEditingIdx(
+              editingIdx === primoSlotVuoto.idx ? null : primoSlotVuoto.idx
             )}
-          </div>
-        );
-      })}
+            title="Aggiungi effetto sonoro"
+            aria-label="Aggiungi slot"
+          >
+            <span className={styles.emoji}>+</span>
+          </button>
+          {editingIdx === primoSlotVuoto.idx && (
+            <div className={styles.popover} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.popoverHeader}>
+                <span>Nuovo effetto</span>
+                <button
+                  type="button"
+                  className={styles.btnChiudi}
+                  onClick={() => setEditingIdx(null)}
+                  aria-label="Chiudi"
+                >
+                  ×
+                </button>
+              </div>
+              <div className={styles.section}>
+                <div className={styles.sectionLabel}>Emoji</div>
+                <EmojiPicker
+                  selezionata={primoSlotVuoto.slot.emoji}
+                  onSeleziona={(e) => setEmoji(primoSlotVuoto.idx, e)}
+                />
+              </div>
+              <div className={styles.section}>
+                <div className={styles.sectionLabel}>Audio</div>
+                <button
+                  type="button"
+                  className={styles.btnPrimario}
+                  onClick={() => void caricaAudio(primoSlotVuoto.idx)}
+                >
+                  Carica MP3…
+                </button>
+              </div>
+              {erroreUpload && <div className={styles.errore}>{erroreUpload}</div>}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

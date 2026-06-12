@@ -106,6 +106,8 @@ export interface ScenaPayload {
   presentazione: PresentazioneSnapshot | null;
   immagineFissaPath: string | null;
   immagineFissaVisibile: boolean;
+  sfondoCountdownPath: string | null;
+  countdownFullscreenVisibile: boolean;
 }
 
 export type EventPayloads = {

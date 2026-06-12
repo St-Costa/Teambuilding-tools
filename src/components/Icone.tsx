@@ -214,6 +214,33 @@ export function IconaPresentazione({ dimensione = 24, className }: IconaProps) {
   );
 }
 
+/** Icona "Orologio": quadrante con lancette, per il countdown a schermo intero. */
+export function IconaOrologio({ dimensione = 24, className }: IconaProps) {
+  return (
+    <svg
+      width={dimensione}
+      height={dimensione}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={STROKE}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="9.5" />
+      {/* tacca 12 */}
+      <line x1="12" y1="3.5" x2="12" y2="5.5" />
+      {/* lancetta minuti (punta a 12) */}
+      <line x1="12" y1="12" x2="12" y2="5.5" strokeWidth={STROKE + 0.3} />
+      {/* lancetta ore (punta a ~10) */}
+      <line x1="12" y1="12" x2="8.1" y2="8.1" strokeWidth={STROKE + 0.3} />
+      <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 /**
  * Icona "ruota della fortuna": cerchio diviso in 6 spicchi + perno centrale
  * + freccia indicatrice in alto. (Non più usata, mantenuta per riferimento.)

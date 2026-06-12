@@ -8,6 +8,7 @@ import DisplayTimer from "../components/DisplayTimer";
 import ScenaLeaderboard from "../components/ScenaLeaderboard";
 import AnimazioneVittoria from "../components/AnimazioneVittoria";
 import Presentazione from "../components/Presentazione";
+import ScenaCountdownFullscreen from "../components/ScenaCountdownFullscreen";
 
 const STATO_INIZIALE: ScenaPayload = {
   folderPath: null,
@@ -29,6 +30,8 @@ const STATO_INIZIALE: ScenaPayload = {
   presentazione: null,
   immagineFissaPath: null,
   immagineFissaVisibile: false,
+  sfondoCountdownPath: null,
+  countdownFullscreenVisibile: false,
 };
 
 export default function App() {
@@ -77,6 +80,8 @@ export default function App() {
   const mostraImmagineFissa =
     stato.immagineFissaVisibile && stato.immagineFissaPath !== null && stato.folderPath !== null;
   const overlayAttivo = mostraRuota || mostraLeaderboard || mostraPresentazione;
+  const mostraCountdownFullscreen =
+    stato.countdownFullscreenVisibile && stato.folderPath !== null && !overlayAttivo;
   return (
     <>
       <Scena
@@ -106,7 +111,19 @@ export default function App() {
           />
         </div>
       )}
-      {!overlayAttivo && <DisplayTimer snapshot={stato.timer} />}
+      {mostraCountdownFullscreen && (
+        <ScenaCountdownFullscreen
+          snapshot={stato.timer}
+          sfondoSrc={
+            stato.folderPath && stato.sfondoCountdownPath
+              ? risolviAsset(stato.folderPath, stato.sfondoCountdownPath)
+              : null
+          }
+        />
+      )}
+      {!overlayAttivo && !mostraCountdownFullscreen && (
+        <DisplayTimer snapshot={stato.timer} />
+      )}
       {mostraLeaderboard && stato.folderPath && stato.leaderboard && (
         <ScenaLeaderboard snapshot={stato.leaderboard} folderPath={stato.folderPath} />
       )}

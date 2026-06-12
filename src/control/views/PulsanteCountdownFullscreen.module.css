@@ -1,0 +1,125 @@
+.root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Bottone edit mode */
+.btnEdit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 10px;
+  border: 2px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.btnEdit:hover {
+  background: rgba(127, 127, 127, 0.12);
+}
+
+.testo {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+
+.nomeFile {
+  font-size: 0.7rem;
+  font-weight: 400;
+  opacity: 0.7;
+  max-width: 14ch;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.daConfigurare {
+  border-style: dashed;
+  opacity: 0.7;
+}
+
+.configurato {
+  border-color: rgba(80, 200, 120, 0.7);
+  background: rgba(80, 200, 120, 0.08);
+}
+
+.configurato:hover {
+  background: rgba(80, 200, 120, 0.18);
+}
+
+.btnRimuovi {
+  width: 1.8rem;
+  height: 1.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(220, 50, 50, 0.5);
+  background: transparent;
+  color: #c62828;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.btnRimuovi:hover {
+  background: rgba(220, 50, 50, 0.12);
+}
+
+/* Bottone play mode: stile coerente con .btnIcona di AmbientazioneAperta */
+.btnIcona {
+  width: 4rem;
+  height: 4rem;
+  padding: 0;
+  border-radius: 9px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.btnIcona:hover {
+  background: rgba(127, 127, 127, 0.12);
+}
+
+/* Edit mode: configurato = verde, da configurare = tratteggiato */
+.configurato {
+  border-color: rgba(80, 200, 120, 0.7);
+  background: rgba(80, 200, 120, 0.08);
+}
+
+.configurato:hover {
+  background: rgba(80, 200, 120, 0.18);
+}
+
+.daConfigurare {
+  border-style: dashed;
+  opacity: 0.7;
+}
+
+/* Play mode: attivo = rosso */
+.attivo {
+  border-color: #b3261e;
+  background: rgba(179, 38, 30, 0.12);
+  color: #b3261e;
+}
+
+.attivo:hover {
+  background: rgba(179, 38, 30, 0.2);
+}

@@ -1,0 +1,50 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+}
+
+.sfondo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Velo scuro per leggibilità delle cifre sopra l'immagine */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.38);
+}
+
+.cifre {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(10rem, 45vmin, 80rem);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-shadow: 0 4px 40px rgba(0, 0, 0, 0.7);
+  user-select: none;
+  pointer-events: none;
+}
+
+.scaduto {
+  color: #ff5252;
+  animation: pulseScaduto 1.1s ease-in-out infinite;
+}
+
+@keyframes pulseScaduto {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}

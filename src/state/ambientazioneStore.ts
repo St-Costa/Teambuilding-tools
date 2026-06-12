@@ -51,6 +51,7 @@ interface AmbientazioneState {
   annotazioneInModificaId: string | null;
   modalita: ModalitaAmbientazione;
   immagineFissaVisibile: boolean;
+  countdownFullscreenVisibile: boolean;
   apri: (folderPath: string, modalita?: ModalitaAmbientazione) => Promise<void>;
   creaNuova: (folderParent: string, nome: string) => Promise<void>;
   chiudi: () => Promise<void>;
@@ -81,6 +82,8 @@ interface AmbientazioneState {
   setSottofondo: (sourceAbsPath: string | null) => Promise<void>;
   impostaImmagineFissa: (sourceAbsPath: string | null) => Promise<void>;
   setImmagineFissaVisibile: (v: boolean) => void;
+  impostaSfondoCountdown: (sourceAbsPath: string | null) => Promise<void>;
+  setCountdownFullscreenVisibile: (v: boolean) => void;
   impostaPresentazione: (sourceAbsPath: string) => Promise<void>;
   rimuoviPresentazione: () => void;
   setNotaPagina: (pagina: number, testo: string) => void;
@@ -144,6 +147,8 @@ function payloadCorrente(state: AmbientazioneState): ScenaPayload {
     presentazione: snap.presentazione,
     immagineFissaPath: state.current?.immagineFissaPath ?? null,
     immagineFissaVisibile: state.immagineFissaVisibile,
+    sfondoCountdownPath: state.current?.sfondoCountdownPath ?? null,
+    countdownFullscreenVisibile: state.countdownFullscreenVisibile,
   };
 }
 
@@ -166,6 +171,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
   annotazioneInModificaId: null,
   modalita: "edit",
   immagineFissaVisibile: false,
+  countdownFullscreenVisibile: false,
 
   async apri(folderPath, modalita = "edit") {
     const a = await apriAmbientazione(folderPath);
@@ -191,6 +197,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       annotazioneInModificaId: null,
       modalita,
       immagineFissaVisibile: false,
+      countdownFullscreenVisibile: false,
     });
     await aggiungiRecente(folderPath, a.nome);
     notificaProiezione(get());
@@ -211,6 +218,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       annotazioneInModificaId: null,
       modalita: "edit",
       immagineFissaVisibile: false,
+      countdownFullscreenVisibile: false,
     });
     await aggiungiRecente(folderPath, nome);
     notificaProiezione(get());
@@ -237,6 +245,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       annotazioneInModificaId: null,
       modalita: "edit",
       immagineFissaVisibile: false,
+      countdownFullscreenVisibile: false,
     });
     notificaProiezione(get());
   },
@@ -455,6 +464,27 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
 
   setImmagineFissaVisibile(v) {
     set({ immagineFissaVisibile: v });
+    notificaProiezione(get());
+  },
+
+  async impostaSfondoCountdown(sourceAbsPath) {
+    const { folderPath, current } = get();
+    if (!folderPath || !current) throw new Error("Nessuna ambientazione aperta");
+    if (sourceAbsPath === null) {
+      get().modifica((draft) => {
+        draft.sfondoCountdownPath = null;
+      });
+      return;
+    }
+    const id = nuovoId();
+    const relativo = await copiaImmagineInCartella(folderPath, sourceAbsPath, "", `sfondo-countdown-${id}`);
+    get().modifica((draft) => {
+      draft.sfondoCountdownPath = relativo;
+    });
+  },
+
+  setCountdownFullscreenVisibile(v) {
+    set({ countdownFullscreenVisibile: v });
     notificaProiezione(get());
   },
 
