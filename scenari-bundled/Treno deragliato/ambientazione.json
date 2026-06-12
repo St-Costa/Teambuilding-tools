@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "nome": "Treno deragliato",
   "creataIl": "2026-05-29T09:47:30.172Z",
-  "modificataIl": "2026-06-01T11:13:14.089Z",
-  "mappaPath": "mappa-9ac372a6-96de-4b76-a11a-c7d7711b4a21.png",
+  "modificataIl": "2026-06-12T15:28:20.462Z",
+  "mappaPath": "mappa-0ba34270-b261-4cec-81bf-f606e25e1d22.png",
   "personaggi": [
     {
       "id": "5ab61745-055e-4cc3-92d8-626bf5e07dfb",
@@ -16,12 +16,12 @@
         "offsetY": 1.6313525860126201
       },
       "posizione": {
-        "x": 0.8260909875233968,
-        "y": 0.6059523123281974
+        "x": 0.8212030570395386,
+        "y": 0.7942304505940115
       },
       "posizioneIniziale": {
-        "x": 0.8260909875233968,
-        "y": 0.6059523123281974
+        "x": 0.8212030570395386,
+        "y": 0.7942304505940115
       },
       "oggettoId": null,
       "oggettoInizialeId": null,
@@ -60,12 +60,12 @@
         "offsetY": 1.2776020930363583
       },
       "posizione": {
-        "x": 0.4427887121836344,
-        "y": 0.39833464445891203
+        "x": 0.4872181347767898,
+        "y": 0.6460593253150866
       },
       "posizioneIniziale": {
-        "x": 0.4427887121836344,
-        "y": 0.39833464445891203
+        "x": 0.4872181347767898,
+        "y": 0.6460593253150866
       },
       "oggettoId": null,
       "oggettoInizialeId": null,
@@ -116,22 +116,22 @@
       "npc": false
     },
     {
-      "id": "192a5ce4-cf64-4f47-aed0-13dd99aaa490",
+      "id": "d842cece-bcbd-4f86-a7fe-73a85a17eb1d",
       "nome": "Fuochista",
-      "colore": "#546E7A",
-      "imgPath": "personaggi/192a5ce4-cf64-4f47-aed0-13dd99aaa490.png",
+      "colore": "#5E35B1",
+      "imgPath": "personaggi/d842cece-bcbd-4f86-a7fe-73a85a17eb1d.png",
       "crop": {
-        "zoom": 1.7777777777777777,
-        "offsetX": -0.01614356407752404,
-        "offsetY": -0.04335174560546875
+        "zoom": 1.3310000000000004,
+        "offsetX": 0.06195749136117788,
+        "offsetY": 0.023465083195612982
       },
       "posizione": {
-        "x": 0.89158683600294,
-        "y": 0.37371895345965045
+        "x": 0.8788595556849166,
+        "y": 0.3643419500690631
       },
       "posizioneIniziale": {
-        "x": 0.89158683600294,
-        "y": 0.37371895345965045
+        "x": 0.8788595556849166,
+        "y": 0.3643419500690631
       },
       "oggettoId": null,
       "oggettoInizialeId": null,
@@ -231,6 +231,39 @@
       },
       "dimensione": 0.04312441865879542,
       "colore": null
+    },
+    {
+      "id": "3bfb8f20-0ff1-4728-b428-2cc1df623cd0",
+      "tipo": "simbolo",
+      "contenuto": "🪨",
+      "posizione": {
+        "x": 0.8056394061009642,
+        "y": 0.6203078323987212
+      },
+      "dimensione": 0.034140195147532165,
+      "colore": null
+    },
+    {
+      "id": "75f4cfcb-8144-4740-869a-59852365d354",
+      "tipo": "simbolo",
+      "contenuto": "🪨",
+      "posizione": {
+        "x": 0.841606690719826,
+        "y": 0.608293331171497
+      },
+      "dimensione": 0.02984974198750496,
+      "colore": null
+    },
+    {
+      "id": "4676d627-d46c-474e-b66b-a25e6b4700f7",
+      "tipo": "simbolo",
+      "contenuto": "🪨",
+      "posizione": {
+        "x": 0.8235031923936115,
+        "y": 0.5658944516141712
+      },
+      "dimensione": 0.03934381466480538,
+      "colore": null
     }
   ],
   "obiettivi": [
@@ -270,5 +303,15 @@
       "audioPath": null
     }
   ],
-  "sottofondoPath": "audio/sottofondo.mp3"
+  "sottofondoPath": "audio/sottofondo.mp3",
+  "presentazionePath": "presentazione/bcad3cff-8dff-46a9-be7b-4bdd857ba431.pdf",
+  "notePresentazione": {},
+  "immagineFissaPath": "immagine-fissa-0dcbef81-d1a5-4064-9320-10a46d6c88fa.png",
+  "leaderboardOrdine": [
+    "35d010e9-a76f-4d07-950c-9c1da7259ac2",
+    "5a510645-979c-49f4-8048-04395b7a7a8f",
+    "5ab61745-055e-4cc3-92d8-626bf5e07dfb",
+    "e96af4bd-b93e-4c70-b671-65a0505c4f25",
+    "5bf72f00-49ac-41c5-9d0d-a50d08b3d542"
+  ]
 }

@@ -6,6 +6,22 @@ import {
   useAmbientazioneStore,
 } from "./ambientazioneStore";
 
+function applicaOrdine<T extends { personaggioId: string }>(
+  righe: T[],
+  ordine: string[],
+): T[] {
+  if (ordine.length === 0) return righe;
+  const map = new Map(righe.map((r) => [r.personaggioId, r]));
+  const ordinati: T[] = [];
+  for (const id of ordine) {
+    const r = map.get(id);
+    if (r) { ordinati.push(r); map.delete(id); }
+  }
+  // Eventuali personaggi aggiunti dopo l'ultimo salvataggio dell'ordine
+  for (const r of map.values()) ordinati.push(r);
+  return ordinati;
+}
+
 export type FaseLeaderboard = "chiusa" | "aperta";
 
 interface RigaSnapInterno {
@@ -23,6 +39,7 @@ interface LeaderboardState {
   apri: () => void;
   chiudi: () => void;
   toggleTick: (personaggioId: string, indice: 0 | 1 | 2) => void;
+  riordina: (fromIdx: number, toIdx: number) => void;
 }
 
 export const useLeaderboardStore = create<LeaderboardState>((set, get) => ({
@@ -34,7 +51,7 @@ export const useLeaderboardStore = create<LeaderboardState>((set, get) => ({
     const amb = useAmbientazioneStore.getState().current;
     if (!amb) return;
     // Gli NPC sono esclusi dalla classifica (ma restano nei conflitti/ruota).
-    const righe: RigaSnapInterno[] = amb.personaggi
+    const base: RigaSnapInterno[] = amb.personaggi
       .filter((p) => !p.npc)
       .map((p) => ({
         personaggioId: p.id,
@@ -43,6 +60,7 @@ export const useLeaderboardStore = create<LeaderboardState>((set, get) => ({
         imgPath: p.imgPath,
         crop: p.crop,
       }));
+    const righe = applicaOrdine(base, amb.leaderboardOrdine ?? []);
     const tick: Record<string, [boolean, boolean, boolean]> = {};
     for (const r of righe) tick[r.personaggioId] = [false, false, false];
     set({ fase: "aperta", righe, tick });
@@ -61,6 +79,19 @@ export const useLeaderboardStore = create<LeaderboardState>((set, get) => ({
     const nuovo: [boolean, boolean, boolean] = [corrente[0], corrente[1], corrente[2]];
     nuovo[indice] = !nuovo[indice];
     set({ tick: { ...state.tick, [personaggioId]: nuovo } });
+    forceEmitScena();
+  },
+
+  riordina(fromIdx, toIdx) {
+    const state = get();
+    if (fromIdx === toIdx) return;
+    if (fromIdx < 0 || toIdx < 0 || fromIdx >= state.righe.length || toIdx >= state.righe.length) return;
+    const nuove = [...state.righe];
+    const [rimossa] = nuove.splice(fromIdx, 1);
+    nuove.splice(toIdx, 0, rimossa);
+    set({ righe: nuove });
+    // Persisti il nuovo ordine nell'ambientazione (autosave).
+    useAmbientazioneStore.getState().setLeaderboardOrdine(nuove.map((r) => r.personaggioId));
     forceEmitScena();
   },
 }));

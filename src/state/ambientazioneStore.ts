@@ -74,6 +74,7 @@ interface AmbientazioneState {
   eliminaPosizioneInizialePersonaggio: (id: string) => void;
   salvaTuttePosizioniIniziali: () => void;
   ripristinaTuttePosizioniIniziali: () => void;
+  setLeaderboardOrdine: (ordine: string[]) => void;
   setObiettivo: (indice: 0 | 1 | 2, testo: string) => void;
   setSoundboardEmoji: (indice: number, emoji: string) => void;
   setSoundboardAudio: (indice: number, sourceAbsPath: string | null) => Promise<void>;
@@ -376,6 +377,12 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
         // Ripristina anche l'oggetto iniziale (può essere null = nessun oggetto).
         p.oggettoId = p.oggettoInizialeId;
       }
+    });
+  },
+
+  setLeaderboardOrdine(ordine) {
+    get().modifica((draft) => {
+      draft.leaderboardOrdine = ordine;
     });
   },
 

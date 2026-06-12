@@ -21,6 +21,7 @@ export default function PannelloLeaderboard({ onChiudi }: Props) {
   const righe = useLeaderboardStore((s) => s.righe);
   const tick = useLeaderboardStore((s) => s.tick);
   const toggleTick = useLeaderboardStore((s) => s.toggleTick);
+  const riordina = useLeaderboardStore((s) => s.riordina);
   const chiudi = useLeaderboardStore((s) => s.chiudi);
 
   const avviaVittoria = useVittoriaStore((s) => s.avvia);
@@ -138,6 +139,7 @@ export default function PannelloLeaderboard({ onChiudi }: Props) {
             <table className={styles.tabella}>
               <thead>
                 <tr>
+                  {inEdit && <th className={styles.thOrdine} />}
                   <th className={styles.thPersonaggio}>Personaggio</th>
                   {([0, 1, 2] as const).map((idx) => (
                     <th
@@ -152,12 +154,34 @@ export default function PannelloLeaderboard({ onChiudi }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {righe.map((r) => {
+                {righe.map((r, rowIdx) => {
                   const t = tick[r.personaggioId] ?? [false, false, false];
                   // 3° obiettivo è malus: -1 quando attivo.
                   const totale = (t[0] ? 1 : 0) + (t[1] ? 1 : 0) - (t[2] ? 1 : 0);
                   return (
                     <tr key={r.personaggioId}>
+                      {inEdit && (
+                        <td className={styles.tdOrdine}>
+                          <button
+                            type="button"
+                            className={styles.btnOrdine}
+                            onClick={() => riordina(rowIdx, rowIdx - 1)}
+                            disabled={rowIdx === 0}
+                            title="Sposta su"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.btnOrdine}
+                            onClick={() => riordina(rowIdx, rowIdx + 1)}
+                            disabled={rowIdx === righe.length - 1}
+                            title="Sposta giù"
+                          >
+                            ▼
+                          </button>
+                        </td>
+                      )}
                       <td className={styles.tdPersonaggio}>
                         <Cerchietto
                           src={risolviAsset(folderPath, r.imgPath)}

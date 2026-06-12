@@ -77,6 +77,9 @@ export interface Ambientazione {
   notePresentazione: Record<number, string>;
   // Immagine fissa: copre tutta la proiezione (sotto il timer) quando attivata.
   immagineFissaPath: string | null;
+  // Ordine personalizzato dei personaggi nella leaderboard (array di ID).
+  // Se vuoto o assente, si usa l'ordine di `personaggi`.
+  leaderboardOrdine: string[];
 }
 
 export class AmbientazioneCorrotta extends Error {
@@ -292,6 +295,9 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
     typeof raw.immagineFissaPath === "string" && raw.immagineFissaPath.length > 0
       ? raw.immagineFissaPath
       : null;
+  const leaderboardOrdine: string[] = Array.isArray(raw.leaderboardOrdine)
+    ? (raw.leaderboardOrdine as unknown[]).filter((v) => typeof v === "string") as string[]
+    : [];
   return {
     schemaVersion: SCHEMA_VERSION,
     nome: raw.nome,
@@ -307,6 +313,7 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
     presentazionePath,
     notePresentazione,
     immagineFissaPath,
+    leaderboardOrdine,
   };
 }
 
@@ -349,6 +356,7 @@ export function nuovoManifest(nome: string): Ambientazione {
     presentazionePath: null,
     notePresentazione: {},
     immagineFissaPath: null,
+    leaderboardOrdine: [],
   };
 }
 
