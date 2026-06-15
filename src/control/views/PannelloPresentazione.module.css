@@ -1,3 +1,23 @@
+.btnRegoleViste {
+  opacity: 0.4;
+}
+
+.btnRegoleViste:hover:not(:disabled) {
+  opacity: 0.7;
+}
+
+.numeroBadge {
+  position: absolute;
+  bottom: 3px;
+  left: 4px;
+  font-size: 0.52rem;
+  font-weight: 800;
+  opacity: 0.5;
+  line-height: 1;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
 .backdrop {
   position: fixed;
   inset: 0;

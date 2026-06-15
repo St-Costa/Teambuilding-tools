@@ -1,6 +1,7 @@
 /* Stile coerente con PulsanteCountdownFullscreen.module.css */
 
 .btnIcona {
+  position: relative;
   width: 4rem;
   height: 4rem;
   padding: 0;
@@ -18,6 +19,18 @@
 
 .btnIcona:hover:not(:disabled) {
   background: rgba(127, 127, 127, 0.12);
+}
+
+.numeroBadge {
+  position: absolute;
+  bottom: 3px;
+  left: 4px;
+  font-size: 0.52rem;
+  font-weight: 800;
+  opacity: 0.5;
+  line-height: 1;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
 }
 
 .btnIcona:disabled {

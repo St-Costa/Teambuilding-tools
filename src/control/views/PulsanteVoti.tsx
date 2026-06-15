@@ -4,7 +4,11 @@ import { useVotiStore } from "../../state/votiStore";
 import { IconaVoto } from "../../components/Icone";
 import styles from "./PulsanteVoti.module.css";
 
-export default function PulsanteVoti() {
+interface Props {
+  numeroBadge?: number;
+}
+
+export default function PulsanteVoti({ numeroBadge }: Props) {
   const current = useAmbientazioneStore((s) => s.current);
   const folderPath = useAmbientazioneStore((s) => s.folderPath);
   const modalita = useAmbientazioneStore((s) => s.modalita);
@@ -50,6 +54,9 @@ export default function PulsanteVoti() {
         aria-label="Sfondo schermata voti"
       >
         <IconaVoto dimensione={30} />
+        {numeroBadge !== undefined && (
+          <span className={styles.numeroBadge}>{numeroBadge}</span>
+        )}
       </button>
     );
   }
@@ -72,6 +79,9 @@ export default function PulsanteVoti() {
       aria-label="Schermata voti"
     >
       <IconaVoto dimensione={30} />
+      {numeroBadge !== undefined && (
+        <span className={styles.numeroBadge}>{numeroBadge}</span>
+      )}
     </button>
   );
 }

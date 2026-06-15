@@ -45,6 +45,9 @@ export default function AmbientazioneAperta() {
   const [wizardOggettoAperto, setWizardOggettoAperto] = useState(false);
   const [erroreMappa, setErroreMappa] = useState<string | null>(null);
   const [stageFullscreen, setStageFullscreen] = useState(false);
+  // Ciclo dim: true dopo il primo click su fullscreen (segnale "già fatto").
+  // Secondo click: reset visivo senza cambiare lo stato della finestra.
+  const [fullscreenVisto, setFullscreenVisto] = useState(false);
   const [conflittoAperto, setConflittoAperto] = useState(false);
   const [confermaChiusuraAperta, setConfermaChiusuraAperta] = useState(false);
   const avviaConflitto = useConflittoStore((s) => s.avvia);
@@ -77,6 +80,8 @@ export default function AmbientazioneAperta() {
   }, []);
 
   async function toggleStageFullscreen() {
+    if (fullscreenVisto) { setFullscreenVisto(false); return; }
+    setFullscreenVisto(true);
     const stage = await WebviewWindow.getByLabel("stage");
     if (!stage) return;
     const nuovo = !stageFullscreen;
@@ -118,72 +123,63 @@ export default function AmbientazioneAperta() {
     <div className={styles.root}>
       <AudioVittoria />
       <header className={styles.toolbar}>
-        <div className={styles.toolbarSinistra}>
-          <PulsanteImmagineFissa />
-          <PulsanteSottofondo />
+        {/* ── SINISTRA: bordino START ── */}
+        <div className={styles.gruppoStart}>
+          <span className={styles.etichettaGruppo}>Start</span>
+          <button
+            className={`${styles.btnIcona}${fullscreenVisto ? ` ${styles.btnVisto}` : ""}`}
+            onClick={() => void toggleStageFullscreen()}
+            title={
+              fullscreenVisto
+                ? "Proiezione già a tutto schermo — clicca per reimpostare"
+                : stageFullscreen
+                  ? "Esci da tutto schermo"
+                  : "Proiezione a tutto schermo"
+            }
+            aria-label={stageFullscreen ? "Esci da tutto schermo" : "Proiezione a tutto schermo"}
+          >
+            <IconaMonitor dimensione={30} />
+            <span className={styles.numeroBadge}>1</span>
+          </button>
+          <PannelloPresentazione numeroBadge={2} />
         </div>
-        <PannelloSoundboard />
-        <div className={styles.toolbarDestra}>
+
+        {/* ── CENTRO: screensaver, sottofondo, SFX, edit, gameplay ── */}
+        <div className={styles.toolbarCentro}>
+          <div className={styles.gruppoScena}>
+            <PulsanteImmagineFissa />
+            <PulsanteSottofondo />
+          </div>
+          <PannelloSoundboard />
           {inEdit && (
             <button className={styles.btnAzione} onClick={handleImpostaMappa}>
               {current.mappaPath ? "Cambia mappa…" : "Imposta mappa…"}
             </button>
           )}
-          {current.mappaPath && <PannelloAnnotazioni />}
-          <button
-            className={styles.btnIcona}
-            onClick={() => void toggleStageFullscreen()}
-            title={stageFullscreen ? "Esci da tutto schermo" : "Proiezione a tutto schermo"}
-            aria-label={stageFullscreen ? "Esci da tutto schermo" : "Proiezione a tutto schermo"}
-          >
-            <IconaMonitor dimensione={30} />
-          </button>
-          <PannelloPresentazione />
-          <button
-            className={styles.btnIcona}
-            onClick={() => {
-              avviaConflitto();
-              setConflittoAperto(true);
-            }}
-            disabled={current.personaggi.length < 2 || leaderboardInCorso || presentazioneInCorso}
-            title={
-              presentazioneInCorso
-                ? "Chiudi prima la presentazione"
-                : leaderboardInCorso
-                  ? "Chiudi prima la leaderboard"
-                  : current.personaggi.length < 2
-                    ? "Servono almeno 2 personaggi"
-                    : "Apri la ruota della fortuna (Conflitto)"
-            }
-            aria-label="Conflitto"
-          >
-            <IconaVS dimensione={34} />
-          </button>
-          <PulsanteCountdownFullscreen variante="config" />
-          <PulsanteCountdownFullscreen variante="toggle" />
-          <PulsanteVoti />
-          <button
-            className={styles.btnIcona}
-            onClick={() => {
-              apriLeaderboard();
-              setLeaderboardAperta(true);
-            }}
-            disabled={
-              current.personaggi.every((p) => p.npc) || conflittoInCorso || presentazioneInCorso
-            }
-            title={
-              presentazioneInCorso
-                ? "Chiudi prima la presentazione"
-                : conflittoInCorso
-                  ? "Chiudi prima il conflitto"
-                  : current.personaggi.every((p) => p.npc)
-                    ? "Serve almeno 1 personaggio non-NPC"
-                    : "Mostra la leaderboard finale"
-            }
-            aria-label="Leaderboard"
-          >
-            <IconaTrofeo dimensione={30} />
-          </button>
+          <div className={styles.gruppoGioco}>
+            <span className={`${styles.etichettaGruppo} ${styles.etichettaGruppoIcona}`}>⚡</span>
+            {current.mappaPath && <PannelloAnnotazioni />}
+            <button
+              className={styles.btnIcona}
+              onClick={() => {
+                avviaConflitto();
+                setConflittoAperto(true);
+              }}
+              disabled={current.personaggi.length < 2 || leaderboardInCorso || presentazioneInCorso}
+              title={
+                presentazioneInCorso
+                  ? "Chiudi prima la presentazione"
+                  : leaderboardInCorso
+                    ? "Chiudi prima la leaderboard"
+                    : current.personaggi.length < 2
+                      ? "Servono almeno 2 personaggi"
+                      : "Apri la ruota della fortuna (Conflitto)"
+              }
+              aria-label="Conflitto"
+            >
+              <IconaVS dimensione={34} />
+            </button>
+          </div>
           {inEdit && (
             <details className={styles.menuPosizioniRoot}>
               <summary className={styles.btnAzione} title="Salva o ripristina posizioni iniziali">
@@ -221,16 +217,50 @@ export default function AmbientazioneAperta() {
               </div>
             </details>
           )}
-          <PannelloTimer />
+        </div>
+
+        {/* ── DESTRA: bordino END + (edit) salvataggio + (edit) home ── */}
+        <div className={styles.toolbarDestra}>
+          <div className={styles.gruppoEnd}>
+            <span className={styles.etichettaGruppo}>End</span>
+            <PulsanteCountdownFullscreen variante="config" numeroBadge={1} />
+            <PulsanteCountdownFullscreen variante="toggle" numeroBadge={1} />
+            <PulsanteVoti numeroBadge={2} />
+            <button
+              className={styles.btnIcona}
+              onClick={() => {
+                apriLeaderboard();
+                setLeaderboardAperta(true);
+              }}
+              disabled={
+                current.personaggi.every((p) => p.npc) || conflittoInCorso || presentazioneInCorso
+              }
+              title={
+                presentazioneInCorso
+                  ? "Chiudi prima la presentazione"
+                  : conflittoInCorso
+                    ? "Chiudi prima il conflitto"
+                    : current.personaggi.every((p) => p.npc)
+                      ? "Serve almeno 1 personaggio non-NPC"
+                      : "Mostra la leaderboard finale"
+              }
+              aria-label="Leaderboard"
+            >
+              <IconaTrofeo dimensione={30} />
+              <span className={styles.numeroBadge}>3</span>
+            </button>
+          </div>
           {inEdit && <IndicatoreSalvataggio />}
-          <button
-            className={styles.btnIcona}
-            onClick={handleChiudi}
-            title="Torna alla schermata iniziale"
-            aria-label="Chiudi ambientazione"
-          >
-            <IconaCasa dimensione={30} />
-          </button>
+          {inEdit && (
+            <button
+              className={styles.btnIcona}
+              onClick={handleChiudi}
+              title="Torna alla schermata iniziale"
+              aria-label="Chiudi ambientazione"
+            >
+              <IconaCasa dimensione={30} />
+            </button>
+          )}
         </div>
       </header>
 
@@ -253,6 +283,9 @@ export default function AmbientazioneAperta() {
           <PannelloGioco />
         )}
         <AreaMappa />
+        <div className={styles.timerOverlay}>
+          <PannelloTimer sovraMappa />
+        </div>
       </div>
 
       {wizardPersonaggioAperto && (

@@ -79,6 +79,7 @@
 
 /* Bottone play mode: stile coerente con .btnIcona di AmbientazioneAperta */
 .btnIcona {
+  position: relative;
   width: 4rem;
   height: 4rem;
   padding: 0;
@@ -92,6 +93,18 @@
   align-items: center;
   justify-content: center;
   line-height: 1;
+}
+
+.numeroBadge {
+  position: absolute;
+  bottom: 3px;
+  left: 4px;
+  font-size: 0.52rem;
+  font-weight: 800;
+  opacity: 0.5;
+  line-height: 1;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
 }
 
 .btnIcona:hover {

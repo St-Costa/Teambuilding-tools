@@ -24,7 +24,11 @@ const RIEMISSIONE_MS = 250;
 // lib/audio.ts (niente file). Suonati SOLO dalla regia, dove l'utente ha
 // interagito e il contesto audio è sbloccato.
 
-export default function PannelloTimer() {
+interface Props {
+  sovraMappa?: boolean;
+}
+
+export default function PannelloTimer({ sovraMappa }: Props) {
   const stato = useTimerStore((s) => s.stato);
   const durationSec = useTimerStore((s) => s.durationSec);
   const targetEndAt = useTimerStore((s) => s.targetEndAt);
@@ -121,7 +125,7 @@ export default function PannelloTimer() {
   const onToggle = stato === "running" ? pause : start; // start() gestisce sia idle che paused
 
   return (
-    <div className={styles.root}>
+    <div className={`${styles.root}${sovraMappa ? ` ${styles.rootSovraMappa}` : ""}`}>
       <button
         type="button"
         className={`${styles.btnToggle} ${stato === "running" ? styles.btnPausa : styles.btnAvvia}`}

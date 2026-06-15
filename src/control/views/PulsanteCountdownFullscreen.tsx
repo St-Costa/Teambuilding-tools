@@ -5,13 +5,14 @@ import styles from "./PulsanteCountdownFullscreen.module.css";
 
 interface Props {
   /**
-   * "config" → visibile in modalità modifica (toolbarSinistra), nascosto in play.
-   * "toggle" → visibile in modalità play (toolbarDestra), nascosto in edit.
+   * "config" → visibile in modalità modifica (bordino END), nascosto in play.
+   * "toggle" → visibile in modalità play (bordino END), nascosto in edit.
    */
   variante: "config" | "toggle";
+  numeroBadge?: number;
 }
 
-export default function PulsanteCountdownFullscreen({ variante }: Props) {
+export default function PulsanteCountdownFullscreen({ variante, numeroBadge }: Props) {
   const current = useAmbientazioneStore((s) => s.current);
   const folderPath = useAmbientazioneStore((s) => s.folderPath);
   const modalita = useAmbientazioneStore((s) => s.modalita);
@@ -52,11 +53,14 @@ export default function PulsanteCountdownFullscreen({ variante }: Props) {
         aria-label="Sfondo countdown"
       >
         <IconaOrologio dimensione={30} />
+        {numeroBadge !== undefined && (
+          <span className={styles.numeroBadge}>{numeroBadge}</span>
+        )}
       </button>
     );
   }
 
-  // Modalità play: bottone icona compatto (toolbarDestra)
+  // Modalità play: bottone icona compatto (bordino END)
   return (
     <button
       type="button"
@@ -66,6 +70,9 @@ export default function PulsanteCountdownFullscreen({ variante }: Props) {
       aria-label="Countdown a schermo intero"
     >
       <IconaOrologio dimensione={30} />
+      {numeroBadge !== undefined && (
+        <span className={styles.numeroBadge}>{numeroBadge}</span>
+      )}
     </button>
   );
 }

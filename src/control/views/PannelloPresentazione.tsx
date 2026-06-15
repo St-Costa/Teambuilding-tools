@@ -9,10 +9,14 @@ import Presentazione from "../../components/Presentazione";
 import styles from "./PannelloPresentazione.module.css";
 import toolbar from "./AmbientazioneAperta.module.css";
 
+interface Props {
+  numeroBadge?: number;
+}
+
 // Componente autonomo: disegna il pulsante in toolbar e, all'apertura, la
 // modale di controllo. In EDIT serve a caricare il PDF e scrivere le note per
 // pagina; in PLAY proietta le slide e mostra in regia anteprima + nota.
-export default function PannelloPresentazione() {
+export default function PannelloPresentazione({ numeroBadge }: Props) {
   const modalita = useAmbientazioneStore((s) => s.modalita);
   const inPlay = modalita === "play";
   const folderPath = useAmbientazioneStore((s) => s.folderPath);
@@ -35,6 +39,9 @@ export default function PannelloPresentazione() {
   const leaderboardInCorso = useLeaderboardStore((s) => s.fase) === "aperta";
 
   const [aperto, setAperto] = useState(false);
+  // true dopo il primo click: pulsante diventa opaco ("già mostrato").
+  // Secondo click: reset visivo, nessuna azione sul pannello.
+  const [regoleViste, setRegoleViste] = useState(false);
   // Stato di navigazione locale usato SOLO in edit (in play comanda lo store).
   const [paginaEdit, setPaginaEdit] = useState(1);
   const [numPagineEdit, setNumPagineEdit] = useState(0);
@@ -81,6 +88,8 @@ export default function PannelloPresentazione() {
   }, [aperto, avanti, indietro]);
 
   function apri() {
+    if (regoleViste) { setRegoleViste(false); return; }
+    setRegoleViste(true);
     setErrore(null);
     setPaginaEdit(1);
     if (inPlay) avvia(); // proietta subito la pagina 1 sulla proiezione
@@ -132,13 +141,17 @@ export default function PannelloPresentazione() {
   return (
     <>
       <button
-        className={toolbar.btnIcona}
+        className={`${toolbar.btnIcona}${regoleViste ? ` ${styles.btnRegoleViste}` : ""}`}
         onClick={apri}
         disabled={disabilitato}
-        title={titolo}
+        title={regoleViste ? "Regole già mostrate — clicca per reimpostare" : titolo}
         aria-label="Presentazione"
+        style={{ position: "relative" }}
       >
         <IconaPresentazione dimensione={28} />
+        {numeroBadge !== undefined && (
+          <span className={styles.numeroBadge}>{numeroBadge}</span>
+        )}
       </button>
 
       {aperto && (
