@@ -6,6 +6,7 @@ import Scena from "../components/Scena";
 import Ruota from "../components/Ruota";
 import DisplayTimer from "../components/DisplayTimer";
 import ScenaLeaderboard from "../components/ScenaLeaderboard";
+import ScenaVoti from "../components/ScenaVoti";
 import AnimazioneVittoria from "../components/AnimazioneVittoria";
 import Presentazione from "../components/Presentazione";
 import ScenaCountdownFullscreen from "../components/ScenaCountdownFullscreen";
@@ -32,6 +33,8 @@ const STATO_INIZIALE: ScenaPayload = {
   immagineFissaVisibile: false,
   sfondoCountdownPath: null,
   countdownFullscreenVisibile: false,
+  voti: null,
+  sfondoVotiPath: null,
 };
 
 export default function App() {
@@ -74,12 +77,13 @@ export default function App() {
   // renderizzati quando l'overlay si chiude (no reset di imgDim/container).
   const mostraRuota = stato.conflitto !== null && stato.folderPath !== null;
   const mostraLeaderboard = stato.leaderboard !== null && stato.folderPath !== null;
+  const mostraVoti = stato.voti !== null && stato.folderPath !== null;
   const mostraPresentazione =
     stato.presentazione !== null && stato.presentazionePath !== null && stato.folderPath !== null;
   // L'immagine fissa NON rientra in overlayAttivo: il timer rimane visibile sopra di essa.
   const mostraImmagineFissa =
     stato.immagineFissaVisibile && stato.immagineFissaPath !== null && stato.folderPath !== null;
-  const overlayAttivo = mostraRuota || mostraLeaderboard || mostraPresentazione;
+  const overlayAttivo = mostraRuota || mostraLeaderboard || mostraPresentazione || mostraVoti;
   const mostraCountdownFullscreen =
     stato.countdownFullscreenVisibile && stato.folderPath !== null && !overlayAttivo;
   return (
@@ -126,6 +130,17 @@ export default function App() {
       )}
       {mostraLeaderboard && stato.folderPath && stato.leaderboard && (
         <ScenaLeaderboard snapshot={stato.leaderboard} folderPath={stato.folderPath} />
+      )}
+      {mostraVoti && stato.folderPath && stato.voti && (
+        <ScenaVoti
+          snapshot={stato.voti}
+          folderPath={stato.folderPath}
+          sfondoSrc={
+            stato.folderPath && stato.sfondoVotiPath
+              ? risolviAsset(stato.folderPath, stato.sfondoVotiPath)
+              : null
+          }
+        />
       )}
       {mostraRuota && stato.folderPath && stato.conflitto && (
         <div

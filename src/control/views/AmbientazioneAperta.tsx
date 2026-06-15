@@ -17,11 +17,14 @@ import PannelloPresentazione from "./PannelloPresentazione";
 import PulsanteSottofondo from "./PulsanteSottofondo";
 import PulsanteImmagineFissa from "./PulsanteImmagineFissa";
 import PulsanteCountdownFullscreen from "./PulsanteCountdownFullscreen";
+import PulsanteVoti from "./PulsanteVoti";
+import PannelloVoti from "./PannelloVoti";
 import AudioVittoria from "./AudioVittoria";
 import { IconaCasa, IconaMonitor, IconaTrofeo, IconaVS } from "../../components/Icone";
 import { useConflittoStore } from "../../state/conflittoStore";
 import { useLeaderboardStore } from "../../state/leaderboardStore";
 import { usePresentazioneStore } from "../../state/presentazioneStore";
+import { useVotiStore } from "../../state/votiStore";
 import "../../state/timerStore";
 // Import side-effect: registra il provider snapshot della vittoria nel payload.
 import "../../state/vittoriaStore";
@@ -50,9 +53,11 @@ export default function AmbientazioneAperta() {
   const conflittoFase = useConflittoStore((s) => s.fase);
   const leaderboardFaseStore = useLeaderboardStore((s) => s.fase);
   const presentazioneFase = usePresentazioneStore((s) => s.fase);
+  const votiFase = useVotiStore((s) => s.fase);
   const conflittoInCorso = conflittoFase !== "chiuso";
   const leaderboardInCorso = leaderboardFaseStore === "aperta";
   const presentazioneInCorso = presentazioneFase === "attiva";
+  const votiInCorso = votiFase === "aperta";
 
   useEffect(() => {
     let cancellato = false;
@@ -156,6 +161,7 @@ export default function AmbientazioneAperta() {
           </button>
           <PulsanteCountdownFullscreen variante="config" />
           <PulsanteCountdownFullscreen variante="toggle" />
+          <PulsanteVoti />
           <button
             className={styles.btnIcona}
             onClick={() => {
@@ -274,6 +280,8 @@ export default function AmbientazioneAperta() {
       {conflittoAperto && <PannelloConflitto onChiudi={() => setConflittoAperto(false)} />}
 
       {leaderboardAperta && <PannelloLeaderboard onChiudi={() => setLeaderboardAperta(false)} />}
+
+      {votiInCorso && <PannelloVoti onChiudi={() => {}} />}
 
       {confermaChiusuraAperta && (
         <div className={styles.confermaBackdrop}>

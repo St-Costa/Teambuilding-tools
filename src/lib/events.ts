@@ -88,6 +88,24 @@ export interface PresentazioneSnapshot {
   numPagine: number; // 0 finché il PDF non è stato aperto
 }
 
+export interface PersonaggioMiniSnap {
+  personaggioId: string;
+  nome: string;
+  colore: string;
+  imgPath: string;
+  crop: import("./ambientazione").Crop;
+}
+
+// Un "accusato" con la lista di chi lo ha votato.
+export interface RigaVotiSnap {
+  target: PersonaggioMiniSnap;
+  votanti: PersonaggioMiniSnap[];
+}
+
+export interface VotiSnapshot {
+  righe: RigaVotiSnap[]; // uno per ogni personaggio non-NPC
+}
+
 export interface ScenaPayload {
   folderPath: string | null;
   mappaPath: string | null;
@@ -108,6 +126,8 @@ export interface ScenaPayload {
   immagineFissaVisibile: boolean;
   sfondoCountdownPath: string | null;
   countdownFullscreenVisibile: boolean;
+  voti: VotiSnapshot | null;
+  sfondoVotiPath: string | null;
 }
 
 export type EventPayloads = {

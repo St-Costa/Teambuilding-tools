@@ -35,6 +35,7 @@ export {
   registraLeaderboardSnapshotProvider,
   registraVittoriaSnapshotProvider,
   registraPresentazioneSnapshotProvider,
+  registraVotiSnapshotProvider,
 } from "./snapshotProviders";
 
 export type SaveStatus = "idle" | "dirty" | "saving" | "saved" | "error";
@@ -84,6 +85,7 @@ interface AmbientazioneState {
   setImmagineFissaVisibile: (v: boolean) => void;
   impostaSfondoCountdown: (sourceAbsPath: string | null) => Promise<void>;
   setCountdownFullscreenVisibile: (v: boolean) => void;
+  impostaSfondoVoti: (sourceAbsPath: string | null) => Promise<void>;
   impostaPresentazione: (sourceAbsPath: string) => Promise<void>;
   rimuoviPresentazione: () => void;
   setNotaPagina: (pagina: number, testo: string) => void;
@@ -149,6 +151,8 @@ function payloadCorrente(state: AmbientazioneState): ScenaPayload {
     immagineFissaVisibile: state.immagineFissaVisibile,
     sfondoCountdownPath: state.current?.sfondoCountdownPath ?? null,
     countdownFullscreenVisibile: state.countdownFullscreenVisibile,
+    voti: snap.voti,
+    sfondoVotiPath: state.current?.sfondoVotiPath ?? null,
   };
 }
 
@@ -486,6 +490,22 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
   setCountdownFullscreenVisibile(v) {
     set({ countdownFullscreenVisibile: v });
     notificaProiezione(get());
+  },
+
+  async impostaSfondoVoti(sourceAbsPath) {
+    const { folderPath, current } = get();
+    if (!folderPath || !current) throw new Error("Nessuna ambientazione aperta");
+    if (sourceAbsPath === null) {
+      get().modifica((draft) => {
+        draft.sfondoVotiPath = null;
+      });
+      return;
+    }
+    const id = nuovoId();
+    const relativo = await copiaImmagineInCartella(folderPath, sourceAbsPath, "", `sfondo-voti-${id}`);
+    get().modifica((draft) => {
+      draft.sfondoVotiPath = relativo;
+    });
   },
 
   async impostaPresentazione(sourceAbsPath) {

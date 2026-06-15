@@ -1,0 +1,95 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #0a0a0a;
+}
+
+.sfondo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.contenuto {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+/* Riga orizzontale centrata — align-items: flex-start per ancorare dall'alto */
+.rigaPersonaggi {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+}
+
+/* Colonna di ogni personaggio — larghezza fissa (+ minWidth) via inline style */
+.colonnaPersonaggio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding: 0.3rem 0.12rem 0.3rem; /* ridotto: spazio recuperato come gap tra colonne */
+  border-radius: 16px;
+  border: 2px solid transparent;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Il più votato: sfondo rosso */
+.colonnaTop {
+  background: rgba(200, 30, 30, 0.28);
+  border-color: rgba(220, 50, 50, 0.65);
+  box-shadow: 0 0 32px rgba(220, 50, 50, 0.35);
+}
+
+/* Manette: spazio fisso sopra il cerchietto (sempre nel DOM, visibility toggle) */
+.manette {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  flex-shrink: 0;
+  /* height impostata via inline style */
+}
+
+.nomeTarget {
+  /* font-size e height impostati via inline style (adattivi alla lunghezza del nome) */
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;    /* mai a capo */
+  overflow: visible;      /* font adattivo → non serve truncation */
+  text-align: center;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* Griglia 2 col per i votanti — altezza e colonne fisse via inline style */
+.rigaVotanti {
+  display: grid;
+  /* grid-template-columns e height impostati via inline style */
+  gap: 4px;
+  align-content: start;
+  justify-content: center;
+  justify-items: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}

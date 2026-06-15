@@ -1,0 +1,52 @@
+/* Stile coerente con PulsanteCountdownFullscreen.module.css */
+
+.btnIcona {
+  width: 4rem;
+  height: 4rem;
+  padding: 0;
+  border-radius: 9px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.btnIcona:hover:not(:disabled) {
+  background: rgba(127, 127, 127, 0.12);
+}
+
+.btnIcona:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Edit mode: configurato = verde, da configurare = tratteggiato */
+.configurato {
+  border-color: rgba(80, 200, 120, 0.7);
+  background: rgba(80, 200, 120, 0.08);
+}
+
+.configurato:hover {
+  background: rgba(80, 200, 120, 0.18);
+}
+
+.daConfigurare {
+  border-style: dashed;
+  opacity: 0.7;
+}
+
+/* Play mode: attivo = rosso (schermata voti aperta) */
+.attivo {
+  border-color: #b3261e;
+  background: rgba(179, 38, 30, 0.12);
+  color: #b3261e;
+}
+
+.attivo:hover {
+  background: rgba(179, 38, 30, 0.2);
+}

@@ -82,6 +82,8 @@ export interface Ambientazione {
   // Ordine personalizzato dei personaggi nella leaderboard (array di ID).
   // Se vuoto o assente, si usa l'ordine di `personaggi`.
   leaderboardOrdine: string[];
+  // Sfondo della schermata voti (prigionieri).
+  sfondoVotiPath: string | null;
 }
 
 export class AmbientazioneCorrotta extends Error {
@@ -304,6 +306,10 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
   const leaderboardOrdine: string[] = Array.isArray(raw.leaderboardOrdine)
     ? (raw.leaderboardOrdine as unknown[]).filter((v) => typeof v === "string") as string[]
     : [];
+  const sfondoVotiPath =
+    typeof raw.sfondoVotiPath === "string" && raw.sfondoVotiPath.length > 0
+      ? raw.sfondoVotiPath
+      : null;
   return {
     schemaVersion: SCHEMA_VERSION,
     nome: raw.nome,
@@ -321,6 +327,7 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
     immagineFissaPath,
     sfondoCountdownPath,
     leaderboardOrdine,
+    sfondoVotiPath,
   };
 }
 
@@ -365,6 +372,7 @@ export function nuovoManifest(nome: string): Ambientazione {
     immagineFissaPath: null,
     sfondoCountdownPath: null,
     leaderboardOrdine: [],
+    sfondoVotiPath: null,
   };
 }
 
