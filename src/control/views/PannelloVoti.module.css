@@ -158,3 +158,46 @@
   border-color: rgba(179, 38, 30, 0.55);
 }
 .acceso:hover { background: rgba(179, 38, 30, 0.15); }
+
+/* ── Footer con bottone incarcerazione ── */
+.footer {
+  padding: 0.8rem 1.5rem;
+  border-top: 1px solid rgba(127, 127, 127, 0.2);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btnIncarcerai {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.4rem;
+  border-radius: 8px;
+  border: none;
+  background: #b3261e;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background 0.15s;
+}
+.btnIncarcerai:hover:not(:disabled) { background: #8b1a14; }
+.btnIncarcerai:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #b3261e;
+}
+
+.btnChiudiAnimazione {
+  padding: 0.55rem 1.4rem;
+  border-radius: 8px;
+  border: 1px solid rgba(127, 127, 127, 0.4);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.95rem;
+  transition: background 0.15s;
+}
+.btnChiudiAnimazione:hover { background: rgba(127, 127, 127, 0.1); }

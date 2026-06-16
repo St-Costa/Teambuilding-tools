@@ -84,6 +84,11 @@ export interface Ambientazione {
   leaderboardOrdine: string[];
   // Sfondo della schermata voti (prigionieri).
   sfondoVotiPath: string | null;
+  // Asset per l'animazione di incarcerazione (dopo la votazione).
+  sfondoPrigionieroPath: string | null;
+  suonoPrigionieroPath: string | null;        // sbarre che cadono
+  suonoPrigionieroStingPath: string | null;   // sting orchestrale
+  suonoPrigionieroSirenaPath: string | null;  // sirena loop
 }
 
 export class AmbientazioneCorrotta extends Error {
@@ -310,6 +315,22 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
     typeof raw.sfondoVotiPath === "string" && raw.sfondoVotiPath.length > 0
       ? raw.sfondoVotiPath
       : null;
+  const sfondoPrigionieroPath =
+    typeof raw.sfondoPrigionieroPath === "string" && raw.sfondoPrigionieroPath.length > 0
+      ? raw.sfondoPrigionieroPath
+      : null;
+  const suonoPrigionieroPath =
+    typeof raw.suonoPrigionieroPath === "string" && raw.suonoPrigionieroPath.length > 0
+      ? raw.suonoPrigionieroPath
+      : null;
+  const suonoPrigionieroStingPath =
+    typeof raw.suonoPrigionieroStingPath === "string" && raw.suonoPrigionieroStingPath.length > 0
+      ? raw.suonoPrigionieroStingPath
+      : null;
+  const suonoPrigionieroSirenaPath =
+    typeof raw.suonoPrigionieroSirenaPath === "string" && raw.suonoPrigionieroSirenaPath.length > 0
+      ? raw.suonoPrigionieroSirenaPath
+      : null;
   return {
     schemaVersion: SCHEMA_VERSION,
     nome: raw.nome,
@@ -328,6 +349,10 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
     sfondoCountdownPath,
     leaderboardOrdine,
     sfondoVotiPath,
+    sfondoPrigionieroPath,
+    suonoPrigionieroPath,
+    suonoPrigionieroStingPath,
+    suonoPrigionieroSirenaPath,
   };
 }
 
@@ -373,6 +398,10 @@ export function nuovoManifest(nome: string): Ambientazione {
     sfondoCountdownPath: null,
     leaderboardOrdine: [],
     sfondoVotiPath: null,
+    sfondoPrigionieroPath: null,
+    suonoPrigionieroPath: null,
+    suonoPrigionieroStingPath: null,
+    suonoPrigionieroSirenaPath: null,
   };
 }
 

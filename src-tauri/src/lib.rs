@@ -241,6 +241,9 @@ enum SuoniGiocoCmd {
     StopVittoria,
     Fuoco,
     Soundboard { path: String, volume: f32 },
+    SoundboardDa { path: String, volume: f32, offset_ms: u64 },
+    Prigioniero { path: String, volume: f32 },
+    StopPrigioniero,
 }
 
 struct SuoniGiocoState(Mutex<Option<Sender<SuoniGiocoCmd>>>);
@@ -261,6 +264,7 @@ fn avvia_thread_suoni_gioco() -> Option<Sender<SuoniGiocoCmd>> {
         let mut sveglia_sink: Option<rodio::Sink> = None;
         let mut vittoria_sink: Option<rodio::Sink> = None;
         let mut applauso_sink: Option<rodio::Sink> = None;
+        let mut prigioniero_sink: Option<rodio::Sink> = None;
 
         loop {
             loop {
@@ -345,6 +349,31 @@ fn avvia_thread_suoni_gioco() -> Option<Sender<SuoniGiocoCmd>> {
                                     handle.play_raw(dec.amplify(volume).convert_samples());
                             }
                         }
+                    }
+                    Ok(SuoniGiocoCmd::SoundboardDa { path, volume, offset_ms }) => {
+                        if let Ok(f) = fs::File::open(&path) {
+                            if let Ok(dec) = rodio::Decoder::new(std::io::BufReader::new(f)) {
+                                use rodio::Source;
+                                let src = dec
+                                    .skip_duration(std::time::Duration::from_millis(offset_ms))
+                                    .amplify(volume);
+                                let _ = handle.play_raw(src.convert_samples());
+                            }
+                        }
+                    }
+                    Ok(SuoniGiocoCmd::Prigioniero { path, volume }) => {
+                        let _ = prigioniero_sink.take();
+                        if let Ok(f) = fs::File::open(&path) {
+                            if let Ok(dec) = rodio::Decoder::new(std::io::BufReader::new(f)) {
+                                if let Ok(s) = rodio::Sink::try_new(&handle) {
+                                    s.append(dec.amplify(volume));
+                                    prigioniero_sink = Some(s);
+                                }
+                            }
+                        }
+                    }
+                    Ok(SuoniGiocoCmd::StopPrigioniero) => {
+                        let _ = prigioniero_sink.take();
                     }
                     Err(mpsc::TryRecvError::Empty) => break,
                     Err(mpsc::TryRecvError::Disconnected) => return,
@@ -439,6 +468,51 @@ fn play_soundboard_slot(
     }
     invia_gioco(&state, SuoniGiocoCmd::Soundboard { path, volume });
     Ok(())
+}
+
+#[tauri::command]
+fn play_prigioniero_sirena(
+    path: String,
+    volume: f32,
+    state: tauri::State<SuoniGiocoState>,
+) -> Result<(), String> {
+    let meta = fs::metadata(&path).map_err(|_| "File audio non trovato.".to_string())?;
+    if !meta.is_file() {
+        return Err("Il percorso non punta a un file audio.".into());
+    }
+    invia_gioco(&state, SuoniGiocoCmd::Prigioniero { path, volume });
+    Ok(())
+}
+
+#[tauri::command]
+fn stop_prigioniero_suoni(state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::StopPrigioniero);
+}
+
+#[tauri::command]
+fn play_soundboard_slot_da(
+    path: String,
+    volume: f32,
+    offset_ms: u64,
+    state: tauri::State<SuoniGiocoState>,
+) -> Result<(), String> {
+    let meta = fs::metadata(&path).map_err(|_| "File audio non trovato.".to_string())?;
+    if !meta.is_file() {
+        return Err("Il percorso non punta a un file audio.".into());
+    }
+    invia_gioco(&state, SuoniGiocoCmd::SoundboardDa { path, volume, offset_ms });
+    Ok(())
+}
+
+#[tauri::command]
+fn durata_audio_ms(path: String) -> Result<u64, String> {
+    let f = fs::File::open(&path).map_err(|e| e.to_string())?;
+    let dec = rodio::Decoder::new(std::io::BufReader::new(f))
+        .map_err(|e| format!("Formato non supportato: {e}"))?;
+    match dec.total_duration() {
+        Some(d) => Ok(d.as_millis() as u64),
+        None => Err("Durata non disponibile nei metadati".into()),
+    }
 }
 
 #[tauri::command]
@@ -717,6 +791,10 @@ pub fn run() {
             stop_vittoria_suoni,
             play_fuoco,
             play_soundboard_slot,
+            play_soundboard_slot_da,
+            play_prigioniero_sirena,
+            stop_prigioniero_suoni,
+            durata_audio_ms,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {

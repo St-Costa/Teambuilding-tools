@@ -10,6 +10,7 @@ import ScenaVoti from "../components/ScenaVoti";
 import AnimazioneVittoria from "../components/AnimazioneVittoria";
 import Presentazione from "../components/Presentazione";
 import ScenaCountdownFullscreen from "../components/ScenaCountdownFullscreen";
+import AnimazionePrigione from "../components/AnimazionePrigione";
 
 const STATO_INIZIALE: ScenaPayload = {
   folderPath: null,
@@ -35,6 +36,8 @@ const STATO_INIZIALE: ScenaPayload = {
   countdownFullscreenVisibile: false,
   voti: null,
   sfondoVotiPath: null,
+  prigionieroAnimazione: null,
+  sfondoPrigionieroPath: null,
 };
 
 export default function App() {
@@ -198,6 +201,18 @@ export default function App() {
           key={stato.vittoria.trigger}
           snapshot={stato.vittoria}
           folderPath={stato.folderPath}
+        />
+      )}
+      {stato.prigionieroAnimazione !== null && stato.folderPath && (
+        <AnimazionePrigione
+          key={stato.prigionieroAnimazione.trigger}
+          snapshot={stato.prigionieroAnimazione}
+          folderPath={stato.folderPath}
+          sfondoSrc={
+            stato.folderPath && stato.sfondoPrigionieroPath
+              ? risolviAsset(stato.folderPath, stato.sfondoPrigionieroPath)
+              : null
+          }
         />
       )}
     </>

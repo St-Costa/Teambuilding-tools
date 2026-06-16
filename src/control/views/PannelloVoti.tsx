@@ -2,6 +2,7 @@ import { useAmbientazioneStore } from "../../state/ambientazioneStore";
 import { useVotiStore } from "../../state/votiStore";
 import { risolviAsset } from "../../lib/storage";
 import Cerchietto from "../../components/Cerchietto";
+import { IconaManette } from "../../components/Icone";
 import styles from "./PannelloVoti.module.css";
 
 interface Props {
@@ -18,6 +19,15 @@ export default function PannelloVoti({ onChiudi }: Props) {
   const toggleVoto = useVotiStore((s) => s.toggleVoto);
   const azzeraVoti = useVotiStore((s) => s.azzeraVoti);
   const chiudi = useVotiStore((s) => s.chiudi);
+  const avviaPrigioniero = useVotiStore((s) => s.avviaPrigioniero);
+  const chiudiPrigioniero = useVotiStore((s) => s.chiudiPrigioniero);
+  const prigionieri = useVotiStore((s) => s.prigionieri);
+
+  const maxVoti = righe.length > 0
+    ? Math.max(...righe.map((r) => (votanti[r.personaggioId] ?? []).length))
+    : 0;
+  const haVoti = maxVoti > 0;
+  const animazioneAttiva = prigionieri !== null && prigionieri.length > 0;
 
   if (!folderPath) return null;
 
@@ -107,6 +117,29 @@ export default function PannelloVoti({ onChiudi }: Props) {
             </div>
           )}
         </section>
+
+        <footer className={styles.footer}>
+          {animazioneAttiva ? (
+            <button
+              type="button"
+              className={styles.btnChiudiAnimazione}
+              onClick={chiudiPrigioniero}
+            >
+              Chiudi animazione
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={styles.btnIncarcerai}
+              disabled={!haVoti}
+              title={haVoti ? "Mostra l'animazione di incarcerazione sulla proiezione" : "Assegna almeno un voto prima di incarcerare"}
+              onClick={avviaPrigioniero}
+            >
+              <IconaManette dimensione={18} />
+              Incarcerai
+            </button>
+          )}
+        </footer>
       </div>
     </div>
   );

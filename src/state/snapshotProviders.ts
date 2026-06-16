@@ -18,6 +18,7 @@ import type {
   VittoriaSnapshot,
   PresentazioneSnapshot,
   VotiSnapshot,
+  PrigionieroSnapshot,
 } from "../lib/events";
 
 type ConflittoSnapshotFn = () => ConflittoSnapshot | null;
@@ -56,6 +57,12 @@ export function registraVotiSnapshotProvider(fn: VotiSnapshotFn | null): void {
   votiSnapshotProvider = fn;
 }
 
+type PrigionieroSnapshotFn = () => PrigionieroSnapshot | null;
+let prigionieroSnapshotProvider: PrigionieroSnapshotFn | null = null;
+export function registraPrigionieroSnapshotProvider(fn: PrigionieroSnapshotFn | null): void {
+  prigionieroSnapshotProvider = fn;
+}
+
 // Timer di default usato finché il timerStore non si è registrato (e come
 // fallback difensivo): identico al default storico inline in payloadCorrente.
 const TIMER_DEFAULT: TimerSnapshot = {
@@ -72,6 +79,7 @@ export interface SnapshotAggregato {
   vittoria: VittoriaSnapshot | null;
   presentazione: PresentazioneSnapshot | null;
   voti: VotiSnapshot | null;
+  prigioniero: PrigionieroSnapshot | null;
 }
 
 /** Snapshot corrente di tutti gli store registrati, per la ScenaPayload. */
@@ -83,5 +91,6 @@ export function leggiSnapshot(): SnapshotAggregato {
     vittoria: vittoriaSnapshotProvider?.() ?? null,
     presentazione: presentazioneSnapshotProvider?.() ?? null,
     voti: votiSnapshotProvider?.() ?? null,
+    prigioniero: prigionieroSnapshotProvider?.() ?? null,
   };
 }

@@ -1,0 +1,128 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #0a0808;
+}
+
+.sfondo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.58);
+  pointer-events: none;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0, 0, 0, 0.72) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Riga personaggi ── */
+.prigionieri {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 5vmin;
+  max-width: 92vw;
+}
+
+.slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: slotEntra 0.55s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+.cerchioWrap {
+  animation: cerchioSu 0.55s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+  filter: drop-shadow(0 0 8px rgba(255, 80, 80, 0.7))
+          drop-shadow(0 0 20px rgba(180, 0, 0, 0.5));
+}
+
+@keyframes cerchioSu {
+  0% { opacity: 0; transform: translateY(160%); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slotEntra {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* ── Grata / Sbarre della prigione ── */
+.grata {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: repeating-linear-gradient(
+    to right,
+    #1a1a1a 0px,
+    #3a3a3a 3px,
+    #6a6a6a 6px,
+    #4a4a4a 10px,
+    #2a2a2a 14px,
+    #111 18px,
+    transparent 18px,
+    transparent 100px
+  );
+  border-top: 18px solid #3a3838;
+  box-shadow: inset 0 4px 0 #6a6565, 0 0 40px rgba(0,0,0,0.8);
+  transform: translateY(-110vh);
+  pointer-events: none;
+}
+
+.grataCaduta {
+  animation: grataScendi 1300ms linear forwards;
+}
+
+@keyframes grataScendi {
+  0%   { transform: translateY(-110vh); }
+  94%  { transform: translateY(12px); }
+  97%  { transform: translateY(-18px); }
+  100% { transform: translateY(0); }
+}
+
+/* ── Flash all'impatto ── */
+.flashImpatto {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+  animation: flashFade 120ms ease-out forwards;
+}
+
+@keyframes flashFade {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ── Canvas particelle ── */
+.particelle {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}

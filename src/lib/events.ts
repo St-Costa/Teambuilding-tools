@@ -106,6 +106,11 @@ export interface VotiSnapshot {
   righe: RigaVotiSnap[]; // uno per ogni personaggio non-NPC
 }
 
+export interface PrigionieroSnapshot {
+  prigionieri: PersonaggioMiniSnap[]; // uno o più (in caso di parità)
+  trigger: number; // incrementato a ogni avvio → forza il restart via key=
+}
+
 export interface ScenaPayload {
   folderPath: string | null;
   mappaPath: string | null;
@@ -128,6 +133,8 @@ export interface ScenaPayload {
   countdownFullscreenVisibile: boolean;
   voti: VotiSnapshot | null;
   sfondoVotiPath: string | null;
+  prigionieroAnimazione: PrigionieroSnapshot | null;
+  sfondoPrigionieroPath: string | null;
 }
 
 export type EventPayloads = {

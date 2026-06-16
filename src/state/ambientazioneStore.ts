@@ -36,6 +36,7 @@ export {
   registraVittoriaSnapshotProvider,
   registraPresentazioneSnapshotProvider,
   registraVotiSnapshotProvider,
+  registraPrigionieroSnapshotProvider,
 } from "./snapshotProviders";
 
 export type SaveStatus = "idle" | "dirty" | "saving" | "saved" | "error";
@@ -86,6 +87,10 @@ interface AmbientazioneState {
   impostaSfondoCountdown: (sourceAbsPath: string | null) => Promise<void>;
   setCountdownFullscreenVisibile: (v: boolean) => void;
   impostaSfondoVoti: (sourceAbsPath: string | null) => Promise<void>;
+  impostaSfondoPrigioniero: (sourceAbsPath: string | null) => Promise<void>;
+  impostaSuonoPrigioniero: (sourceAbsPath: string | null) => Promise<void>;
+  impostaSuonoPrigionieroSting: (sourceAbsPath: string | null) => Promise<void>;
+  impostaSuonoPrigionieroSirena: (sourceAbsPath: string | null) => Promise<void>;
   impostaPresentazione: (sourceAbsPath: string) => Promise<void>;
   rimuoviPresentazione: () => void;
   setNotaPagina: (pagina: number, testo: string) => void;
@@ -153,6 +158,8 @@ function payloadCorrente(state: AmbientazioneState): ScenaPayload {
     countdownFullscreenVisibile: state.countdownFullscreenVisibile,
     voti: snap.voti,
     sfondoVotiPath: state.current?.sfondoVotiPath ?? null,
+    prigionieroAnimazione: snap.prigioniero,
+    sfondoPrigionieroPath: state.current?.sfondoPrigionieroPath ?? null,
   };
 }
 
@@ -506,6 +513,51 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
     get().modifica((draft) => {
       draft.sfondoVotiPath = relativo;
     });
+  },
+
+  async impostaSfondoPrigioniero(sourceAbsPath) {
+    const { folderPath, current } = get();
+    if (!folderPath || !current) throw new Error("Nessuna ambientazione aperta");
+    if (sourceAbsPath === null) {
+      get().modifica((draft) => { draft.sfondoPrigionieroPath = null; });
+      return;
+    }
+    const id = nuovoId();
+    const relativo = await copiaImmagineInCartella(folderPath, sourceAbsPath, "", `sfondo-prigioniero-${id}`);
+    get().modifica((draft) => { draft.sfondoPrigionieroPath = relativo; });
+  },
+
+  async impostaSuonoPrigioniero(sourceAbsPath) {
+    const { folderPath, current } = get();
+    if (!folderPath || !current) throw new Error("Nessuna ambientazione aperta");
+    if (sourceAbsPath === null) {
+      get().modifica((draft) => { draft.suonoPrigionieroPath = null; });
+      return;
+    }
+    const relativo = await copiaAudioInCartella(folderPath, sourceAbsPath, "audio", `prigioniero-sbarre-${nuovoId()}`);
+    get().modifica((draft) => { draft.suonoPrigionieroPath = relativo; });
+  },
+
+  async impostaSuonoPrigionieroSting(sourceAbsPath) {
+    const { folderPath, current } = get();
+    if (!folderPath || !current) throw new Error("Nessuna ambientazione aperta");
+    if (sourceAbsPath === null) {
+      get().modifica((draft) => { draft.suonoPrigionieroStingPath = null; });
+      return;
+    }
+    const relativo = await copiaAudioInCartella(folderPath, sourceAbsPath, "audio", `prigioniero-sting-${nuovoId()}`);
+    get().modifica((draft) => { draft.suonoPrigionieroStingPath = relativo; });
+  },
+
+  async impostaSuonoPrigionieroSirena(sourceAbsPath) {
+    const { folderPath, current } = get();
+    if (!folderPath || !current) throw new Error("Nessuna ambientazione aperta");
+    if (sourceAbsPath === null) {
+      get().modifica((draft) => { draft.suonoPrigionieroSirenaPath = null; });
+      return;
+    }
+    const relativo = await copiaAudioInCartella(folderPath, sourceAbsPath, "audio", `prigioniero-sirena-${nuovoId()}`);
+    get().modifica((draft) => { draft.suonoPrigionieroSirenaPath = relativo; });
   },
 
   async impostaPresentazione(sourceAbsPath) {

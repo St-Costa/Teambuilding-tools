@@ -45,3 +45,22 @@ export function fermaSveglia(): void {
 export function fermaTimerSuoni(): void {
   void invoke("ferma_timer_suoni").catch(() => undefined);
 }
+
+/** Sbarre prigioniero: parte da offsetMs nell'mp3, fire-and-forget via Rust. */
+export function playPrigionieroSbarre(absPath: string, offsetMs: number): void {
+  void invoke("play_soundboard_slot_da", { path: absPath, volume: 1.0, offsetMs }).catch(() => undefined);
+}
+
+/** Ambience prigioniero: sink stoppabile, si ferma alla chiusura. */
+export function playPrigionieroAmbience(absPath: string): void {
+  void invoke("play_prigioniero_sirena", { path: absPath, volume: 1.87 }).catch(() => undefined);
+}
+
+export function stopPrigionieroAmbience(): void {
+  void invoke("stop_prigioniero_suoni").catch(() => undefined);
+}
+
+/** Durata in ms di un file audio (letta dai metadati via Rust). */
+export async function durataAudioMs(absPath: string): Promise<number> {
+  return invoke<number>("durata_audio_ms", { path: absPath });
+}

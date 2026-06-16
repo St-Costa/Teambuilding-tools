@@ -1,7 +1,12 @@
 import { create } from "zustand";
-import type { VotiSnapshot, RigaVotiSnap, PersonaggioMiniSnap } from "../lib/events";
+import type { VotiSnapshot, RigaVotiSnap, PersonaggioMiniSnap, PrigionieroSnapshot } from "../lib/events";
 import type { Crop } from "../lib/ambientazione";
-import { forceEmitScena, registraVotiSnapshotProvider, useAmbientazioneStore } from "./ambientazioneStore";
+import { forceEmitScena, registraVotiSnapshotProvider, registraPrigionieroSnapshotProvider, useAmbientazioneStore } from "./ambientazioneStore";
+import { playPrigionieroSbarre, playPrigionieroAmbience, stopPrigionieroAmbience } from "../lib/audio";
+import { joinPath } from "../lib/path";
+
+const AUDIO_OFFSET_MS = 900; // i primi 900ms dell'mp3 sbarre sono silenzio/intro
+const DELAY_DOPO_AMBIENCE_MS = 100; // parte prima il sottofondo, poi l'animazione
 
 export type FaseVoti = "chiusa" | "aperta";
 
@@ -19,16 +24,23 @@ interface VotiState {
   righe: PersonaggioSnap[];
   // votanti[targetId] = array di voterId che hanno votato per target
   votanti: Record<string, string[]>;
+  // Animazione incarcerazione: chi ha più voti
+  prigionieri: PersonaggioMiniSnap[] | null;
+  prigionieroTrigger: number;
   apri: () => void;
   chiudi: () => void;
   toggleVoto: (targetId: string, votanteId: string) => void;
   azzeraVoti: () => void;
+  avviaPrigioniero: () => void;
+  chiudiPrigioniero: () => void;
 }
 
 export const useVotiStore = create<VotiState>((set, get) => ({
   fase: "chiusa",
   righe: [],
   votanti: {},
+  prigionieri: null,
+  prigionieroTrigger: 0,
 
   apri() {
     const amb = useAmbientazioneStore.getState().current;
@@ -44,7 +56,8 @@ export const useVotiStore = create<VotiState>((set, get) => ({
   },
 
   chiudi() {
-    set({ fase: "chiusa" });
+    stopPrigionieroAmbience();
+    set({ fase: "chiusa", prigionieri: null });
     forceEmitScena();
   },
 
@@ -64,7 +77,46 @@ export const useVotiStore = create<VotiState>((set, get) => ({
     set({ votanti: azzerati });
     forceEmitScena();
   },
+
+  avviaPrigioniero() {
+    const state = get();
+    if (state.fase !== "aperta" || state.righe.length === 0) return;
+    const maxVoti = Math.max(...state.righe.map((r) => (state.votanti[r.personaggioId] ?? []).length));
+    if (maxVoti === 0) return;
+    const prigionieri: PersonaggioMiniSnap[] = state.righe
+      .filter((r) => (state.votanti[r.personaggioId] ?? []).length === maxVoti)
+      .map((r) => ({ personaggioId: r.personaggioId, nome: r.nome, colore: r.colore, imgPath: r.imgPath, crop: r.crop }));
+
+    const amb = useAmbientazioneStore.getState().current;
+    const folder = useAmbientazioneStore.getState().folderPath;
+
+    // 1) Prima di tutto: parte il sottofondo ambience.
+    if (amb && folder && amb.suonoPrigionieroSirenaPath) {
+      playPrigionieroAmbience(joinPath(folder, amb.suonoPrigionieroSirenaPath));
+    }
+
+    // 2) Dopo un breve ritardo: l'animazione (emit allo STAGE) e il suono sbarre.
+    window.setTimeout(() => {
+      if (amb && folder && amb.suonoPrigionieroPath) {
+        playPrigionieroSbarre(joinPath(folder, amb.suonoPrigionieroPath), AUDIO_OFFSET_MS);
+      }
+      set({ prigionieri, prigionieroTrigger: get().prigionieroTrigger + 1 });
+      forceEmitScena();
+    }, DELAY_DOPO_AMBIENCE_MS);
+  },
+
+  chiudiPrigioniero() {
+    stopPrigionieroAmbience();
+    set({ prigionieri: null });
+    forceEmitScena();
+  },
 }));
+
+registraPrigionieroSnapshotProvider((): PrigionieroSnapshot | null => {
+  const s = useVotiStore.getState();
+  if (!s.prigionieri) return null;
+  return { prigionieri: s.prigionieri, trigger: s.prigionieroTrigger };
+});
 
 registraVotiSnapshotProvider((): VotiSnapshot | null => {
   const s = useVotiStore.getState();
