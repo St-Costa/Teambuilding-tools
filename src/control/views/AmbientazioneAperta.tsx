@@ -19,7 +19,7 @@ import PulsanteImmagineFissa from "./PulsanteImmagineFissa";
 import PulsanteCountdownFullscreen from "./PulsanteCountdownFullscreen";
 import PulsanteVoti from "./PulsanteVoti";
 import PannelloVoti from "./PannelloVoti";
-import AudioVittoria from "./AudioVittoria";
+import AudioVittoria from "../components/AudioVittoria";
 import { IconaCasa, IconaMonitor, IconaTrofeo, IconaVS } from "../../components/Icone";
 import { useConflittoStore } from "../../state/conflittoStore";
 import { useLeaderboardStore } from "../../state/leaderboardStore";
