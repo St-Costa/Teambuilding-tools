@@ -37,6 +37,7 @@ interface LeaderboardState {
   righe: RigaSnapInterno[]; // snapshot personaggi al momento di apri()
   tick: Record<string, [boolean, boolean, boolean]>;
   apri: () => void;
+  apriConMalus: (malusIds: string[]) => void;
   chiudi: () => void;
   toggleTick: (personaggioId: string, indice: 0 | 1 | 2) => void;
   riordina: (fromIdx: number, toIdx: number) => void;
@@ -48,6 +49,13 @@ export const useLeaderboardStore = create<LeaderboardState>((set, get) => ({
   tick: {},
 
   apri() {
+    get().apriConMalus([]);
+  },
+
+  // Apre la leaderboard pre-segnando il malus (3ª colonna, −1) per i
+  // personaggi indicati: usato dopo l'incarcerazione per portare i
+  // prigionieri direttamente in classifica già penalizzati.
+  apriConMalus(malusIds) {
     const amb = useAmbientazioneStore.getState().current;
     if (!amb) return;
     // Gli NPC sono esclusi dalla classifica (ma restano nei conflitti/ruota).
@@ -61,8 +69,9 @@ export const useLeaderboardStore = create<LeaderboardState>((set, get) => ({
         crop: p.crop,
       }));
     const righe = applicaOrdine(base, amb.leaderboardOrdine ?? []);
+    const malus = new Set(malusIds);
     const tick: Record<string, [boolean, boolean, boolean]> = {};
-    for (const r of righe) tick[r.personaggioId] = [false, false, false];
+    for (const r of righe) tick[r.personaggioId] = [false, false, malus.has(r.personaggioId)];
     set({ fase: "aperta", righe, tick });
     forceEmitScena();
   },

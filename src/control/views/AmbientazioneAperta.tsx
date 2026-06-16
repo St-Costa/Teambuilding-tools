@@ -51,7 +51,6 @@ export default function AmbientazioneAperta() {
   const [conflittoAperto, setConflittoAperto] = useState(false);
   const [confermaChiusuraAperta, setConfermaChiusuraAperta] = useState(false);
   const avviaConflitto = useConflittoStore((s) => s.avvia);
-  const [leaderboardAperta, setLeaderboardAperta] = useState(false);
   const apriLeaderboard = useLeaderboardStore((s) => s.apri);
   const conflittoFase = useConflittoStore((s) => s.fase);
   const leaderboardFaseStore = useLeaderboardStore((s) => s.fase);
@@ -230,7 +229,6 @@ export default function AmbientazioneAperta() {
               className={styles.btnIcona}
               onClick={() => {
                 apriLeaderboard();
-                setLeaderboardAperta(true);
               }}
               disabled={
                 current.personaggi.every((p) => p.npc) || conflittoInCorso || presentazioneInCorso
@@ -312,7 +310,7 @@ export default function AmbientazioneAperta() {
 
       {conflittoAperto && <PannelloConflitto onChiudi={() => setConflittoAperto(false)} />}
 
-      {leaderboardAperta && <PannelloLeaderboard onChiudi={() => setLeaderboardAperta(false)} />}
+      {leaderboardInCorso && <PannelloLeaderboard onChiudi={() => {}} />}
 
       {votiInCorso && <PannelloVoti onChiudi={() => {}} />}
 

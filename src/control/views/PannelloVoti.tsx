@@ -1,5 +1,6 @@
 import { useAmbientazioneStore } from "../../state/ambientazioneStore";
 import { useVotiStore } from "../../state/votiStore";
+import { useLeaderboardStore } from "../../state/leaderboardStore";
 import { risolviAsset } from "../../lib/storage";
 import Cerchietto from "../../components/Cerchietto";
 import { IconaManette } from "../../components/Icone";
@@ -20,7 +21,6 @@ export default function PannelloVoti({ onChiudi }: Props) {
   const azzeraVoti = useVotiStore((s) => s.azzeraVoti);
   const chiudi = useVotiStore((s) => s.chiudi);
   const avviaPrigioniero = useVotiStore((s) => s.avviaPrigioniero);
-  const chiudiPrigioniero = useVotiStore((s) => s.chiudiPrigioniero);
   const prigionieri = useVotiStore((s) => s.prigionieri);
 
   const maxVoti = righe.length > 0
@@ -33,6 +33,15 @@ export default function PannelloVoti({ onChiudi }: Props) {
 
   function handleChiudi() {
     chiudi();
+    onChiudi();
+  }
+
+  // Chiude l'animazione e porta subito alla leaderboard, con i prigionieri
+  // già segnati nel malus (−1).
+  function handleChiudiAnimazione() {
+    const idsPrigionieri = (prigionieri ?? []).map((p) => p.personaggioId);
+    useLeaderboardStore.getState().apriConMalus(idsPrigionieri);
+    chiudi(); // ferma ambience, resetta prigionieri, chiude i voti
     onChiudi();
   }
 
@@ -123,9 +132,9 @@ export default function PannelloVoti({ onChiudi }: Props) {
             <button
               type="button"
               className={styles.btnChiudiAnimazione}
-              onClick={chiudiPrigioniero}
+              onClick={handleChiudiAnimazione}
             >
-              Chiudi animazione
+              Chiudi e vai alla leaderboard
             </button>
           ) : (
             <button
