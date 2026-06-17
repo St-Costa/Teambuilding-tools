@@ -636,3 +636,31 @@ problema di codec (`avdec_mp3`/`libav` erano presenti) né del codice applicativ
 - NON verificato dal vivo via GUI (ambiente headless): le modifiche a
   comportamento invariato vanno riprovate dall'utente in una sessione reale
   (apertura scenario, ruota con `+1`/`+2`, PDF, audio, timer, leaderboard).
+
+### D-097 — Robustezza asset/immagini e micro-ottimizzazioni (post-M14)
+Intervento di rifinitura a comportamento invariato.
+**Bug corretti:**
+1. Fallback `resize` in [Scena.tsx](../src/components/Scena.tsx) e
+   [AreaMappa.tsx](../src/control/views/AreaMappa.tsx) registrava e rimuoveva due
+   arrow function diverse → il listener non veniva mai rimosso. Ora usa la stessa
+   reference. (Path raro: in WebView Tauri `ResizeObserver` esiste sempre.)
+**Robustezza:**
+2. `onError` sull'immagine mappa (Scena/AreaMappa) → placeholder esplicito
+   "mappa non trovata" invece di una scena vuota muta se il file manca.
+3. `onError`/`onLoad` su [Cerchietto](../src/components/Cerchietto.tsx) e
+   [Quadratino](../src/components/Quadratino.tsx): asset mancante → si nasconde
+   l'icona "immagine rotta" lasciando il bordo colorato come riempimento neutro.
+4. Nuovo helper [lib/immagine.ts](../src/lib/immagine.ts)
+   (`cropDiPartenzaDaImmagine`) con timeout (5s): un file bloccato/non leggibile
+   non appende più il wizard. Centralizza la logica duplicata tra i due wizard.
+**Performance:**
+5. Effect "safety net" di `imgDim` in Scena vincolato alle dipendenze reali
+   (`imgDim`, `mappaPath`, dimensioni container): non rigira più ad ogni render.
+6. Lookup oggetto→personaggio O(1) (Map memoizzata) invece di `find()` lineare
+   per ogni personaggio ad ogni emit.
+
+### Verificato (D-097)
+- `npm run lint` (0 error), `npm test` (53 passati), `npm run build` ok.
+- NON verificato dal vivo (ambiente headless): da riprovare in sessione reale
+  (apertura scenario, spostamento personaggi, fullscreen proiezione, ruota,
+  e il caso di mappa/asset mancante che ora mostra il placeholder).

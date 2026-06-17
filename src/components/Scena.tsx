@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { oggettoDi, type Annotazione, type Oggetto, type Personaggio } from "../lib/ambientazione";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { type Annotazione, type Oggetto, type Personaggio } from "../lib/ambientazione";
 import { risolviAsset } from "../lib/storage";
 import {
   dimensioneCerchietto,
@@ -58,17 +58,26 @@ export default function Scena({
     setMappaErrore(false);
   }, [mappaPath]);
 
-  // Safety net: dopo ogni render, se imgDim è null ma l'img è già caricata
-  // (cache, race con onLoad in fullscreen toggle, ecc.), settalo dai
-  // naturalWidth/Height. Senza questo, in alcuni scenari di re-render
-  // sotto overlay i personaggi non rientrano sulla mappa.
+  // Safety net: se imgDim è null ma l'img è già caricata (cache, race con
+  // onLoad in fullscreen toggle, ecc.), settalo dai naturalWidth/Height. Senza
+  // questo, in alcuni scenari di re-render sotto overlay i personaggi non
+  // rientrano sulla mappa. Vincolato alle dipendenze reali (imgDim, mappaPath,
+  // dimensioni container) per non rieseguirlo a vuoto ad ogni emit/render.
   useEffect(() => {
     if (imgDim) return;
     const img = imgRef.current;
     if (img?.complete && img.naturalWidth > 0) {
       setImgDim({ w: img.naturalWidth, h: img.naturalHeight });
     }
-  });
+  }, [imgDim, mappaPath, container.w, container.h]);
+
+  // Lookup O(1) oggetto→personaggio: evita una find() lineare per ogni
+  // personaggio ad ogni emit (fino a 60/s durante drag o timer).
+  const oggettiPerId = useMemo(() => {
+    const m = new Map<string, Oggetto>();
+    for (const o of oggetti) m.set(o.id, o);
+    return m;
+  }, [oggetti]);
 
   if (!folderPath || !mappaPath) {
     return (
@@ -113,7 +122,7 @@ export default function Scena({
       />
       {rett &&
         personaggi.map((p) => {
-          const oggetto = oggettoDi(p, oggetti);
+          const oggetto = p.oggettoId ? (oggettiPerId.get(p.oggettoId) ?? null) : null;
           return (
             <div
               key={p.id}
