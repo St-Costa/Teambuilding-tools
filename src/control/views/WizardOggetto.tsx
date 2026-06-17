@@ -2,6 +2,7 @@ import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { cropIniziale, validaNomeOggetto, type Crop, type Oggetto } from "../../lib/ambientazione";
+import { cropDiPartenzaDaImmagine } from "../../lib/immagine";
 import MaschereCircolare from "../components/MaschereCircolare";
 import styles from "./WizardOggetto.module.css";
 
@@ -32,27 +33,12 @@ export default function WizardOggetto({ oggettiEsistenti, onAnnulla, onConferma 
       });
       if (typeof scelto === "string") {
         setSourceImgPath(scelto);
-        setCrop(await cropDiPartenza(scelto));
+        setCrop(await cropDiPartenzaDaImmagine(scelto));
         setStep("ritaglio");
       }
     } catch (e) {
       setErroreGenerico(stringifyErr(e));
     }
-  }
-
-  async function cropDiPartenza(path: string): Promise<Crop> {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const lato = Math.max(img.naturalWidth, img.naturalHeight);
-        const lato_corto = Math.min(img.naturalWidth, img.naturalHeight);
-        const zoomNaturale = lato_corto > 0 ? lato / lato_corto : 1;
-        const zoom = Math.min(10, Math.max(0.5, zoomNaturale));
-        resolve({ zoom, offsetX: 0, offsetY: 0 });
-      };
-      img.onerror = () => resolve(cropIniziale());
-      img.src = convertFileSrc(path);
-    });
   }
 
   async function conferma() {

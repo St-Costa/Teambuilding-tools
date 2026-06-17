@@ -46,7 +46,21 @@ export default function Cerchietto({
   return (
     <div className={`${styles.root} ${className ?? ""}`} style={stileRoot} aria-label={alt}>
       <div className={styles.cerchio} style={stileCerchio}>
-        <img src={src} alt={alt} draggable={false} style={stileImg} className={styles.img} />
+        <img
+          src={src}
+          alt={alt}
+          draggable={false}
+          style={stileImg}
+          className={styles.img}
+          // Asset mancante (file rimosso dal disco): nascondi l'icona "immagine
+          // rotta" lasciando il cerchio col bordo colorato come riempimento neutro.
+          onError={(e) => {
+            e.currentTarget.style.visibility = "hidden";
+          }}
+          onLoad={(e) => {
+            e.currentTarget.style.visibility = "visible";
+          }}
+        />
       </div>
       {npc && (
         // Anello tratteggiato per gli NPC. Copre l'intero box (incluso il bordo);

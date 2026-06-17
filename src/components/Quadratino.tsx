@@ -39,7 +39,20 @@ export default function Quadratino({
   };
   return (
     <div className={`${styles.root} ${className ?? ""}`} style={stileContenitore} aria-label={alt}>
-      <img src={src} alt={alt} draggable={false} style={stileImg} className={styles.img} />
+      <img
+        src={src}
+        alt={alt}
+        draggable={false}
+        style={stileImg}
+        className={styles.img}
+        // Asset mancante: nascondi l'icona rotta, resta il riquadro col bordo.
+        onError={(e) => {
+          e.currentTarget.style.visibility = "hidden";
+        }}
+        onLoad={(e) => {
+          e.currentTarget.style.visibility = "visible";
+        }}
+      />
     </div>
   );
 }
