@@ -33,6 +33,7 @@ export default function Scena({
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [container, setContainer] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
   const [imgDim, setImgDim] = useState<{ w: number; h: number } | null>(null);
+  const [mappaErrore, setMappaErrore] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -47,12 +48,14 @@ export default function Scena({
       ro.observe(el);
       return () => ro.disconnect();
     }
-    window.addEventListener("resize", () => cb());
-    return () => window.removeEventListener("resize", () => cb());
+    const onResize = () => cb();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   useEffect(() => {
     setImgDim(null);
+    setMappaErrore(false);
   }, [mappaPath]);
 
   // Safety net: dopo ogni render, se imgDim è null ma l'img è già caricata
@@ -71,6 +74,14 @@ export default function Scena({
     return (
       <div className={styles.root} ref={containerRef}>
         <div className={styles.placeholder}>{nome ?? "—"}</div>
+      </div>
+    );
+  }
+
+  if (mappaErrore) {
+    return (
+      <div className={styles.root} ref={containerRef}>
+        <div className={styles.placeholder}>Immagine della mappa non trovata</div>
       </div>
     );
   }
@@ -97,6 +108,7 @@ export default function Scena({
           const t = e.currentTarget;
           setImgDim({ w: t.naturalWidth, h: t.naturalHeight });
         }}
+        onError={() => setMappaErrore(true)}
         draggable={false}
       />
       {rett &&

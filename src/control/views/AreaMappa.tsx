@@ -40,6 +40,7 @@ export default function AreaMappa() {
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [container, setContainer] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
   const [imgDim, setImgDim] = useState<{ w: number; h: number } | null>(null);
+  const [mappaErrore, setMappaErrore] = useState(false);
   const dragRef = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
   const rafRef = useRef<number | null>(null);
   const pendingPos = useRef<{ x: number; y: number } | null>(null);
@@ -71,12 +72,14 @@ export default function AreaMappa() {
       ro.observe(el);
       return () => ro.disconnect();
     }
-    window.addEventListener("resize", () => cb());
-    return () => window.removeEventListener("resize", () => cb());
+    const onResize = () => cb();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   useEffect(() => {
     setImgDim(null);
+    setMappaErrore(false);
   }, [current?.mappaPath]);
 
   useEffect(() => {
@@ -133,6 +136,18 @@ export default function AreaMappa() {
         <p>Nessuna mappa impostata.</p>
         <p className={styles.placeholderHint}>
           Usa "Imposta mappa…" nella barra in alto per caricare un'immagine.
+        </p>
+      </main>
+    );
+  }
+
+  if (mappaErrore) {
+    return (
+      <main className={styles.placeholder} ref={containerRef}>
+        <p>Immagine della mappa non trovata.</p>
+        <p className={styles.placeholderHint}>
+          Il file potrebbe essere stato spostato o eliminato. Reimposta la mappa dalla barra in
+          alto.
         </p>
       </main>
     );
@@ -368,6 +383,7 @@ export default function AreaMappa() {
         alt="Mappa"
         className={styles.mappa}
         onLoad={handleImgLoad}
+        onError={() => setMappaErrore(true)}
         draggable={false}
       />
       {rett &&
