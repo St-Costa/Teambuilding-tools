@@ -115,3 +115,12 @@
   font-weight: 700;
   font-size: 1.5rem;
 }
+
+/* Avviso: durata allungata per incastrare la musica del countdown. */
+.avvisoDurata {
+  margin-left: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #b8860b;
+  white-space: nowrap;
+}

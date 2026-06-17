@@ -229,6 +229,12 @@ static VITTORIA_BYTES: &[u8] = include_bytes!("../../public/suoni/vittoria.mp3")
 static APPLAUSO_BYTES: &[u8] = include_bytes!("../../public/suoni/applauso.mp3");
 static FUOCO_BYTES: &[u8] = include_bytes!("../../public/suoni/fuoco.mp3");
 
+// Musica della fase countdown: sequenza "a sandwich" start → loop×N → end.
+// File fissi globali, embedded come gli altri suoni di gioco.
+static COUNTDOWN_START_BYTES: &[u8] = include_bytes!("../../public/suoni/countdown-start.mp3");
+static COUNTDOWN_LOOP_BYTES: &[u8] = include_bytes!("../../public/suoni/countdown-loop.mp3");
+static COUNTDOWN_END_BYTES: &[u8] = include_bytes!("../../public/suoni/countdown-end.mp3");
+
 enum SuoniGiocoCmd {
     BeepInizio,
     Campana,
@@ -244,6 +250,10 @@ enum SuoniGiocoCmd {
     SoundboardDa { path: String, volume: f32, offset_ms: u64 },
     Prigioniero { path: String, volume: f32 },
     StopPrigioniero,
+    CountdownAvvia { n: u32 },
+    CountdownPausa,
+    CountdownRiprendi,
+    CountdownFerma,
 }
 
 struct SuoniGiocoState(Mutex<Option<Sender<SuoniGiocoCmd>>>);
@@ -265,6 +275,7 @@ fn avvia_thread_suoni_gioco() -> Option<Sender<SuoniGiocoCmd>> {
         let mut vittoria_sink: Option<rodio::Sink> = None;
         let mut applauso_sink: Option<rodio::Sink> = None;
         let mut prigioniero_sink: Option<rodio::Sink> = None;
+        let mut countdown_sink: Option<rodio::Sink> = None;
 
         loop {
             loop {
@@ -374,6 +385,48 @@ fn avvia_thread_suoni_gioco() -> Option<Sender<SuoniGiocoCmd>> {
                     }
                     Ok(SuoniGiocoCmd::StopPrigioniero) => {
                         let _ = prigioniero_sink.take();
+                    }
+                    Ok(SuoniGiocoCmd::CountdownAvvia { n }) => {
+                        // Sequenza finita start → loop×n → end accodata in un
+                        // unico Sink: rodio le riproduce gapless (niente loop
+                        // automatico, a differenza della sveglia).
+                        let _ = countdown_sink.take();
+                        if let Ok(s) = rodio::Sink::try_new(&handle) {
+                            let mut ok = true;
+                            match rodio::Decoder::new(std::io::Cursor::new(COUNTDOWN_START_BYTES)) {
+                                Ok(dec) => s.append(dec),
+                                Err(_) => ok = false,
+                            }
+                            for _ in 0..n {
+                                if let Ok(dec) =
+                                    rodio::Decoder::new(std::io::Cursor::new(COUNTDOWN_LOOP_BYTES))
+                                {
+                                    s.append(dec);
+                                } else {
+                                    ok = false;
+                                }
+                            }
+                            match rodio::Decoder::new(std::io::Cursor::new(COUNTDOWN_END_BYTES)) {
+                                Ok(dec) => s.append(dec),
+                                Err(_) => ok = false,
+                            }
+                            if ok {
+                                countdown_sink = Some(s);
+                            }
+                        }
+                    }
+                    Ok(SuoniGiocoCmd::CountdownPausa) => {
+                        if let Some(ref s) = countdown_sink {
+                            s.pause();
+                        }
+                    }
+                    Ok(SuoniGiocoCmd::CountdownRiprendi) => {
+                        if let Some(ref s) = countdown_sink {
+                            s.play();
+                        }
+                    }
+                    Ok(SuoniGiocoCmd::CountdownFerma) => {
+                        let _ = countdown_sink.take();
                     }
                     Err(mpsc::TryRecvError::Empty) => break,
                     Err(mpsc::TryRecvError::Disconnected) => return,
@@ -502,6 +555,60 @@ fn play_soundboard_slot_da(
     }
     invia_gioco(&state, SuoniGiocoCmd::SoundboardDa { path, volume, offset_ms });
     Ok(())
+}
+
+#[tauri::command]
+fn play_countdown_musica(n: u32, state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::CountdownAvvia { n });
+}
+
+#[tauri::command]
+fn pausa_countdown_musica(state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::CountdownPausa);
+}
+
+#[tauri::command]
+fn riprendi_countdown_musica(state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::CountdownRiprendi);
+}
+
+#[tauri::command]
+fn ferma_countdown_musica(state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::CountdownFerma);
+}
+
+/// Durate [start, loop, end] in ms dei file countdown embedded: unica fonte di
+/// verità per il calcolo dell'allungamento lato frontend.
+///
+/// Misura la durata REALE decodificando e contando i campioni, invece di
+/// affidarsi a `total_duration()` (che su questi mp3 è una stima arrotondata):
+/// così il valore coincide esattamente con la lunghezza di riproduzione e non
+/// si accumula deriva sommando molti loop.
+#[tauri::command]
+fn durate_countdown_audio() -> Result<[u64; 3], String> {
+    // Memoizzato: la decodifica completa dei 3 file (~150 ms) verrebbe altrimenti
+    // rifatta ad ogni apertura di scenario (PannelloTimer la chiama al montaggio),
+    // rallentando l'avvio. Calcolata una sola volta per esecuzione.
+    static CACHE: std::sync::OnceLock<[u64; 3]> = std::sync::OnceLock::new();
+    fn durata(bytes: &'static [u8]) -> u64 {
+        match rodio::Decoder::new(std::io::Cursor::new(bytes)) {
+            Ok(dec) => {
+                let canali = dec.channels().max(1) as u64;
+                let sample_rate = dec.sample_rate().max(1) as u64;
+                let campioni = dec.count() as u64; // campioni interleaved sui canali
+                // frame = campioni / canali; durata_ms = frame * 1000 / sample_rate
+                (campioni / canali) * 1000 / sample_rate
+            }
+            Err(_) => 0,
+        }
+    }
+    Ok(*CACHE.get_or_init(|| {
+        [
+            durata(COUNTDOWN_START_BYTES),
+            durata(COUNTDOWN_LOOP_BYTES),
+            durata(COUNTDOWN_END_BYTES),
+        ]
+    }))
 }
 
 #[tauri::command]
@@ -759,6 +866,11 @@ pub fn run() {
         .manage(SottofondoState(Mutex::new(avvia_thread_sottofondo())))
         .manage(SuoniGiocoState(Mutex::new(avvia_thread_suoni_gioco())))
         .setup(|app| {
+            // Scalda la cache delle durate countdown fuori dal percorso critico,
+            // così la prima apertura di scenario non paga la decodifica (~150 ms).
+            std::thread::spawn(|| {
+                let _ = durate_countdown_audio();
+            });
             if let Ok(config_dir) = app.path().app_config_dir() {
                 let _ = app.fs_scope().allow_directory(&config_dir, true);
             }
@@ -794,6 +906,11 @@ pub fn run() {
             play_soundboard_slot_da,
             play_prigioniero_sirena,
             stop_prigioniero_suoni,
+            play_countdown_musica,
+            pausa_countdown_musica,
+            riprendi_countdown_musica,
+            ferma_countdown_musica,
+            durate_countdown_audio,
             durata_audio_ms,
         ])
         .on_window_event(|window, event| {

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { remainingMs, useTimerStore } from "../../state/timerStore";
-import { forceEmitScena } from "../../state/ambientazioneStore";
+import { formatMmSs, remainingMs, useTimerStore } from "../../state/timerStore";
+import { forceEmitScena, useAmbientazioneStore } from "../../state/ambientazioneStore";
 import {
   fermaCampanello,
   fermaSveglia,
@@ -8,7 +8,13 @@ import {
   playCampanello,
   playInizioTimer,
   playSveglia,
+  durateCountdownAudio,
+  playCountdownMusica,
+  pausaCountdownMusica,
+  riprendiCountdownMusica,
+  fermaCountdownMusica,
 } from "../../lib/audio";
+import { calcolaCountdownConMusica } from "../../lib/countdownMusica";
 import styles from "./PannelloTimer.module.css";
 
 const TICK_MS = 200;
@@ -39,6 +45,28 @@ export default function PannelloTimer({ sovraMappa }: Props) {
   const setDuration = useTimerStore((s) => s.setDuration);
   const markEnded = useTimerStore((s) => s.markEnded);
 
+  // Musica countdown: attiva SOLO quando si avvia il timer con il countdown a
+  // schermo intero visibile. In quella modalità la musica "a sandwich" è
+  // l'unico audio → sopprimiamo i suoni sintetici (via, campanello, sveglia).
+  const countdownFullscreenVisibile = useAmbientazioneStore((s) => s.countdownFullscreenVisibile);
+  const durateRef = useRef<[number, number, number] | null>(null);
+  const musicaCountdownAttiva = useRef(false);
+  const [avvisoDurata, setAvvisoDurata] = useState<string | null>(null);
+
+  // Durate dei file countdown embedded: caricate una volta, servono in modo
+  // sincrono al click di Avvia per calcolare l'allungamento.
+  useEffect(() => {
+    let vivo = true;
+    void durateCountdownAudio()
+      .then((d) => {
+        if (vivo) durateRef.current = d;
+      })
+      .catch(() => undefined);
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
   const [, setTick] = useState(0);
   useEffect(() => {
     if (stato !== "running") return;
@@ -59,7 +87,7 @@ export default function PannelloTimer({ sovraMappa }: Props) {
   // idle sia riprendendo da pausa), così tutti capiscono che il tempo scorre.
   const statoPrecRef = useRef(stato);
   useEffect(() => {
-    if (stato === "running" && statoPrecRef.current !== "running") {
+    if (stato === "running" && statoPrecRef.current !== "running" && !musicaCountdownAttiva.current) {
       playInizioTimer();
     }
     statoPrecRef.current = stato;
@@ -85,7 +113,13 @@ export default function PannelloTimer({ sovraMappa }: Props) {
       return;
     }
     const prev = prevMsRef.current;
-    if (!thirtySecPlayedRef.current && prev !== null && prev > 30_000 && ms <= 30_000) {
+    if (
+      !thirtySecPlayedRef.current &&
+      prev !== null &&
+      prev > 30_000 &&
+      ms <= 30_000 &&
+      !musicaCountdownAttiva.current
+    ) {
       thirtySecPlayedRef.current = true;
       playCampanello();
     }
@@ -96,6 +130,8 @@ export default function PannelloTimer({ sovraMappa }: Props) {
   // sveglia, poi sveglia in loop finché non si esce da "ended" (reset/avvio).
   useEffect(() => {
     if (stato !== "ended") return;
+    // In modalità musica countdown end.mp3 fa da finale: niente sveglia.
+    if (musicaCountdownAttiva.current) return;
     fermaCampanello();
     playSveglia();
     return () => fermaSveglia();
@@ -104,7 +140,15 @@ export default function PannelloTimer({ sovraMappa }: Props) {
   // Al reset (idle) ferma eventuali suoni ancora in coda (es. il campanello da
   // 30s che dura a lungo), così non restano a suonare dopo lo stop.
   useEffect(() => {
-    if (stato === "idle") fermaTimerSuoni();
+    if (stato === "idle") {
+      fermaTimerSuoni();
+      // Uscita dalla fase: ferma la musica countdown e azzera lo stato/avviso.
+      if (musicaCountdownAttiva.current) {
+        fermaCountdownMusica();
+        musicaCountdownAttiva.current = false;
+      }
+      setAvvisoDurata(null);
+    }
   }, [stato]);
 
   const modificabile = stato === "idle" || stato === "ended";
@@ -120,9 +164,38 @@ export default function PannelloTimer({ sovraMappa }: Props) {
     setDuration(minIniz * 60 + sec);
   }
 
+  // Avvio da idle: se il countdown a schermo intero è attivo e le durate audio
+  // sono note, allunghiamo la durata per incastrare la musica e la avviamo.
+  function avvia() {
+    if (stato === "paused") {
+      start(); // resume
+      if (musicaCountdownAttiva.current) riprendiCountdownMusica();
+      return;
+    }
+    // idle
+    const durate = durateRef.current;
+    if (countdownFullscreenVisibile && durate && durationSec > 0) {
+      const [s, l, e] = durate;
+      const { n, durataSec } = calcolaCountdownConMusica(durationSec, s, l, e);
+      setDuration(durataSec);
+      musicaCountdownAttiva.current = true; // prima di start(): gateggia i suoni sintetici
+      start();
+      playCountdownMusica(n);
+      setAvvisoDurata(`♪ Durata adattata a ${formatMmSs(durataSec * 1000)} per la musica`);
+    } else {
+      musicaCountdownAttiva.current = false;
+      start();
+    }
+  }
+
+  function mettiInPausa() {
+    pause();
+    if (musicaCountdownAttiva.current) pausaCountdownMusica();
+  }
+
   const iconaToggle = stato === "running" ? "❚❚" : "▶";
   const titleToggle = stato === "running" ? "Pausa" : stato === "paused" ? "Riprendi" : "Avvia";
-  const onToggle = stato === "running" ? pause : start; // start() gestisce sia idle che paused
+  const onToggle = stato === "running" ? mettiInPausa : avvia;
 
   return (
     <div className={`${styles.root}${sovraMappa ? ` ${styles.rootSovraMappa}` : ""}`}>
@@ -171,6 +244,9 @@ export default function PannelloTimer({ sovraMappa }: Props) {
           disabled={!modificabile}
         />
       </div>
+      {avvisoDurata && stato !== "idle" && (
+        <span className={styles.avvisoDurata}>{avvisoDurata}</span>
+      )}
     </div>
   );
 }

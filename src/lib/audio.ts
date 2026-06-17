@@ -64,3 +64,31 @@ export function stopPrigionieroAmbience(): void {
 export async function durataAudioMs(absPath: string): Promise<number> {
   return invoke<number>("durata_audio_ms", { path: absPath });
 }
+
+// ───────────────── Musica della fase countdown (sandwich) ───────────────────
+// Sequenza start → loop×n → end suonata gapless dal backend Rust.
+
+/** Avvia la sequenza musicale countdown con n ripetizioni del loop. */
+export function playCountdownMusica(n: number): void {
+  void invoke("play_countdown_musica", { n }).catch(() => undefined);
+}
+
+/** Mette in pausa la musica countdown (es. timer in pausa). */
+export function pausaCountdownMusica(): void {
+  void invoke("pausa_countdown_musica").catch(() => undefined);
+}
+
+/** Riprende la musica countdown dopo una pausa. */
+export function riprendiCountdownMusica(): void {
+  void invoke("riprendi_countdown_musica").catch(() => undefined);
+}
+
+/** Ferma la musica countdown (es. reset/uscita dalla fase). */
+export function fermaCountdownMusica(): void {
+  void invoke("ferma_countdown_musica").catch(() => undefined);
+}
+
+/** Durate [start, loop, end] in ms dei file countdown embedded. */
+export async function durateCountdownAudio(): Promise<[number, number, number]> {
+  return invoke<[number, number, number]>("durate_countdown_audio");
+}
