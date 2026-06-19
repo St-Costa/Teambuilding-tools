@@ -68,9 +68,17 @@ export async function durataAudioMs(absPath: string): Promise<number> {
 // ───────────────── Musica della fase countdown (sandwich) ───────────────────
 // Sequenza start → loop×n → end suonata gapless dal backend Rust.
 
-/** Avvia la sequenza musicale countdown con n ripetizioni del loop. */
-export function playCountdownMusica(n: number): void {
-  void invoke("play_countdown_musica", { n }).catch(() => undefined);
+/** Volume di default del sottofondo countdown: 30% del totale (modificabile in regia). */
+export const VOLUME_COUNTDOWN_DEFAULT = 0.3;
+
+/** Avvia la sequenza musicale countdown con n ripetizioni del loop, al volume dato. */
+export function playCountdownMusica(n: number, volume: number = VOLUME_COUNTDOWN_DEFAULT): void {
+  void invoke("play_countdown_musica", { n, volume }).catch(() => undefined);
+}
+
+/** Imposta il volume del sottofondo countdown in riproduzione (0..1). */
+export function impostaVolumeCountdownMusica(volume: number): void {
+  void invoke("imposta_volume_countdown_musica", { volume }).catch(() => undefined);
 }
 
 /** Mette in pausa la musica countdown (es. timer in pausa). */

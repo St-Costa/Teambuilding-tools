@@ -13,7 +13,10 @@ import {
   pausaCountdownMusica,
   riprendiCountdownMusica,
   fermaCountdownMusica,
+  impostaVolumeCountdownMusica,
+  VOLUME_COUNTDOWN_DEFAULT,
 } from "../../lib/audio";
+import { useSottofondoStore } from "../../lib/sottofondo";
 import { calcolaCountdownConMusica } from "../../lib/countdownMusica";
 import styles from "./PannelloTimer.module.css";
 
@@ -52,6 +55,11 @@ export default function PannelloTimer({ sovraMappa }: Props) {
   const durateRef = useRef<[number, number, number] | null>(null);
   const musicaCountdownAttiva = useRef(false);
   const [avvisoDurata, setAvvisoDurata] = useState<string | null>(null);
+  // Volume del sottofondo countdown: di default 30% del totale, regolabile dal
+  // conduttore tramite la barra che compare sotto il timer quando la musica è
+  // attiva. Lo stato (vs il ref) rende visibile/aggiornabile la barra.
+  const [volumeCountdown, setVolumeCountdown] = useState(VOLUME_COUNTDOWN_DEFAULT);
+  const [mostraVolumeCountdown, setMostraVolumeCountdown] = useState(false);
 
   // Durate dei file countdown embedded: caricate una volta, servono in modo
   // sincrono al click di Avvia per calcolare l'allungamento.
@@ -148,6 +156,7 @@ export default function PannelloTimer({ sovraMappa }: Props) {
         musicaCountdownAttiva.current = false;
       }
       setAvvisoDurata(null);
+      setMostraVolumeCountdown(false);
     }
   }, [stato]);
 
@@ -179,8 +188,12 @@ export default function PannelloTimer({ sovraMappa }: Props) {
       const { n, durataSec } = calcolaCountdownConMusica(durationSec, s, l, e);
       setDuration(durataSec);
       musicaCountdownAttiva.current = true; // prima di start(): gateggia i suoni sintetici
+      // Il sottofondo "normale" (barra in alto) deve tacere durante il countdown:
+      // la musica countdown è l'unico audio di sottofondo in questa fase.
+      useSottofondoStore.getState().ferma();
       start();
-      playCountdownMusica(n);
+      playCountdownMusica(n, volumeCountdown);
+      setMostraVolumeCountdown(true);
       setAvvisoDurata(`♪ Durata adattata a ${formatMmSs(durataSec * 1000)} per la musica`);
     } else {
       musicaCountdownAttiva.current = false;
@@ -197,7 +210,14 @@ export default function PannelloTimer({ sovraMappa }: Props) {
   const titleToggle = stato === "running" ? "Pausa" : stato === "paused" ? "Riprendi" : "Avvia";
   const onToggle = stato === "running" ? mettiInPausa : avvia;
 
+  function handleVolumeCountdown(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = Math.max(0, Math.min(1, Number(e.target.value) / 100));
+    setVolumeCountdown(v);
+    impostaVolumeCountdownMusica(v);
+  }
+
   return (
+   <div className={`${styles.contenitore}${sovraMappa ? ` ${styles.contenitoreSovraMappa}` : ""}`}>
     <div className={`${styles.root}${sovraMappa ? ` ${styles.rootSovraMappa}` : ""}`}>
       <button
         type="button"
@@ -248,5 +268,23 @@ export default function PannelloTimer({ sovraMappa }: Props) {
         <span className={styles.avvisoDurata}>{avvisoDurata}</span>
       )}
     </div>
+    {mostraVolumeCountdown && stato !== "idle" && (
+      <div className={`${styles.volumeCountdown}${sovraMappa ? ` ${styles.volumeCountdownSovraMappa}` : ""}`}>
+        <span className={styles.volumeIcona} aria-hidden="true">♪</span>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={1}
+          value={Math.round(volumeCountdown * 100)}
+          onChange={handleVolumeCountdown}
+          className={styles.volumeSlider}
+          title="Volume del sottofondo countdown"
+          aria-label="Volume del sottofondo countdown"
+        />
+        <span className={styles.volumeValore}>{Math.round(volumeCountdown * 100)}%</span>
+      </div>
+    )}
+   </div>
   );
 }

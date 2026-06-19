@@ -111,6 +111,29 @@
   flex-shrink: 0;
 }
 
+/* Accusato NPC: pulsante che lo rende votabile in proiezione */
+.colonnaTargetNpc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0.2rem;
+  border-radius: 50%;
+  border: 2px dashed rgba(127, 127, 127, 0.5);
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.colonnaTargetNpc[aria-pressed="true"] {
+  border-color: rgba(60, 160, 90, 0.85);
+  box-shadow: 0 0 12px rgba(60, 160, 90, 0.45);
+}
+.colonnaTargetNpc:hover { border-color: rgba(60, 160, 90, 0.7); }
+
+/* Riga NPC non ancora votabile: attenuata (come i votanti spenti) */
+.rigaNpcSpenta { opacity: 0.55; }
+.rigaNpcSpenta:hover { opacity: 0.8; }
+
 /* Griglia votanti: N colonne fisse via inline style — fit-content evita spazio vuoto a dx */
 .colonnaVotanti {
   display: grid;

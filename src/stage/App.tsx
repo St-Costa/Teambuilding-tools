@@ -139,9 +139,13 @@ export default function App() {
           snapshot={stato.voti}
           folderPath={stato.folderPath}
           sfondoSrc={
-            stato.folderPath && stato.sfondoVotiPath
-              ? risolviAsset(stato.folderPath, stato.sfondoVotiPath)
-              : null
+            // Stesso sfondo della schermata countdown (fallback allo sfondo voti
+            // se il countdown non ne ha uno impostato).
+            stato.folderPath && stato.sfondoCountdownPath
+              ? risolviAsset(stato.folderPath, stato.sfondoCountdownPath)
+              : stato.folderPath && stato.sfondoVotiPath
+                ? risolviAsset(stato.folderPath, stato.sfondoVotiPath)
+                : null
           }
         />
       )}

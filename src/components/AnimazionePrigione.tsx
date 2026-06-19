@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import type { PrigionieroSnapshot } from "../lib/events";
 import { risolviAsset } from "../lib/storage";
 import { useViewport } from "../lib/useViewport";
-import Cerchietto from "./Cerchietto";
 import styles from "./AnimazionePrigione.module.css";
 
 interface Props {
@@ -14,10 +13,10 @@ interface Props {
 const DELAY_SBARRE_MS = 0;
 const DELAY_IMPATTO_MS = DELAY_SBARRE_MS + 1300;
 
-function frazioneCerchietto(n: number): number {
-  const f = 0.38 / Math.sqrt(Math.max(1, n));
-  return Math.min(0.38, Math.max(0.1, f));
-}
+// Le immagini dei personaggi sono in portrait: il riquadro di ogni prigioniero
+// usa lo stesso rapporto (larghezza/altezza) così la foto riempie la cornice
+// senza deformarsi.
+const PORTRAIT_RATIO = 0.66;
 
 interface Particella {
   x: number;
@@ -36,7 +35,12 @@ export default function AnimazionePrigione({ snapshot, folderPath, sfondoSrc }: 
   const { w, h } = useViewport();
   const vmin = Math.min(w, h);
   const n = snapshot.prigionieri.length;
-  const dim = Math.round(vmin * frazioneCerchietto(n));
+  // Riquadri portrait affiancati: l'altezza è limitata dal viewport, la
+  // larghezza dallo spazio disponibile diviso per il numero di prigionieri.
+  const gapPx = vmin * 0.05;
+  const maxLarghezza = (w * 0.92 - (n - 1) * gapPx) / Math.max(1, n);
+  const altezza = Math.round(Math.min(h * 0.66, maxLarghezza / PORTRAIT_RATIO));
+  const larghezza = Math.round(altezza * PORTRAIT_RATIO);
 
   const [sbarre, setSbarre] = useState(false);
   const [flash, setFlash] = useState(false);
@@ -151,21 +155,31 @@ export default function AnimazionePrigione({ snapshot, folderPath, sfondoSrc }: 
       <div className={styles.overlay} aria-hidden="true" />
       <div className={styles.vignette} aria-hidden="true" />
 
-      {/* Personaggi (solo cerchietti, senza nomi né manette) */}
-      <div className={styles.prigionieri}>
+      {/* Personaggi: immagini in portrait (senza nomi né manette) */}
+      <div className={styles.prigionieri} style={{ gap: gapPx }}>
         {snapshot.prigionieri.map((p, i) => (
           <div
             key={p.personaggioId}
             className={styles.slot}
             style={{ animationDelay: `${i * 0.1}s` }}
           >
-            <div className={styles.cerchioWrap} style={{ animationDelay: `${i * 0.1}s` }}>
-              <Cerchietto
+            <div
+              className={styles.ritrattoWrap}
+              style={{
+                width: larghezza,
+                height: altezza,
+                borderColor: p.colore,
+                animationDelay: `${i * 0.1}s`,
+              }}
+            >
+              <img
                 src={risolviAsset(folderPath, p.imgPath)}
-                colore={p.colore}
-                crop={p.crop}
-                dimensione={dim}
                 alt={p.nome}
+                className={styles.ritratto}
+                draggable={false}
+                onError={(e) => {
+                  e.currentTarget.style.visibility = "hidden";
+                }}
               />
             </div>
           </div>

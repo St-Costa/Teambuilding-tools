@@ -250,10 +250,11 @@ enum SuoniGiocoCmd {
     SoundboardDa { path: String, volume: f32, offset_ms: u64 },
     Prigioniero { path: String, volume: f32 },
     StopPrigioniero,
-    CountdownAvvia { n: u32 },
+    CountdownAvvia { n: u32, volume: f32 },
     CountdownPausa,
     CountdownRiprendi,
     CountdownFerma,
+    CountdownVolume(f32),
 }
 
 struct SuoniGiocoState(Mutex<Option<Sender<SuoniGiocoCmd>>>);
@@ -386,12 +387,13 @@ fn avvia_thread_suoni_gioco() -> Option<Sender<SuoniGiocoCmd>> {
                     Ok(SuoniGiocoCmd::StopPrigioniero) => {
                         let _ = prigioniero_sink.take();
                     }
-                    Ok(SuoniGiocoCmd::CountdownAvvia { n }) => {
+                    Ok(SuoniGiocoCmd::CountdownAvvia { n, volume }) => {
                         // Sequenza finita start → loop×n → end accodata in un
                         // unico Sink: rodio le riproduce gapless (niente loop
                         // automatico, a differenza della sveglia).
                         let _ = countdown_sink.take();
                         if let Ok(s) = rodio::Sink::try_new(&handle) {
+                            s.set_volume(volume);
                             let mut ok = true;
                             match rodio::Decoder::new(std::io::Cursor::new(COUNTDOWN_START_BYTES)) {
                                 Ok(dec) => s.append(dec),
@@ -427,6 +429,11 @@ fn avvia_thread_suoni_gioco() -> Option<Sender<SuoniGiocoCmd>> {
                     }
                     Ok(SuoniGiocoCmd::CountdownFerma) => {
                         let _ = countdown_sink.take();
+                    }
+                    Ok(SuoniGiocoCmd::CountdownVolume(v)) => {
+                        if let Some(ref s) = countdown_sink {
+                            s.set_volume(v);
+                        }
                     }
                     Err(mpsc::TryRecvError::Empty) => break,
                     Err(mpsc::TryRecvError::Disconnected) => return,
@@ -558,8 +565,13 @@ fn play_soundboard_slot_da(
 }
 
 #[tauri::command]
-fn play_countdown_musica(n: u32, state: tauri::State<SuoniGiocoState>) {
-    invia_gioco(&state, SuoniGiocoCmd::CountdownAvvia { n });
+fn play_countdown_musica(n: u32, volume: f32, state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::CountdownAvvia { n, volume });
+}
+
+#[tauri::command]
+fn imposta_volume_countdown_musica(volume: f32, state: tauri::State<SuoniGiocoState>) {
+    invia_gioco(&state, SuoniGiocoCmd::CountdownVolume(volume));
 }
 
 #[tauri::command]
@@ -907,6 +919,7 @@ pub fn run() {
             play_prigioniero_sirena,
             stop_prigioniero_suoni,
             play_countdown_musica,
+            imposta_volume_countdown_musica,
             pausa_countdown_musica,
             riprendi_countdown_musica,
             ferma_countdown_musica,

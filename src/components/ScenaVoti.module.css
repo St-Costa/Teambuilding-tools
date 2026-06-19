@@ -6,16 +6,23 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: #0a0a0a;
+  background: #000;
 }
 
+/* Stesso sfondo della schermata countdown: immagine piena + velo scuro */
 .sfondo {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.35;
+  pointer-events: none;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.38);
   pointer-events: none;
 }
 
@@ -29,6 +36,12 @@
   height: 100%;
   padding: 2rem;
   box-sizing: border-box;
+}
+
+/* Con l'NPC in basso, i tondini votabili salgono verso l'alto */
+.contenutoConNpc {
+  align-items: flex-start;
+  padding-top: 5vh;
 }
 
 /* Riga orizzontale centrata — align-items: flex-start per ancorare dall'alto */
@@ -54,7 +67,7 @@
   transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
 }
 
-/* Il più votato: sfondo rosso */
+/* Il più votato: sfondo rosso (portrait, verticale) */
 .colonnaTop {
   background: rgba(200, 30, 30, 0.28);
   border-color: rgba(220, 50, 50, 0.65);
@@ -82,14 +95,98 @@
   flex-shrink: 0;
 }
 
-/* Griglia 2 col per i votanti — altezza e colonne fisse via inline style */
+/* Contenitore dell'area votanti */
+.areaVotanti {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Griglia 2 col per i votanti — colonne fisse via inline style */
 .rigaVotanti {
   display: grid;
-  /* grid-template-columns e height impostati via inline style */
   gap: 4px;
   align-content: start;
   justify-content: center;
   justify-items: center;
   overflow: hidden;
   flex-shrink: 0;
+}
+
+/* Disposizione "5 dei dadi": griglia 3×3, gli item piazzati via inline style */
+.votantiDado {
+  display: grid;
+  gap: 4px;
+  justify-content: center;
+  align-content: center;
+  justify-items: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Riga NPC: landscape, entra dal basso ── */
+.npcRiga {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 4vh;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  padding: 0.8rem 1.4rem;
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background: rgba(0, 0, 0, 0.35);
+  max-width: 92vw;
+  box-sizing: border-box;
+  animation: npcEntra 0.55s cubic-bezier(0.2, 1.1, 0.4, 1) both;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+/* NPC più votato: rettangolo rosso "landscape" (orizzontale) */
+.npcRigaTop {
+  background: rgba(200, 30, 30, 0.30);
+  border-color: rgba(220, 50, 50, 0.65);
+  box-shadow: 0 0 36px rgba(220, 50, 50, 0.4);
+}
+
+@keyframes npcEntra {
+  0% { opacity: 0; transform: translateX(-50%) translateY(140%); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Manette NPC: a SINISTRA del rettangolo */
+.manetteNpc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.npcTarget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.nomeTargetNpc {
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* Voti NPC: a DESTRA del rettangolo */
+.votantiNpc {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-shrink: 1;
 }

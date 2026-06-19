@@ -20,9 +20,14 @@ interface PersonaggioSnap {
 
 interface VotiState {
   fase: FaseVoti;
-  // snapshot dei personaggi al momento di apri()
+  // snapshot dei personaggi NON-NPC al momento di apri() (giocatori)
   righe: PersonaggioSnap[];
-  // votanti[targetId] = array di voterId che hanno votato per target
+  // L'unico NPC dello scenario (se presente): è sia votabile sia votante.
+  npc: PersonaggioSnap | null;
+  // NPC reso "votabile": solo allora compare in proiezione come accusato.
+  npcVotabile: boolean;
+  // votanti[targetId] = array di voterId che hanno votato per target.
+  // I target e i votanti includono l'NPC.
   votanti: Record<string, string[]>;
   // Animazione incarcerazione: chi ha più voti
   prigionieri: PersonaggioMiniSnap[] | null;
@@ -30,6 +35,7 @@ interface VotiState {
   apri: () => void;
   chiudi: () => void;
   toggleVoto: (targetId: string, votanteId: string) => void;
+  toggleNpcVotabile: () => void;
   azzeraVoti: () => void;
   avviaPrigioniero: () => void;
   chiudiPrigioniero: () => void;
@@ -38,6 +44,8 @@ interface VotiState {
 export const useVotiStore = create<VotiState>((set, get) => ({
   fase: "chiusa",
   righe: [],
+  npc: null,
+  npcVotabile: false,
   votanti: {},
   prigionieri: null,
   prigionieroTrigger: 0,
@@ -45,19 +53,34 @@ export const useVotiStore = create<VotiState>((set, get) => ({
   apri() {
     const amb = useAmbientazioneStore.getState().current;
     if (!amb) return;
-    const righe: PersonaggioSnap[] = amb.personaggi
-      .filter((p) => !p.npc)
-      .map((p) => ({ personaggioId: p.id, nome: p.nome, colore: p.colore, imgPath: p.imgPath, crop: p.crop }));
+    const toSnap = (p: typeof amb.personaggi[number]): PersonaggioSnap => ({
+      personaggioId: p.id,
+      nome: p.nome,
+      colore: p.colore,
+      imgPath: p.imgPath,
+      crop: p.crop,
+    });
+    const righe: PersonaggioSnap[] = amb.personaggi.filter((p) => !p.npc).map(toSnap);
+    // In ogni scenario c'è sempre esattamente un NPC: lo prendiamo (se presente).
+    const npcPers = amb.personaggi.find((p) => p.npc) ?? null;
+    const npc = npcPers ? toSnap(npcPers) : null;
     // Reset voti ad ogni apertura: ogni sessione di gioco parte da zero.
+    // I target (chiavi) includono anche l'NPC, così può ricevere voti.
     const votanti: Record<string, string[]> = {};
     for (const r of righe) votanti[r.personaggioId] = [];
-    set({ fase: "aperta", righe, votanti });
+    if (npc) votanti[npc.personaggioId] = [];
+    set({ fase: "aperta", righe, npc, npcVotabile: false, votanti });
     forceEmitScena();
   },
 
   chiudi() {
     stopPrigionieroAmbience();
-    set({ fase: "chiusa", prigionieri: null });
+    set({ fase: "chiusa", prigionieri: null, npcVotabile: false });
+    forceEmitScena();
+  },
+
+  toggleNpcVotabile() {
+    set({ npcVotabile: !get().npcVotabile });
     forceEmitScena();
   },
 
@@ -81,9 +104,12 @@ export const useVotiStore = create<VotiState>((set, get) => ({
   avviaPrigioniero() {
     const state = get();
     if (state.fase !== "aperta" || state.righe.length === 0) return;
-    const maxVoti = Math.max(...state.righe.map((r) => (state.votanti[r.personaggioId] ?? []).length));
+    // Candidati all'incarcerazione: i giocatori e, se reso votabile, l'NPC.
+    const candidati: PersonaggioSnap[] =
+      state.npc && state.npcVotabile ? [...state.righe, state.npc] : state.righe;
+    const maxVoti = Math.max(...candidati.map((r) => (state.votanti[r.personaggioId] ?? []).length));
     if (maxVoti === 0) return;
-    const prigionieri: PersonaggioMiniSnap[] = state.righe
+    const prigionieri: PersonaggioMiniSnap[] = candidati
       .filter((r) => (state.votanti[r.personaggioId] ?? []).length === maxVoti)
       .map((r) => ({ personaggioId: r.personaggioId, nome: r.nome, colore: r.colore, imgPath: r.imgPath, crop: r.crop }));
 
@@ -121,8 +147,11 @@ registraPrigionieroSnapshotProvider((): PrigionieroSnapshot | null => {
 registraVotiSnapshotProvider((): VotiSnapshot | null => {
   const s = useVotiStore.getState();
   if (s.fase !== "aperta") return null;
-  const righeMap = new Map(s.righe.map((r) => [r.personaggioId, r]));
-  const righe: RigaVotiSnap[] = s.righe.map((r) => {
+  // Mappa per risolvere i votanti: include l'NPC (può votare i giocatori).
+  const tutti: PersonaggioSnap[] = s.npc ? [...s.righe, s.npc] : s.righe;
+  const map = new Map(tutti.map((r) => [r.personaggioId, r]));
+
+  const costruisciRiga = (r: PersonaggioSnap, isNpc: boolean): RigaVotiSnap => {
     const target: PersonaggioMiniSnap = {
       personaggioId: r.personaggioId,
       nome: r.nome,
@@ -132,10 +161,14 @@ registraVotiSnapshotProvider((): VotiSnapshot | null => {
     };
     const votantiIds = s.votanti[r.personaggioId] ?? [];
     const votanti: PersonaggioMiniSnap[] = votantiIds
-      .map((id) => righeMap.get(id))
+      .map((id) => map.get(id))
       .filter((v): v is PersonaggioSnap => v !== undefined)
       .map((v) => ({ personaggioId: v.personaggioId, nome: v.nome, colore: v.colore, imgPath: v.imgPath, crop: v.crop }));
-    return { target, votanti };
-  });
+    return { target, votanti, isNpc };
+  };
+
+  const righe: RigaVotiSnap[] = s.righe.map((r) => costruisciRiga(r, false));
+  // L'NPC compare in proiezione solo quando reso votabile.
+  if (s.npc && s.npcVotabile) righe.push(costruisciRiga(s.npc, true));
   return { righe };
 });

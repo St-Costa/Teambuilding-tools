@@ -16,15 +16,23 @@ const DIM_VOTANTE = 60;
 export default function PannelloVoti({ onChiudi }: Props) {
   const folderPath = useAmbientazioneStore((s) => s.folderPath);
   const righe = useVotiStore((s) => s.righe);
+  const npc = useVotiStore((s) => s.npc);
+  const npcVotabile = useVotiStore((s) => s.npcVotabile);
   const votanti = useVotiStore((s) => s.votanti);
   const toggleVoto = useVotiStore((s) => s.toggleVoto);
+  const toggleNpcVotabile = useVotiStore((s) => s.toggleNpcVotabile);
   const azzeraVoti = useVotiStore((s) => s.azzeraVoti);
   const chiudi = useVotiStore((s) => s.chiudi);
   const avviaPrigioniero = useVotiStore((s) => s.avviaPrigioniero);
   const prigionieri = useVotiStore((s) => s.prigionieri);
 
-  const maxVoti = righe.length > 0
-    ? Math.max(...righe.map((r) => (votanti[r.personaggioId] ?? []).length))
+  // Righe (accusati) e colonne (votanti) includono l'NPC: vota tutti e può
+  // essere votato. La riga NPC è semi-trasparente finché non lo rendi votabile.
+  const accusati = npc ? [...righe, npc] : righe;
+  const votantiCol = npc ? [...righe, npc] : righe;
+
+  const maxVoti = accusati.length > 0
+    ? Math.max(...accusati.map((r) => (votanti[r.personaggioId] ?? []).length))
     : 0;
   const haVoti = maxVoti > 0;
   const animazioneAttiva = prigionieri !== null && prigionieri.length > 0;
@@ -71,34 +79,65 @@ export default function PannelloVoti({ onChiudi }: Props) {
             <p className={styles.vuoto}>Nessun personaggio nell'ambientazione.</p>
           ) : (
             <div className={styles.griglia}>
-              {righe.map((target) => {
+              {accusati.map((target) => {
                 const votantiTarget = votanti[target.personaggioId] ?? [];
+                const isNpcRow = npc !== null && target.personaggioId === npc.personaggioId;
+                // La riga NPC è attenuata finché non è resa votabile in proiezione.
+                const rigaClass = `${styles.riga}${
+                  isNpcRow && !npcVotabile ? ` ${styles.rigaNpcSpenta}` : ""
+                }`;
                 return (
-                  <div key={target.personaggioId} className={styles.riga}>
-                    {/* Accusato (senza nome — riconoscibile dal cerchietto) */}
-                    <div className={styles.colonnaTarget}>
-                      <Cerchietto
-                        src={risolviAsset(folderPath, target.imgPath)}
-                        colore={target.colore}
-                        crop={target.crop}
-                        dimensione={DIM_TARGET}
-                        alt={target.nome}
-                      />
-                    </div>
+                  <div key={target.personaggioId} className={rigaClass}>
+                    {/* Accusato (senza nome — riconoscibile dal cerchietto).
+                        Per l'NPC il cerchietto è un pulsante: lo rende votabile
+                        (e quindi visibile in proiezione). */}
+                    {isNpcRow ? (
+                      <button
+                        type="button"
+                        className={styles.colonnaTargetNpc}
+                        onClick={toggleNpcVotabile}
+                        title={
+                          npcVotabile
+                            ? "NPC votabile in proiezione — clicca per nasconderlo"
+                            : "Rendi l'NPC votabile (compare in proiezione)"
+                        }
+                        aria-pressed={npcVotabile}
+                      >
+                        <Cerchietto
+                          src={risolviAsset(folderPath, target.imgPath)}
+                          colore={target.colore}
+                          crop={target.crop}
+                          dimensione={DIM_TARGET}
+                          npc
+                          alt={target.nome}
+                        />
+                      </button>
+                    ) : (
+                      <div className={styles.colonnaTarget}>
+                        <Cerchietto
+                          src={risolviAsset(folderPath, target.imgPath)}
+                          colore={target.colore}
+                          crop={target.crop}
+                          dimensione={DIM_TARGET}
+                          alt={target.nome}
+                        />
+                      </div>
+                    )}
 
                     {/*
                       Griglia N colonne fisse: stessa posizione = stesso personaggio.
-                      La cella del target stesso è vuota.
+                      La cella del target stesso è vuota. L'ultima colonna è l'NPC.
                     */}
                     <div
                       className={styles.colonnaVotanti}
-                      style={{ gridTemplateColumns: `repeat(${righe.length}, ${DIM_VOTANTE + 12}px)` }}
+                      style={{ gridTemplateColumns: `repeat(${votantiCol.length}, ${DIM_VOTANTE + 12}px)` }}
                     >
-                      {righe.map((v) => {
+                      {votantiCol.map((v) => {
                         if (v.personaggioId === target.personaggioId) {
                           return <div key={v.personaggioId} className={styles.cellVuota} />;
                         }
                         const acceso = votantiTarget.includes(v.personaggioId);
+                        const isNpcVoter = npc !== null && v.personaggioId === npc.personaggioId;
                         return (
                           <button
                             key={v.personaggioId}
@@ -114,6 +153,7 @@ export default function PannelloVoti({ onChiudi }: Props) {
                               colore={v.colore}
                               crop={v.crop}
                               dimensione={DIM_VOTANTE}
+                              npc={isNpcVoter}
                               alt={v.nome}
                             />
                           </button>

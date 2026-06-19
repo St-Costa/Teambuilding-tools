@@ -100,10 +100,15 @@ export interface PersonaggioMiniSnap {
 export interface RigaVotiSnap {
   target: PersonaggioMiniSnap;
   votanti: PersonaggioMiniSnap[];
+  // L'NPC ha un rendering dedicato in proiezione (riga "landscape" che entra dal
+  // basso, manette a sinistra e voti a destra) e compare solo se reso votabile.
+  isNpc: boolean;
 }
 
 export interface VotiSnapshot {
-  righe: RigaVotiSnap[]; // uno per ogni personaggio non-NPC
+  // Righe dei personaggi votabili: i non-NPC sempre presenti; l'eventuale NPC
+  // (isNpc=true) compare solo quando il conduttore lo rende votabile.
+  righe: RigaVotiSnap[];
 }
 
 export interface PrigionieroSnapshot {
