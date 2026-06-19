@@ -1,6 +1,7 @@
 import { useAmbientazioneStore } from "../../state/ambientazioneStore";
 import { useLeaderboardStore } from "../../state/leaderboardStore";
 import { useVittoriaStore } from "../../state/vittoriaStore";
+import { useMemeStore } from "../../state/memeStore";
 import { risolviAsset } from "../../lib/storage";
 import Cerchietto from "../../components/Cerchietto";
 import ClassificaPodio from "../../components/ClassificaPodio";
@@ -43,15 +44,31 @@ export default function PannelloLeaderboard({ onChiudi }: Props) {
     };
   });
 
-  function handleChiudi() {
+  async function handleChiudi() {
     const haTickAttivi = Object.values(tick).some((t) => t.some(Boolean));
     if (haTickAttivi) {
       if (!confirm("Chiudere la leaderboard? I tick attuali verranno persi.")) return;
     }
+    // Una vittoria è stata proclamata in questa fase finale? (animazione attiva
+    // o già avviata almeno una volta).
+    const vittoriaProclamata = useVittoriaStore.getState().trigger > 0;
     // Non lasciare l'animazione di vittoria orfana sopra una scena senza contesto.
     terminaVittoria();
     chiudi();
     onChiudi();
+
+    // Alla chiusura dell'animazione di vittoria (dopo la leaderboard): se ci sono
+    // momenti meme raccolti, chiedi dove salvare il file .md. Solo in regia.
+    const meme = useMemeStore.getState();
+    if (vittoriaProclamata && meme.momenti.length > 0) {
+      if (confirm("Vuoi salvare il file dei momenti meme della partita?")) {
+        try {
+          await meme.salvaSuFile();
+        } catch (e) {
+          alert(`Impossibile salvare i momenti meme: ${e instanceof Error ? e.message : String(e)}`);
+        }
+      }
+    }
   }
 
   // Avvia la premiazione: i vincitori sono le righe col punteggio massimo

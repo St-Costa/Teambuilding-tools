@@ -82,19 +82,18 @@ export default function PannelloVoti({ onChiudi }: Props) {
               {accusati.map((target) => {
                 const votantiTarget = votanti[target.personaggioId] ?? [];
                 const isNpcRow = npc !== null && target.personaggioId === npc.personaggioId;
-                // La riga NPC è attenuata finché non è resa votabile in proiezione.
-                const rigaClass = `${styles.riga}${
-                  isNpcRow && !npcVotabile ? ` ${styles.rigaNpcSpenta}` : ""
-                }`;
                 return (
-                  <div key={target.personaggioId} className={rigaClass}>
+                  <div key={target.personaggioId} className={styles.riga}>
                     {/* Accusato (senza nome — riconoscibile dal cerchietto).
                         Per l'NPC il cerchietto è un pulsante: lo rende votabile
-                        (e quindi visibile in proiezione). */}
+                        (e quindi visibile in proiezione). Finché non lo è, compare
+                        attenuato (non del tutto opaco). */}
                     {isNpcRow ? (
                       <button
                         type="button"
-                        className={styles.colonnaTargetNpc}
+                        className={`${styles.colonnaTargetNpc}${
+                          npcVotabile ? "" : ` ${styles.npcSpento}`
+                        }`}
                         onClick={toggleNpcVotabile}
                         title={
                           npcVotabile

@@ -12,6 +12,7 @@ import {
 import Cerchietto from "../../components/Cerchietto";
 import Quadratino from "../../components/Quadratino";
 import AnnotazioneView from "../../components/Annotazione";
+import ChatMomenti from "./ChatMomenti";
 import { oggettoDi } from "../../lib/ambientazione";
 import styles from "./AreaMappa.module.css";
 
@@ -510,6 +511,8 @@ export default function AreaMappa() {
             </div>
           );
         })}
+      {/* Chat momenti meme: centrata sul bordo inferiore della mappa (solo regia) */}
+      <ChatMomenti />
     </main>
   );
 }

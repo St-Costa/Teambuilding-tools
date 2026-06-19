@@ -130,9 +130,9 @@
 }
 .colonnaTargetNpc:hover { border-color: rgba(60, 160, 90, 0.7); }
 
-/* Riga NPC non ancora votabile: attenuata (come i votanti spenti) */
-.rigaNpcSpenta { opacity: 0.55; }
-.rigaNpcSpenta:hover { opacity: 0.8; }
+/* NPC non ancora votabile: cerchietto attenuato (non del tutto opaco) */
+.npcSpento { opacity: 0.45; filter: saturate(0.7); }
+.npcSpento:hover { opacity: 0.75; filter: saturate(1); }
 
 /* Griglia votanti: N colonne fisse via inline style — fit-content evita spazio vuoto a dx */
 .colonnaVotanti {
