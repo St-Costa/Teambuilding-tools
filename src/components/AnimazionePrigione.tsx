@@ -168,7 +168,6 @@ export default function AnimazionePrigione({ snapshot, folderPath, sfondoSrc }: 
               style={{
                 width: larghezza,
                 height: altezza,
-                borderColor: p.colore,
                 animationDelay: `${i * 0.1}s`,
               }}
             >

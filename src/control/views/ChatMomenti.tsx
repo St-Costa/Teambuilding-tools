@@ -1,12 +1,10 @@
 import { useRef, useState } from "react";
 import { useMemeStore } from "../../state/memeStore";
-import { renderMarkdown } from "../../lib/markdown";
 import styles from "./ChatMomenti.module.css";
 
 // Chat dei "momenti meme": vive sulla mappa in regia (mai in proiezione),
-// centrata in basso. A sinistra si scrive, a destra l'anteprima del .md.
-// Il riquadro è ridimensionabile: bordo alto = altezza, bordi laterali =
-// larghezza (simmetrica, il centro resta fermo).
+// centrata in basso. Il riquadro è ridimensionabile: bordo alto = altezza,
+// bordi laterali = larghezza (simmetrica, il centro resta fermo).
 
 const LARGHEZZA_DEFAULT = 560;
 const ALTEZZA_DEFAULT = 220;
@@ -24,10 +22,7 @@ interface DragState {
 }
 
 export default function ChatMomenti() {
-  const momenti = useMemeStore((s) => s.momenti);
   const aggiungi = useMemeStore((s) => s.aggiungi);
-  const rimuovi = useMemeStore((s) => s.rimuovi);
-  const markdown = useMemeStore((s) => s.markdown);
 
   const [larghezza, setLarghezza] = useState(LARGHEZZA_DEFAULT);
   const [altezza, setAltezza] = useState(ALTEZZA_DEFAULT);
@@ -84,8 +79,6 @@ export default function ChatMomenti() {
     dragRef.current = null;
   }
 
-  const html = renderMarkdown(markdown());
-
   return (
     <div
       className={styles.riquadro}
@@ -119,30 +112,8 @@ export default function ChatMomenti() {
       />
 
       <div className={styles.contenuto}>
-        {/* Colonna sinistra: chat */}
         <div className={styles.chat}>
           <div className={styles.intestazione}>😂 Momenti meme</div>
-          <div className={styles.listaMessaggi}>
-            {momenti.length === 0 ? (
-              <p className={styles.vuoto}>Segna qui i momenti divertenti…</p>
-            ) : (
-              momenti.map((m, i) => (
-                <div key={i} className={styles.messaggio}>
-                  <span className={styles.ora}>{m.ora}</span>
-                  <span className={styles.testoMsg}>{m.testo}</span>
-                  <button
-                    type="button"
-                    className={styles.btnRimuovi}
-                    onClick={() => rimuovi(i)}
-                    title="Rimuovi"
-                    aria-label="Rimuovi momento"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
           <div className={styles.inputRiga}>
             <textarea
               className={styles.input}
@@ -150,18 +121,11 @@ export default function ChatMomenti() {
               placeholder="Scrivi un momento e premi Invio…"
               onChange={(e) => setBozza(e.target.value)}
               onKeyDown={handleKeyDown}
-              rows={1}
             />
             <button type="button" className={styles.btnInvia} onClick={invia} title="Salva momento">
               Invia
             </button>
           </div>
-        </div>
-
-        {/* Colonna destra: anteprima del file .md */}
-        <div className={styles.preview}>
-          <div className={styles.intestazione}>Anteprima .md</div>
-          <div className={styles.previewBody} dangerouslySetInnerHTML={{ __html: html }} />
         </div>
       </div>
     </div>

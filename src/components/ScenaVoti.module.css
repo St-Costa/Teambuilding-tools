@@ -41,7 +41,7 @@
 /* Con l'NPC in basso, i tondini votabili salgono verso l'alto */
 .contenutoConNpc {
   align-items: flex-start;
-  padding-top: 5vh;
+  padding-top: 1vh;
 }
 
 /* Riga orizzontale centrata — align-items: flex-start per ancorare dall'alto */
@@ -140,7 +140,7 @@
   padding: 0.8rem 1.4rem;
   border-radius: 20px;
   border: 2px solid transparent;
-  background: rgba(0, 0, 0, 0.35);
+  background: transparent;
   max-width: 92vw;
   box-sizing: border-box;
   animation: npcEntra 0.55s cubic-bezier(0.2, 1.1, 0.4, 1) both;
