@@ -47,7 +47,11 @@ export default function PulsanteImmagineFissa() {
           type="button"
           className={`${styles.btnPrincipale} ${haImmagine ? styles.configurato : styles.daConfigurare}`}
           onClick={() => void caricaImmagine()}
-          title={haImmagine ? `Screensaver: ${immagineFissaPath?.split(/[/\\]/).pop()} — clicca per cambiare` : "Carica immagine screensaver"}
+          title={
+            haImmagine
+              ? `Screensaver: ${immagineFissaPath?.split(/[/\\]/).pop()} — clicca per cambiare`
+              : "Carica immagine screensaver"
+          }
         >
           <span className={styles.icona}>🖼</span>
         </button>

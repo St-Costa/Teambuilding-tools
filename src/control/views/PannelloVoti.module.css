@@ -62,7 +62,9 @@
   cursor: pointer;
   font: inherit;
 }
-.btnAzzeraVoti:hover { background: rgba(179, 38, 30, 0.1); }
+.btnAzzeraVoti:hover {
+  background: rgba(179, 38, 30, 0.1);
+}
 
 .btnChiudi {
   padding: 0.45rem 1rem;
@@ -73,7 +75,9 @@
   cursor: pointer;
   font: inherit;
 }
-.btnChiudi:hover { background: rgba(127, 127, 127, 0.1); }
+.btnChiudi:hover {
+  background: rgba(127, 127, 127, 0.1);
+}
 
 .sezione {
   padding: 1rem 1.2rem 1.4rem;
@@ -101,7 +105,9 @@
   border-radius: 10px;
   border: 1px solid rgba(127, 127, 127, 0.15);
 }
-.riga:hover { background: rgba(127, 127, 127, 0.04); }
+.riga:hover {
+  background: rgba(127, 127, 127, 0.04);
+}
 
 /* Accusato: solo cerchietto, niente nome */
 .colonnaTarget {
@@ -122,17 +128,27 @@
   border: 2px dashed rgba(127, 127, 127, 0.5);
   background: transparent;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 .colonnaTargetNpc[aria-pressed="true"] {
   border-color: rgba(60, 160, 90, 0.85);
   box-shadow: 0 0 12px rgba(60, 160, 90, 0.45);
 }
-.colonnaTargetNpc:hover { border-color: rgba(60, 160, 90, 0.7); }
+.colonnaTargetNpc:hover {
+  border-color: rgba(60, 160, 90, 0.7);
+}
 
 /* NPC non ancora votabile: cerchietto attenuato (non del tutto opaco) */
-.npcSpento { opacity: 0.45; filter: saturate(0.7); }
-.npcSpento:hover { opacity: 0.75; filter: saturate(1); }
+.npcSpento {
+  opacity: 0.45;
+  filter: saturate(0.7);
+}
+.npcSpento:hover {
+  opacity: 0.75;
+  filter: saturate(1);
+}
 
 /* Griglia votanti: N colonne fisse via inline style — fit-content evita spazio vuoto a dx */
 .colonnaVotanti {
@@ -158,7 +174,11 @@
   border: 2px solid transparent;
   background: transparent;
   cursor: pointer;
-  transition: opacity 0.14s, filter 0.14s, background 0.12s, border-color 0.12s;
+  transition:
+    opacity 0.14s,
+    filter 0.14s,
+    background 0.12s,
+    border-color 0.12s;
   width: 100%;
 }
 
@@ -180,7 +200,9 @@
   background: rgba(179, 38, 30, 0.08);
   border-color: rgba(179, 38, 30, 0.55);
 }
-.acceso:hover { background: rgba(179, 38, 30, 0.15); }
+.acceso:hover {
+  background: rgba(179, 38, 30, 0.15);
+}
 
 /* ── Footer con bottone incarcerazione ── */
 .footer {
@@ -205,7 +227,9 @@
   font-size: 0.95rem;
   transition: background 0.15s;
 }
-.btnIncarcerai:hover:not(:disabled) { background: #8b1a14; }
+.btnIncarcerai:hover:not(:disabled) {
+  background: #8b1a14;
+}
 .btnIncarcerai:disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -223,4 +247,6 @@
   font-size: 0.95rem;
   transition: background 0.15s;
 }
-.btnChiudiAnimazione:hover { background: rgba(127, 127, 127, 0.1); }
+.btnChiudiAnimazione:hover {
+  background: rgba(127, 127, 127, 0.1);
+}

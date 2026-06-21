@@ -18,7 +18,9 @@ export default function PulsanteCountdownFullscreen({ variante, numeroBadge }: P
   const modalita = useAmbientazioneStore((s) => s.modalita);
   const impostaSfondoCountdown = useAmbientazioneStore((s) => s.impostaSfondoCountdown);
   const countdownFullscreenVisibile = useAmbientazioneStore((s) => s.countdownFullscreenVisibile);
-  const setCountdownFullscreenVisibile = useAmbientazioneStore((s) => s.setCountdownFullscreenVisibile);
+  const setCountdownFullscreenVisibile = useAmbientazioneStore(
+    (s) => s.setCountdownFullscreenVisibile,
+  );
 
   const inEdit = modalita === "edit";
   const sfondoPath = current?.sfondoCountdownPath ?? null;
@@ -49,13 +51,15 @@ export default function PulsanteCountdownFullscreen({ variante, numeroBadge }: P
         type="button"
         className={`${styles.btnIcona} ${haSfondo ? styles.configurato : styles.daConfigurare}`}
         onClick={() => void caricaSfondo()}
-        title={haSfondo ? `Sfondo countdown: ${sfondoPath?.split(/[/\\]/).pop()} — clicca per cambiare` : "Carica sfondo per il countdown a schermo intero"}
+        title={
+          haSfondo
+            ? `Sfondo countdown: ${sfondoPath?.split(/[/\\]/).pop()} — clicca per cambiare`
+            : "Carica sfondo per il countdown a schermo intero"
+        }
         aria-label="Sfondo countdown"
       >
         <IconaOrologio dimensione={30} />
-        {numeroBadge !== undefined && (
-          <span className={styles.numeroBadge}>{numeroBadge}</span>
-        )}
+        {numeroBadge !== undefined && <span className={styles.numeroBadge}>{numeroBadge}</span>}
       </button>
     );
   }
@@ -66,13 +70,13 @@ export default function PulsanteCountdownFullscreen({ variante, numeroBadge }: P
       type="button"
       className={`${styles.btnIcona} ${countdownFullscreenVisibile ? styles.attivo : ""}`}
       onClick={() => setCountdownFullscreenVisibile(!countdownFullscreenVisibile)}
-      title={countdownFullscreenVisibile ? "Nascondi countdown" : "Mostra countdown a schermo intero"}
+      title={
+        countdownFullscreenVisibile ? "Nascondi countdown" : "Mostra countdown a schermo intero"
+      }
       aria-label="Countdown a schermo intero"
     >
       <IconaOrologio dimensione={30} />
-      {numeroBadge !== undefined && (
-        <span className={styles.numeroBadge}>{numeroBadge}</span>
-      )}
+      {numeroBadge !== undefined && <span className={styles.numeroBadge}>{numeroBadge}</span>}
     </button>
   );
 }

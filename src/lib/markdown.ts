@@ -5,10 +5,7 @@
 // prima di applicare le trasformazioni, così non può iniettare markup.
 
 function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 // Inline: **grassetto**, *corsivo* / _corsivo_, `codice`.

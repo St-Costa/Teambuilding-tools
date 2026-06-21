@@ -48,7 +48,9 @@ export function fermaTimerSuoni(): void {
 
 /** Sbarre prigioniero: parte da offsetMs nell'mp3, fire-and-forget via Rust. */
 export function playPrigionieroSbarre(absPath: string, offsetMs: number): void {
-  void invoke("play_soundboard_slot_da", { path: absPath, volume: 1.0, offsetMs }).catch(() => undefined);
+  void invoke("play_soundboard_slot_da", { path: absPath, volume: 1.0, offsetMs }).catch(
+    () => undefined,
+  );
 }
 
 /** Ambience prigioniero: sink stoppabile, si ferma alla chiusura. */

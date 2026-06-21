@@ -86,9 +86,9 @@ export interface Ambientazione {
   sfondoVotiPath: string | null;
   // Asset per l'animazione di incarcerazione (dopo la votazione).
   sfondoPrigionieroPath: string | null;
-  suonoPrigionieroPath: string | null;        // sbarre che cadono
-  suonoPrigionieroStingPath: string | null;   // sting orchestrale
-  suonoPrigionieroSirenaPath: string | null;  // sirena loop
+  suonoPrigionieroPath: string | null; // sbarre che cadono
+  suonoPrigionieroStingPath: string | null; // sting orchestrale
+  suonoPrigionieroSirenaPath: string | null; // sirena loop
 }
 
 export class AmbientazioneCorrotta extends Error {
@@ -309,7 +309,7 @@ export function validaAmbientazione(raw: unknown): Ambientazione {
       ? raw.sfondoCountdownPath
       : null;
   const leaderboardOrdine: string[] = Array.isArray(raw.leaderboardOrdine)
-    ? (raw.leaderboardOrdine as unknown[]).filter((v) => typeof v === "string") as string[]
+    ? ((raw.leaderboardOrdine as unknown[]).filter((v) => typeof v === "string") as string[])
     : [];
   const sfondoVotiPath =
     typeof raw.sfondoVotiPath === "string" && raw.sfondoVotiPath.length > 0

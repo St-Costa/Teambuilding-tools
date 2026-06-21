@@ -1,8 +1,22 @@
 import { create } from "zustand";
-import type { VotiSnapshot, RigaVotiSnap, PersonaggioMiniSnap, PrigionieroSnapshot } from "../lib/events";
+import type {
+  VotiSnapshot,
+  RigaVotiSnap,
+  PersonaggioMiniSnap,
+  PrigionieroSnapshot,
+} from "../lib/events";
 import type { Crop } from "../lib/ambientazione";
-import { forceEmitScena, registraVotiSnapshotProvider, registraPrigionieroSnapshotProvider, useAmbientazioneStore } from "./ambientazioneStore";
-import { playPrigionieroSbarre, playPrigionieroAmbience, stopPrigionieroAmbience } from "../lib/audio";
+import {
+  forceEmitScena,
+  registraVotiSnapshotProvider,
+  registraPrigionieroSnapshotProvider,
+  useAmbientazioneStore,
+} from "./ambientazioneStore";
+import {
+  playPrigionieroSbarre,
+  playPrigionieroAmbience,
+  stopPrigionieroAmbience,
+} from "../lib/audio";
 import { joinPath } from "../lib/path";
 
 const AUDIO_OFFSET_MS = 900; // i primi 900ms dell'mp3 sbarre sono silenzio/intro
@@ -53,7 +67,7 @@ export const useVotiStore = create<VotiState>((set, get) => ({
   apri() {
     const amb = useAmbientazioneStore.getState().current;
     if (!amb) return;
-    const toSnap = (p: typeof amb.personaggi[number]): PersonaggioSnap => ({
+    const toSnap = (p: (typeof amb.personaggi)[number]): PersonaggioSnap => ({
       personaggioId: p.id,
       nome: p.nome,
       colore: p.colore,
@@ -107,11 +121,19 @@ export const useVotiStore = create<VotiState>((set, get) => ({
     // Candidati all'incarcerazione: i giocatori e, se reso votabile, l'NPC.
     const candidati: PersonaggioSnap[] =
       state.npc && state.npcVotabile ? [...state.righe, state.npc] : state.righe;
-    const maxVoti = Math.max(...candidati.map((r) => (state.votanti[r.personaggioId] ?? []).length));
+    const maxVoti = Math.max(
+      ...candidati.map((r) => (state.votanti[r.personaggioId] ?? []).length),
+    );
     if (maxVoti === 0) return;
     const prigionieri: PersonaggioMiniSnap[] = candidati
       .filter((r) => (state.votanti[r.personaggioId] ?? []).length === maxVoti)
-      .map((r) => ({ personaggioId: r.personaggioId, nome: r.nome, colore: r.colore, imgPath: r.imgPath, crop: r.crop }));
+      .map((r) => ({
+        personaggioId: r.personaggioId,
+        nome: r.nome,
+        colore: r.colore,
+        imgPath: r.imgPath,
+        crop: r.crop,
+      }));
 
     const amb = useAmbientazioneStore.getState().current;
     const folder = useAmbientazioneStore.getState().folderPath;
@@ -163,7 +185,13 @@ registraVotiSnapshotProvider((): VotiSnapshot | null => {
     const votanti: PersonaggioMiniSnap[] = votantiIds
       .map((id) => map.get(id))
       .filter((v): v is PersonaggioSnap => v !== undefined)
-      .map((v) => ({ personaggioId: v.personaggioId, nome: v.nome, colore: v.colore, imgPath: v.imgPath, crop: v.crop }));
+      .map((v) => ({
+        personaggioId: v.personaggioId,
+        nome: v.nome,
+        colore: v.colore,
+        imgPath: v.imgPath,
+        crop: v.crop,
+      }));
     return { target, votanti, isNpc };
   };
 

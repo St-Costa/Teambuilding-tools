@@ -128,9 +128,7 @@ export default function App() {
           }
         />
       )}
-      {!overlayAttivo && !mostraCountdownFullscreen && (
-        <DisplayTimer snapshot={stato.timer} />
-      )}
+      {!overlayAttivo && !mostraCountdownFullscreen && <DisplayTimer snapshot={stato.timer} />}
       {mostraLeaderboard && stato.folderPath && stato.leaderboard && (
         <ScenaLeaderboard snapshot={stato.leaderboard} folderPath={stato.folderPath} />
       )}

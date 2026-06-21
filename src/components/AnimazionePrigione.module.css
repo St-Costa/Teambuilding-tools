@@ -69,13 +69,23 @@
 }
 
 @keyframes cerchioSu {
-  0% { opacity: 0; transform: translateY(160%); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(160%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slotEntra {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 /* ── Grata / Sbarre della prigione ── */
@@ -95,7 +105,9 @@
     transparent 100px
   );
   border-top: 18px solid #3a3838;
-  box-shadow: inset 0 4px 0 #6a6565, 0 0 40px rgba(0,0,0,0.8);
+  box-shadow:
+    inset 0 4px 0 #6a6565,
+    0 0 40px rgba(0, 0, 0, 0.8);
   transform: translateY(-110vh);
   pointer-events: none;
 }
@@ -105,10 +117,18 @@
 }
 
 @keyframes grataScendi {
-  0%   { transform: translateY(-110vh); }
-  94%  { transform: translateY(12px); }
-  97%  { transform: translateY(-18px); }
-  100% { transform: translateY(0); }
+  0% {
+    transform: translateY(-110vh);
+  }
+  94% {
+    transform: translateY(12px);
+  }
+  97% {
+    transform: translateY(-18px);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 
 /* ── Flash all'impatto ── */
@@ -122,8 +142,12 @@
 }
 
 @keyframes flashFade {
-  0%   { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 /* ── Canvas particelle ── */

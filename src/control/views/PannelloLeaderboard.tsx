@@ -65,7 +65,9 @@ export default function PannelloLeaderboard({ onChiudi }: Props) {
         try {
           await meme.salvaSuFile();
         } catch (e) {
-          alert(`Impossibile salvare i momenti meme: ${e instanceof Error ? e.message : String(e)}`);
+          alert(
+            `Impossibile salvare i momenti meme: ${e instanceof Error ? e.message : String(e)}`,
+          );
         }
       }
     }

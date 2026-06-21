@@ -1,5 +1,9 @@
 import { create } from "zustand";
-import { forceEmitScena, registraTimerSnapshotProvider, useAmbientazioneStore } from "./ambientazioneStore";
+import {
+  forceEmitScena,
+  registraTimerSnapshotProvider,
+  useAmbientazioneStore,
+} from "./ambientazioneStore";
 import type { TimerSnapshot } from "../lib/events";
 
 export type StatoTimer = "idle" | "running" | "paused" | "ended";

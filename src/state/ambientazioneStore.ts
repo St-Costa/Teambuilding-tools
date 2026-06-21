@@ -467,7 +467,12 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       return;
     }
     const id = nuovoId();
-    const relativo = await copiaImmagineInCartella(folderPath, sourceAbsPath, "", `immagine-fissa-${id}`);
+    const relativo = await copiaImmagineInCartella(
+      folderPath,
+      sourceAbsPath,
+      "",
+      `immagine-fissa-${id}`,
+    );
     get().modifica((draft) => {
       draft.immagineFissaPath = relativo;
     });
@@ -488,7 +493,12 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       return;
     }
     const id = nuovoId();
-    const relativo = await copiaImmagineInCartella(folderPath, sourceAbsPath, "", `sfondo-countdown-${id}`);
+    const relativo = await copiaImmagineInCartella(
+      folderPath,
+      sourceAbsPath,
+      "",
+      `sfondo-countdown-${id}`,
+    );
     get().modifica((draft) => {
       draft.sfondoCountdownPath = relativo;
     });
@@ -509,7 +519,12 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       return;
     }
     const id = nuovoId();
-    const relativo = await copiaImmagineInCartella(folderPath, sourceAbsPath, "", `sfondo-voti-${id}`);
+    const relativo = await copiaImmagineInCartella(
+      folderPath,
+      sourceAbsPath,
+      "",
+      `sfondo-voti-${id}`,
+    );
     get().modifica((draft) => {
       draft.sfondoVotiPath = relativo;
     });
@@ -519,45 +534,81 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
     const { folderPath, current } = get();
     if (!folderPath || !current) throw new Error("Nessuna ambientazione aperta");
     if (sourceAbsPath === null) {
-      get().modifica((draft) => { draft.sfondoPrigionieroPath = null; });
+      get().modifica((draft) => {
+        draft.sfondoPrigionieroPath = null;
+      });
       return;
     }
     const id = nuovoId();
-    const relativo = await copiaImmagineInCartella(folderPath, sourceAbsPath, "", `sfondo-prigioniero-${id}`);
-    get().modifica((draft) => { draft.sfondoPrigionieroPath = relativo; });
+    const relativo = await copiaImmagineInCartella(
+      folderPath,
+      sourceAbsPath,
+      "",
+      `sfondo-prigioniero-${id}`,
+    );
+    get().modifica((draft) => {
+      draft.sfondoPrigionieroPath = relativo;
+    });
   },
 
   async impostaSuonoPrigioniero(sourceAbsPath) {
     const { folderPath, current } = get();
     if (!folderPath || !current) throw new Error("Nessuna ambientazione aperta");
     if (sourceAbsPath === null) {
-      get().modifica((draft) => { draft.suonoPrigionieroPath = null; });
+      get().modifica((draft) => {
+        draft.suonoPrigionieroPath = null;
+      });
       return;
     }
-    const relativo = await copiaAudioInCartella(folderPath, sourceAbsPath, "audio", `prigioniero-sbarre-${nuovoId()}`);
-    get().modifica((draft) => { draft.suonoPrigionieroPath = relativo; });
+    const relativo = await copiaAudioInCartella(
+      folderPath,
+      sourceAbsPath,
+      "audio",
+      `prigioniero-sbarre-${nuovoId()}`,
+    );
+    get().modifica((draft) => {
+      draft.suonoPrigionieroPath = relativo;
+    });
   },
 
   async impostaSuonoPrigionieroSting(sourceAbsPath) {
     const { folderPath, current } = get();
     if (!folderPath || !current) throw new Error("Nessuna ambientazione aperta");
     if (sourceAbsPath === null) {
-      get().modifica((draft) => { draft.suonoPrigionieroStingPath = null; });
+      get().modifica((draft) => {
+        draft.suonoPrigionieroStingPath = null;
+      });
       return;
     }
-    const relativo = await copiaAudioInCartella(folderPath, sourceAbsPath, "audio", `prigioniero-sting-${nuovoId()}`);
-    get().modifica((draft) => { draft.suonoPrigionieroStingPath = relativo; });
+    const relativo = await copiaAudioInCartella(
+      folderPath,
+      sourceAbsPath,
+      "audio",
+      `prigioniero-sting-${nuovoId()}`,
+    );
+    get().modifica((draft) => {
+      draft.suonoPrigionieroStingPath = relativo;
+    });
   },
 
   async impostaSuonoPrigionieroSirena(sourceAbsPath) {
     const { folderPath, current } = get();
     if (!folderPath || !current) throw new Error("Nessuna ambientazione aperta");
     if (sourceAbsPath === null) {
-      get().modifica((draft) => { draft.suonoPrigionieroSirenaPath = null; });
+      get().modifica((draft) => {
+        draft.suonoPrigionieroSirenaPath = null;
+      });
       return;
     }
-    const relativo = await copiaAudioInCartella(folderPath, sourceAbsPath, "audio", `prigioniero-sirena-${nuovoId()}`);
-    get().modifica((draft) => { draft.suonoPrigionieroSirenaPath = relativo; });
+    const relativo = await copiaAudioInCartella(
+      folderPath,
+      sourceAbsPath,
+      "audio",
+      `prigioniero-sirena-${nuovoId()}`,
+    );
+    get().modifica((draft) => {
+      draft.suonoPrigionieroSirenaPath = relativo;
+    });
   },
 
   async impostaPresentazione(sourceAbsPath) {

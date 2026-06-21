@@ -27,9 +27,7 @@ export default function ScenaCountdownFullscreen({ snapshot, sfondoSrc }: Props)
 
   return (
     <div className={styles.root}>
-      {sfondoSrc && (
-        <img src={sfondoSrc} alt="" className={styles.sfondo} />
-      )}
+      {sfondoSrc && <img src={sfondoSrc} alt="" className={styles.sfondo} />}
       <div className={styles.overlay} />
       {mostraTimer && (
         <div className={`${styles.cifre} ${snapshot.stato === "ended" ? styles.scaduto : ""}`}>

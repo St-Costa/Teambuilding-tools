@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { cropIniziale, validaNomePersonaggio, type Crop, type Personaggio } from "../../lib/ambientazione";
+import {
+  cropIniziale,
+  validaNomePersonaggio,
+  type Crop,
+  type Personaggio,
+} from "../../lib/ambientazione";
 import { cropDiPartenzaDaImmagine } from "../../lib/immagine";
 import { PALETTE, nomeColore, primoColoreLibero } from "../../lib/colori";
 import MaschereCircolare from "../components/MaschereCircolare";

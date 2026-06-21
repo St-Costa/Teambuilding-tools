@@ -31,9 +31,10 @@ export default function PannelloVoti({ onChiudi }: Props) {
   const accusati = npc ? [...righe, npc] : righe;
   const votantiCol = npc ? [...righe, npc] : righe;
 
-  const maxVoti = accusati.length > 0
-    ? Math.max(...accusati.map((r) => (votanti[r.personaggioId] ?? []).length))
-    : 0;
+  const maxVoti =
+    accusati.length > 0
+      ? Math.max(...accusati.map((r) => (votanti[r.personaggioId] ?? []).length))
+      : 0;
   const haVoti = maxVoti > 0;
   const animazioneAttiva = prigionieri !== null && prigionieri.length > 0;
 
@@ -129,7 +130,9 @@ export default function PannelloVoti({ onChiudi }: Props) {
                     */}
                     <div
                       className={styles.colonnaVotanti}
-                      style={{ gridTemplateColumns: `repeat(${votantiCol.length}, ${DIM_VOTANTE + 12}px)` }}
+                      style={{
+                        gridTemplateColumns: `repeat(${votantiCol.length}, ${DIM_VOTANTE + 12}px)`,
+                      }}
                     >
                       {votantiCol.map((v) => {
                         if (v.personaggioId === target.personaggioId) {
@@ -180,7 +183,11 @@ export default function PannelloVoti({ onChiudi }: Props) {
               type="button"
               className={styles.btnIncarcerai}
               disabled={!haVoti}
-              title={haVoti ? "Mostra l'animazione di incarcerazione sulla proiezione" : "Assegna almeno un voto prima di incarcerare"}
+              title={
+                haVoti
+                  ? "Mostra l'animazione di incarcerazione sulla proiezione"
+                  : "Assegna almeno un voto prima di incarcerare"
+              }
               onClick={avviaPrigioniero}
             >
               <IconaManette dimensione={18} />

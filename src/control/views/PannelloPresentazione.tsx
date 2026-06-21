@@ -88,7 +88,10 @@ export default function PannelloPresentazione({ numeroBadge }: Props) {
   }, [aperto, avanti, indietro]);
 
   function apri() {
-    if (regoleViste) { setRegoleViste(false); return; }
+    if (regoleViste) {
+      setRegoleViste(false);
+      return;
+    }
     setRegoleViste(true);
     setErrore(null);
     setPaginaEdit(1);
@@ -149,9 +152,7 @@ export default function PannelloPresentazione({ numeroBadge }: Props) {
         style={{ position: "relative" }}
       >
         <IconaPresentazione dimensione={28} />
-        {numeroBadge !== undefined && (
-          <span className={styles.numeroBadge}>{numeroBadge}</span>
-        )}
+        {numeroBadge !== undefined && <span className={styles.numeroBadge}>{numeroBadge}</span>}
       </button>
 
       {aperto && (

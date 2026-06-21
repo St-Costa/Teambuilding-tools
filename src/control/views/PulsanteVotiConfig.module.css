@@ -65,7 +65,9 @@
   width: 100%;
   transition: background 0.12s;
 }
-.slot:hover { background: rgba(127, 127, 127, 0.1); }
+.slot:hover {
+  background: rgba(127, 127, 127, 0.1);
+}
 
 .slotTipo {
   font-size: 1rem;

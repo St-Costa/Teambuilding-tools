@@ -68,10 +68,7 @@ function GrigliaVotanti({
     );
   }
   return (
-    <div
-      className={styles.rigaVotanti}
-      style={{ gridTemplateColumns: `repeat(2, ${dim}px)` }}
-    >
+    <div className={styles.rigaVotanti} style={{ gridTemplateColumns: `repeat(2, ${dim}px)` }}>
       {votanti.map((v) => (
         <Cerchietto
           key={v.personaggioId}
@@ -99,7 +96,7 @@ export default function ScenaVoti({ snapshot, folderPath, sfondoSrc }: Props) {
   // Gap tra colonne: pochi pixel dinamici; il padding interno è ridotto per compensare.
   const gapPx = Math.max(8, Math.floor(w * 0.008));
   // colWidth esclude i gap così il totale resta dentro il 90% della larghezza
-  const colWidth = Math.floor((w * 0.90 - (numChars - 1) * gapPx) / numChars);
+  const colWidth = Math.floor((w * 0.9 - (numChars - 1) * gapPx) / numChars);
   // Quando l'NPC è visibile, i giocatori vengono rimpiccioliti (h*0.21 vs h*0.26)
   // per garantire che la barra NPC in basso non si sovrapponga mai ai giocatori.
   // Verifica matematica: con h=1080, playerH≈642px, NPC top≈766px → 124px di margine.
@@ -114,13 +111,13 @@ export default function ScenaVoti({ snapshot, folderPath, sfondoSrc }: Props) {
 
   // Font base aumentato (0.25 vs 0.19) perché il padding ridotto "libera" spazio al testo
   const nameFontSizeBase = Math.max(Math.floor(dimTarget * 0.25), 11);
-  const nameFontSizeMax = Math.floor((colWidth * 0.88) / 0.60);
+  const nameFontSizeMax = Math.floor((colWidth * 0.88) / 0.6);
 
   // Font size uguale per tutti: prende il minimo adattivo tra tutti i nomi
   const nomeFontSize = players.reduce((minSz, r) => {
     const fitted = Math.max(
       Math.min(nameFontSizeBase, Math.floor(nameFontSizeMax / Math.max(1, r.target.nome.length))),
-      8
+      8,
     );
     return Math.min(minSz, fitted);
   }, nameFontSizeBase);
@@ -177,9 +174,7 @@ export default function ScenaVoti({ snapshot, folderPath, sfondoSrc }: Props) {
 
   return (
     <div className={styles.root}>
-      {sfondoSrc && (
-        <img src={sfondoSrc} className={styles.sfondo} alt="" aria-hidden="true" />
-      )}
+      {sfondoSrc && <img src={sfondoSrc} className={styles.sfondo} alt="" aria-hidden="true" />}
       {/* Velo scuro per leggibilità, come nella schermata countdown */}
       <div className={styles.overlay} aria-hidden="true" />
       <div className={`${styles.contenuto} ${npcRiga ? styles.contenutoConNpc : ""}`}>
@@ -189,7 +184,7 @@ export default function ScenaVoti({ snapshot, folderPath, sfondoSrc }: Props) {
       </div>
 
       {/* Riga NPC: "landscape", entra dal basso. Manette a sinistra, voti a destra. */}
-      {npcRiga && (
+      {npcRiga &&
         (() => {
           const isTop = maxVoti > 0 && npcRiga.votanti.length === maxVoti;
           return (
@@ -229,8 +224,7 @@ export default function ScenaVoti({ snapshot, folderPath, sfondoSrc }: Props) {
               </div>
             </div>
           );
-        })()
-      )}
+        })()}
     </div>
   );
 }

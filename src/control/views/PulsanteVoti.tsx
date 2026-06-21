@@ -18,7 +18,9 @@ export default function PulsanteVoti({ numeroBadge }: Props) {
   const impostaSfondoPrigioniero = useAmbientazioneStore((s) => s.impostaSfondoPrigioniero);
   const impostaSuonoPrigioniero = useAmbientazioneStore((s) => s.impostaSuonoPrigioniero);
   const impostaSuonoPrigionieroSting = useAmbientazioneStore((s) => s.impostaSuonoPrigionieroSting);
-  const impostaSuonoPrigionieroSirena = useAmbientazioneStore((s) => s.impostaSuonoPrigionieroSirena);
+  const impostaSuonoPrigionieroSirena = useAmbientazioneStore(
+    (s) => s.impostaSuonoPrigionieroSirena,
+  );
 
   const fase = useVotiStore((s) => s.fase);
   const apri = useVotiStore((s) => s.apri);
@@ -36,7 +38,12 @@ export default function PulsanteVoti({ numeroBadge }: Props) {
   const aperta = fase === "aperta";
 
   // Quanti asset prigioniero sono configurati (0-4)
-  const nConfigurati = [sfondoPrigionieroPath, suonoPrigionieroPath, suonoPrigionieroStingPath, suonoPrigionieroSirenaPath].filter(Boolean).length;
+  const nConfigurati = [
+    sfondoPrigionieroPath,
+    suonoPrigionieroPath,
+    suonoPrigionieroStingPath,
+    suonoPrigionieroSirenaPath,
+  ].filter(Boolean).length;
 
   if (!current || !folderPath) return null;
 
@@ -51,7 +58,9 @@ export default function PulsanteVoti({ numeroBadge }: Props) {
         if (typeof scelto !== "string") return;
         await impostaSfondoVoti(scelto);
         await eseguiSalvataggio();
-      } catch { /* annullato */ }
+      } catch {
+        /* annullato */
+      }
     }
 
     async function caricaSfondoPrigioniero() {
@@ -63,7 +72,9 @@ export default function PulsanteVoti({ numeroBadge }: Props) {
         if (typeof scelto !== "string") return;
         await impostaSfondoPrigioniero(scelto);
         await eseguiSalvataggio();
-      } catch { /* annullato */ }
+      } catch {
+        /* annullato */
+      }
     }
 
     async function caricaSuonoSbarre() {
@@ -75,7 +86,9 @@ export default function PulsanteVoti({ numeroBadge }: Props) {
         if (typeof scelto !== "string") return;
         await impostaSuonoPrigioniero(scelto);
         await eseguiSalvataggio();
-      } catch { /* annullato */ }
+      } catch {
+        /* annullato */
+      }
     }
 
     async function caricaSuonoSting() {
@@ -87,7 +100,9 @@ export default function PulsanteVoti({ numeroBadge }: Props) {
         if (typeof scelto !== "string") return;
         await impostaSuonoPrigionieroSting(scelto);
         await eseguiSalvataggio();
-      } catch { /* annullato */ }
+      } catch {
+        /* annullato */
+      }
     }
 
     async function caricaSuonoSirena() {
@@ -99,7 +114,9 @@ export default function PulsanteVoti({ numeroBadge }: Props) {
         if (typeof scelto !== "string") return;
         await impostaSuonoPrigionieroSirena(scelto);
         await eseguiSalvataggio();
-      } catch { /* annullato */ }
+      } catch {
+        /* annullato */
+      }
     }
 
     return (
@@ -113,9 +130,7 @@ export default function PulsanteVoti({ numeroBadge }: Props) {
           aria-expanded={mostraConfig}
         >
           <IconaVoto dimensione={30} />
-          {numeroBadge !== undefined && (
-            <span className={styles.numeroBadge}>{numeroBadge}</span>
-          )}
+          {numeroBadge !== undefined && <span className={styles.numeroBadge}>{numeroBadge}</span>}
         </button>
 
         {mostraConfig && (
@@ -185,9 +200,7 @@ export default function PulsanteVoti({ numeroBadge }: Props) {
       aria-label="Schermata voti"
     >
       <IconaVoto dimensione={30} />
-      {numeroBadge !== undefined && (
-        <span className={styles.numeroBadge}>{numeroBadge}</span>
-      )}
+      {numeroBadge !== undefined && <span className={styles.numeroBadge}>{numeroBadge}</span>}
     </button>
   );
 }
@@ -204,7 +217,9 @@ function SlotAsset({ label, valore, onClick, tipo }: SlotAssetProps) {
     <button type="button" className={stylesConfig.slot} onClick={onClick}>
       <span className={stylesConfig.slotTipo}>{tipo === "immagine" ? "🖼" : "🔊"}</span>
       <span className={stylesConfig.slotLabel}>{label}</span>
-      <span className={`${stylesConfig.slotValore} ${valore ? stylesConfig.configurato : stylesConfig.mancante}`}>
+      <span
+        className={`${stylesConfig.slotValore} ${valore ? stylesConfig.configurato : stylesConfig.mancante}`}
+      >
         {valore ?? "— non impostato —"}
       </span>
     </button>

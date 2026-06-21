@@ -64,7 +64,10 @@
   padding: 0.3rem 0.12rem 0.3rem; /* ridotto: spazio recuperato come gap tra colonne */
   border-radius: 16px;
   border: 2px solid transparent;
-  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+  transition:
+    background 0.3s,
+    border-color 0.3s,
+    box-shadow 0.3s;
 }
 
 /* Il più votato: sfondo rosso (portrait, verticale) */
@@ -88,8 +91,8 @@
   font-weight: 700;
   color: #fff;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
-  white-space: nowrap;    /* mai a capo */
-  overflow: visible;      /* font adattivo → non serve truncation */
+  white-space: nowrap; /* mai a capo */
+  overflow: visible; /* font adattivo → non serve truncation */
   text-align: center;
   width: 100%;
   flex-shrink: 0;
@@ -144,19 +147,28 @@
   max-width: 92vw;
   box-sizing: border-box;
   animation: npcEntra 0.55s cubic-bezier(0.2, 1.1, 0.4, 1) both;
-  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+  transition:
+    background 0.3s,
+    border-color 0.3s,
+    box-shadow 0.3s;
 }
 
 /* NPC più votato: rettangolo rosso "landscape" (orizzontale) */
 .npcRigaTop {
-  background: rgba(200, 30, 30, 0.30);
+  background: rgba(200, 30, 30, 0.3);
   border-color: rgba(220, 50, 50, 0.65);
   box-shadow: 0 0 36px rgba(220, 50, 50, 0.4);
 }
 
 @keyframes npcEntra {
-  0% { opacity: 0; transform: translateX(-50%) translateY(140%); }
-  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(140%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 /* Manette NPC: a SINISTRA del rettangolo */

@@ -26,9 +26,9 @@ export default function PannelloSoundboard() {
     .filter(({ slot }) => slot.audioPath !== null);
 
   const primoSlotVuoto = inEdit
-    ? current.soundboard
+    ? (current.soundboard
         .map((slot, idx) => ({ slot, idx }))
-        .find(({ slot }) => slot.audioPath === null) ?? null
+        .find(({ slot }) => slot.audioPath === null) ?? null)
     : null;
 
   if (slotConfigurati.length === 0 && !primoSlotVuoto) return null;
@@ -169,9 +169,9 @@ export default function PannelloSoundboard() {
           <button
             type="button"
             className={`${styles.slot} ${styles.slotVuoto}`}
-            onClick={() => setEditingIdx(
-              editingIdx === primoSlotVuoto.idx ? null : primoSlotVuoto.idx
-            )}
+            onClick={() =>
+              setEditingIdx(editingIdx === primoSlotVuoto.idx ? null : primoSlotVuoto.idx)
+            }
             title="Aggiungi effetto sonoro"
             aria-label="Aggiungi slot"
           >

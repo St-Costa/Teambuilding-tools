@@ -67,7 +67,11 @@ export default function PulsanteSottofondo() {
           type="button"
           className={`${styles.btnPrincipale} ${haSottofondo ? styles.configurato : styles.daConfigurare}`}
           onClick={() => void caricaMp3()}
-          title={haSottofondo ? `Sottofondo: ${sottofondoPath?.split(/[/\\]/).pop()} — clicca per cambiare` : "Scegli un MP3 di sottofondo"}
+          title={
+            haSottofondo
+              ? `Sottofondo: ${sottofondoPath?.split(/[/\\]/).pop()} — clicca per cambiare`
+              : "Scegli un MP3 di sottofondo"
+          }
         >
           <span className={styles.icona}>{haSottofondo ? "♪" : "+"}</span>
         </button>
@@ -108,7 +112,9 @@ export default function PulsanteSottofondo() {
         className={`${styles.btnPrincipale} ${inRiproduzione ? styles.inPlay : styles.configurato}`}
         disabled={caricamento}
         onClick={() => (inRiproduzione ? ferma() : void avvia(folderPath, sottofondoPath))}
-        title={caricamento ? "Caricamento…" : inRiproduzione ? "Ferma sottofondo" : "Avvia sottofondo"}
+        title={
+          caricamento ? "Caricamento…" : inRiproduzione ? "Ferma sottofondo" : "Avvia sottofondo"
+        }
       >
         <span className={styles.icona}>{caricamento ? "…" : inRiproduzione ? "■" : "▶"}</span>
       </button>

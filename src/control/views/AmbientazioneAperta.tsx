@@ -79,7 +79,10 @@ export default function AmbientazioneAperta() {
   }, []);
 
   async function toggleStageFullscreen() {
-    if (fullscreenVisto) { setFullscreenVisto(false); return; }
+    if (fullscreenVisto) {
+      setFullscreenVisto(false);
+      return;
+    }
     setFullscreenVisto(true);
     const stage = await WebviewWindow.getByLabel("stage");
     if (!stage) return;

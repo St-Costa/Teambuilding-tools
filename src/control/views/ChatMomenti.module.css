@@ -24,7 +24,9 @@
   position: absolute;
   z-index: 2;
   background: transparent;
-  transition: background 0.12s, box-shadow 0.12s;
+  transition:
+    background 0.12s,
+    box-shadow 0.12s;
 }
 .maniglia:hover {
   background: rgba(120, 170, 255, 0.55);

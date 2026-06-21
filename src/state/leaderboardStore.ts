@@ -6,16 +6,16 @@ import {
   useAmbientazioneStore,
 } from "./ambientazioneStore";
 
-function applicaOrdine<T extends { personaggioId: string }>(
-  righe: T[],
-  ordine: string[],
-): T[] {
+function applicaOrdine<T extends { personaggioId: string }>(righe: T[], ordine: string[]): T[] {
   if (ordine.length === 0) return righe;
   const map = new Map(righe.map((r) => [r.personaggioId, r]));
   const ordinati: T[] = [];
   for (const id of ordine) {
     const r = map.get(id);
-    if (r) { ordinati.push(r); map.delete(id); }
+    if (r) {
+      ordinati.push(r);
+      map.delete(id);
+    }
   }
   // Eventuali personaggi aggiunti dopo l'ultimo salvataggio dell'ordine
   for (const r of map.values()) ordinati.push(r);
@@ -94,7 +94,8 @@ export const useLeaderboardStore = create<LeaderboardState>((set, get) => ({
   riordina(fromIdx, toIdx) {
     const state = get();
     if (fromIdx === toIdx) return;
-    if (fromIdx < 0 || toIdx < 0 || fromIdx >= state.righe.length || toIdx >= state.righe.length) return;
+    if (fromIdx < 0 || toIdx < 0 || fromIdx >= state.righe.length || toIdx >= state.righe.length)
+      return;
     const nuove = [...state.righe];
     const [rimossa] = nuove.splice(fromIdx, 1);
     nuove.splice(toIdx, 0, rimossa);

@@ -107,9 +107,7 @@ fn avvia_thread_sottofondo() -> Option<Sender<SottofondoCmd>> {
                         if let Ok(s) = rodio::Sink::try_new(&handle) {
                             s.set_volume(volume);
                             if let Ok(f) = fs::File::open(&path) {
-                                if let Ok(dec) =
-                                    rodio::Decoder::new(std::io::BufReader::new(f))
-                                {
+                                if let Ok(dec) = rodio::Decoder::new(std::io::BufReader::new(f)) {
                                     s.append(dec);
                                     sink = Some(s);
                                     path_corrente = Some(path);
@@ -151,9 +149,7 @@ fn avvia_thread_sottofondo() -> Option<Sender<SottofondoCmd>> {
                 if let (Some(ref s), Some(ref path)) = (&sink, &path_corrente) {
                     if s.empty() {
                         if let Ok(f) = fs::File::open(path) {
-                            if let Ok(dec) =
-                                rodio::Decoder::new(std::io::BufReader::new(f))
-                            {
+                            if let Ok(dec) = rodio::Decoder::new(std::io::BufReader::new(f)) {
                                 s.append(dec);
                             }
                         }
@@ -246,11 +242,24 @@ enum SuoniGiocoCmd {
     Applauso,
     StopVittoria,
     Fuoco,
-    Soundboard { path: String, volume: f32 },
-    SoundboardDa { path: String, volume: f32, offset_ms: u64 },
-    Prigioniero { path: String, volume: f32 },
+    Soundboard {
+        path: String,
+        volume: f32,
+    },
+    SoundboardDa {
+        path: String,
+        volume: f32,
+        offset_ms: u64,
+    },
+    Prigioniero {
+        path: String,
+        volume: f32,
+    },
     StopPrigioniero,
-    CountdownAvvia { n: u32, volume: f32 },
+    CountdownAvvia {
+        n: u32,
+        volume: f32,
+    },
     CountdownPausa,
     CountdownRiprendi,
     CountdownFerma,
@@ -354,15 +363,16 @@ fn avvia_thread_suoni_gioco() -> Option<Sender<SuoniGiocoCmd>> {
                     }
                     Ok(SuoniGiocoCmd::Soundboard { path, volume }) => {
                         if let Ok(f) = fs::File::open(&path) {
-                            if let Ok(dec) =
-                                rodio::Decoder::new(std::io::BufReader::new(f))
-                            {
-                                let _ =
-                                    handle.play_raw(dec.amplify(volume).convert_samples());
+                            if let Ok(dec) = rodio::Decoder::new(std::io::BufReader::new(f)) {
+                                let _ = handle.play_raw(dec.amplify(volume).convert_samples());
                             }
                         }
                     }
-                    Ok(SuoniGiocoCmd::SoundboardDa { path, volume, offset_ms }) => {
+                    Ok(SuoniGiocoCmd::SoundboardDa {
+                        path,
+                        volume,
+                        offset_ms,
+                    }) => {
                         if let Ok(f) = fs::File::open(&path) {
                             if let Ok(dec) = rodio::Decoder::new(std::io::BufReader::new(f)) {
                                 use rodio::Source;
@@ -444,9 +454,7 @@ fn avvia_thread_suoni_gioco() -> Option<Sender<SuoniGiocoCmd>> {
             // Gap massimo 10 ms, impercettibile come beep di allarme.
             if let Some(ref s) = sveglia_sink {
                 if s.empty() {
-                    if let Ok(dec) =
-                        rodio::Decoder::new(std::io::Cursor::new(SVEGLIA_BYTES))
-                    {
+                    if let Ok(dec) = rodio::Decoder::new(std::io::Cursor::new(SVEGLIA_BYTES)) {
                         s.append(dec);
                     }
                 }
@@ -560,7 +568,14 @@ fn play_soundboard_slot_da(
     if !meta.is_file() {
         return Err("Il percorso non punta a un file audio.".into());
     }
-    invia_gioco(&state, SuoniGiocoCmd::SoundboardDa { path, volume, offset_ms });
+    invia_gioco(
+        &state,
+        SuoniGiocoCmd::SoundboardDa {
+            path,
+            volume,
+            offset_ms,
+        },
+    );
     Ok(())
 }
 
@@ -608,7 +623,7 @@ fn durate_countdown_audio() -> Result<[u64; 3], String> {
                 let canali = dec.channels().max(1) as u64;
                 let sample_rate = dec.sample_rate().max(1) as u64;
                 let campioni = dec.count() as u64; // campioni interleaved sui canali
-                // frame = campioni / canali; durata_ms = frame * 1000 / sample_rate
+                                                   // frame = campioni / canali; durata_ms = frame * 1000 / sample_rate
                 (campioni / canali) * 1000 / sample_rate
             }
             Err(_) => 0,

@@ -99,7 +99,7 @@ export default function AnimazionePrigione({ snapshot, folderPath, sfondoSrc }: 
         const x = Math.random() * W;
         particelleRef.current.push({
           x,
-          y: H,                            // nascono dal fondo
+          y: H, // nascono dal fondo
           vx: (Math.random() - 0.5) * 220,
           vy: -(400 + Math.random() * 400), // 400–800 px/s verso l'alto
           life: 1.4 + Math.random() * 0.8,
@@ -148,9 +148,7 @@ export default function AnimazionePrigione({ snapshot, folderPath, sfondoSrc }: 
 
   return (
     <div className={styles.root}>
-      {sfondoSrc && (
-        <img src={sfondoSrc} className={styles.sfondo} alt="" aria-hidden="true" />
-      )}
+      {sfondoSrc && <img src={sfondoSrc} className={styles.sfondo} alt="" aria-hidden="true" />}
 
       <div className={styles.overlay} aria-hidden="true" />
       <div className={styles.vignette} aria-hidden="true" />
@@ -186,10 +184,7 @@ export default function AnimazionePrigione({ snapshot, folderPath, sfondoSrc }: 
       </div>
 
       {/* Sbarre della prigione */}
-      <div
-        className={`${styles.grata} ${sbarre ? styles.grataCaduta : ""}`}
-        aria-hidden="true"
-      />
+      <div className={`${styles.grata} ${sbarre ? styles.grataCaduta : ""}`} aria-hidden="true" />
 
       {flash && <div className={styles.flashImpatto} aria-hidden="true" />}
 

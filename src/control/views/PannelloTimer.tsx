@@ -95,7 +95,11 @@ export default function PannelloTimer({ sovraMappa }: Props) {
   // idle sia riprendendo da pausa), così tutti capiscono che il tempo scorre.
   const statoPrecRef = useRef(stato);
   useEffect(() => {
-    if (stato === "running" && statoPrecRef.current !== "running" && !musicaCountdownAttiva.current) {
+    if (
+      stato === "running" &&
+      statoPrecRef.current !== "running" &&
+      !musicaCountdownAttiva.current
+    ) {
       playInizioTimer();
     }
     statoPrecRef.current = stato;
@@ -217,74 +221,78 @@ export default function PannelloTimer({ sovraMappa }: Props) {
   }
 
   return (
-   <div className={`${styles.contenitore}${sovraMappa ? ` ${styles.contenitoreSovraMappa}` : ""}`}>
-    <div className={`${styles.root}${sovraMappa ? ` ${styles.rootSovraMappa}` : ""}`}>
-      <button
-        type="button"
-        className={`${styles.btnToggle} ${stato === "running" ? styles.btnPausa : styles.btnAvvia}`}
-        onClick={onToggle}
-        disabled={stato === "idle" && durationSec <= 0}
-        title={titleToggle}
-        aria-label={titleToggle}
-      >
-        {iconaToggle}
-      </button>
-      <button
-        type="button"
-        className={styles.btnReset}
-        onClick={reset}
-        title="Reset (riporta alla durata configurata)"
-        aria-label="Reset"
-      >
-        ■
-      </button>
-      <div
-        className={styles.gruppoDurata}
-        title={modificabile ? "Imposta durata" : "Reset per cambiare durata"}
-      >
-        <input
-          type="number"
-          className={styles.inputDurata}
-          min={0}
-          max={99}
-          step={1}
-          value={minIniz}
-          onChange={handleMinChange}
-          disabled={!modificabile}
-        />
-        <span className={styles.duePunti}>:</span>
-        <input
-          type="number"
-          className={styles.inputDurata}
-          min={0}
-          max={59}
-          step={1}
-          value={secIniz}
-          onChange={handleSecChange}
-          disabled={!modificabile}
-        />
+    <div className={`${styles.contenitore}${sovraMappa ? ` ${styles.contenitoreSovraMappa}` : ""}`}>
+      <div className={`${styles.root}${sovraMappa ? ` ${styles.rootSovraMappa}` : ""}`}>
+        <button
+          type="button"
+          className={`${styles.btnToggle} ${stato === "running" ? styles.btnPausa : styles.btnAvvia}`}
+          onClick={onToggle}
+          disabled={stato === "idle" && durationSec <= 0}
+          title={titleToggle}
+          aria-label={titleToggle}
+        >
+          {iconaToggle}
+        </button>
+        <button
+          type="button"
+          className={styles.btnReset}
+          onClick={reset}
+          title="Reset (riporta alla durata configurata)"
+          aria-label="Reset"
+        >
+          ■
+        </button>
+        <div
+          className={styles.gruppoDurata}
+          title={modificabile ? "Imposta durata" : "Reset per cambiare durata"}
+        >
+          <input
+            type="number"
+            className={styles.inputDurata}
+            min={0}
+            max={99}
+            step={1}
+            value={minIniz}
+            onChange={handleMinChange}
+            disabled={!modificabile}
+          />
+          <span className={styles.duePunti}>:</span>
+          <input
+            type="number"
+            className={styles.inputDurata}
+            min={0}
+            max={59}
+            step={1}
+            value={secIniz}
+            onChange={handleSecChange}
+            disabled={!modificabile}
+          />
+        </div>
+        {avvisoDurata && stato !== "idle" && (
+          <span className={styles.avvisoDurata}>{avvisoDurata}</span>
+        )}
       </div>
-      {avvisoDurata && stato !== "idle" && (
-        <span className={styles.avvisoDurata}>{avvisoDurata}</span>
+      {mostraVolumeCountdown && stato !== "idle" && (
+        <div
+          className={`${styles.volumeCountdown}${sovraMappa ? ` ${styles.volumeCountdownSovraMappa}` : ""}`}
+        >
+          <span className={styles.volumeIcona} aria-hidden="true">
+            ♪
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={Math.round(volumeCountdown * 100)}
+            onChange={handleVolumeCountdown}
+            className={styles.volumeSlider}
+            title="Volume del sottofondo countdown"
+            aria-label="Volume del sottofondo countdown"
+          />
+          <span className={styles.volumeValore}>{Math.round(volumeCountdown * 100)}%</span>
+        </div>
       )}
     </div>
-    {mostraVolumeCountdown && stato !== "idle" && (
-      <div className={`${styles.volumeCountdown}${sovraMappa ? ` ${styles.volumeCountdownSovraMappa}` : ""}`}>
-        <span className={styles.volumeIcona} aria-hidden="true">♪</span>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={1}
-          value={Math.round(volumeCountdown * 100)}
-          onChange={handleVolumeCountdown}
-          className={styles.volumeSlider}
-          title="Volume del sottofondo countdown"
-          aria-label="Volume del sottofondo countdown"
-        />
-        <span className={styles.volumeValore}>{Math.round(volumeCountdown * 100)}%</span>
-      </div>
-    )}
-   </div>
   );
 }

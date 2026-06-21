@@ -295,7 +295,9 @@
   border-radius: 3px;
   color: inherit;
   opacity: 0.55;
-  transition: opacity 0.1s, background 0.1s;
+  transition:
+    opacity 0.1s,
+    background 0.1s;
 }
 
 .btnOrdine:hover:not(:disabled) {
