@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "nome": "Treno deragliato",
   "creataIl": "2026-05-29T09:47:30.172Z",
-  "modificataIl": "2026-06-22T09:41:33.702Z",
+  "modificataIl": "2026-06-22T11:17:44.589Z",
   "mappaPath": "mappa-0ba34270-b261-4cec-81bf-f606e25e1d22.png",
   "personaggi": [
     {
@@ -304,7 +304,7 @@
     }
   ],
   "sottofondoPath": "audio/sottofondo.mp3",
-  "presentazionePath": "presentazione/bcad3cff-8dff-46a9-be7b-4bdd857ba431.pdf",
+  "presentazionePath": "presentazione/b06e93f9-8abb-439d-8f04-e714391a82ea.pdf",
   "notePresentazione": {},
   "immagineFissaPath": "immagine-fissa-0dcbef81-d1a5-4064-9320-10a46d6c88fa.png",
   "sfondoCountdownPath": "sfondo-countdown-9a358575-ee57-4464-ab71-c1a557bed658.png",
