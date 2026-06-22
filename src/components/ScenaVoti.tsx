@@ -110,8 +110,7 @@ function GrigliaVotanti({
   // della colonna dietro quel contesto non viene invalidato quando si toglie il
   // "più votato" → resta un rettangolino rosso fantasma (bug del voto centrale).
   const votantiOrdinati = [...votanti].sort(
-    (a, b) =>
-      (caselle.get(a.personaggioId) ?? 4) - (caselle.get(b.personaggioId) ?? 4),
+    (a, b) => (caselle.get(a.personaggioId) ?? 4) - (caselle.get(b.personaggioId) ?? 4),
   );
 
   return (
@@ -197,7 +196,10 @@ export default function ScenaVoti({ snapshot, folderPath, sfondoSrc }: Props) {
         style={{ width: colWidth, minWidth: colWidth, boxSizing: "border-box" }}
       >
         {/* Evidenza rossa sempre nel DOM, dietro al contenuto: fade in opacity */}
-        <div className={`${styles.evidenza} ${isTop ? styles.evidenzaTop : ""}`} aria-hidden="true" />
+        <div
+          className={`${styles.evidenza} ${isTop ? styles.evidenzaTop : ""}`}
+          aria-hidden="true"
+        />
         {/* Manette: sempre nel DOM a dimensione fissa, invisible se non top */}
         <span
           className={styles.manette}
