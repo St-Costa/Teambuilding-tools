@@ -23,10 +23,13 @@ interface DragState {
 
 export default function ChatMomenti() {
   const aggiungi = useMemeStore((s) => s.aggiungi);
+  const markdown = useMemeStore((s) => s.markdown);
+  const ultimo = useMemeStore((s) => s.momenti[s.momenti.length - 1]);
 
   const [larghezza, setLarghezza] = useState(LARGHEZZA_DEFAULT);
   const [altezza, setAltezza] = useState(ALTEZZA_DEFAULT);
   const [bozza, setBozza] = useState("");
+  const [anteprima, setAnteprima] = useState(false);
 
   const dragRef = useRef<DragState | null>(null);
 
@@ -114,17 +117,42 @@ export default function ChatMomenti() {
       <div className={styles.contenuto}>
         <div className={styles.chat}>
           <div className={styles.intestazione}>😂 Momenti meme</div>
+          {!anteprima && ultimo && (
+            <div className={styles.ultimo} title={ultimo.testo}>
+              <span className={styles.ultimoOra}>{ultimo.ora}</span> {ultimo.testo}
+            </div>
+          )}
           <div className={styles.inputRiga}>
-            <textarea
-              className={styles.input}
-              value={bozza}
-              placeholder="Scrivi un momento e premi Invio…"
-              onChange={(e) => setBozza(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-            <button type="button" className={styles.btnInvia} onClick={invia} title="Salva momento">
-              Invia
-            </button>
+            {anteprima ? (
+              <pre className={styles.anteprima}>{markdown()}</pre>
+            ) : (
+              <textarea
+                className={styles.input}
+                value={bozza}
+                placeholder="Scrivi un momento e premi Invio…"
+                onChange={(e) => setBozza(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+            )}
+            <div className={styles.bottoni}>
+              <button
+                type="button"
+                className={styles.btnPreview}
+                onClick={() => setAnteprima((v) => !v)}
+                title="Mostra il contenuto dei momenti meme raccolti"
+              >
+                {anteprima ? "Modifica" : "Preview"}
+              </button>
+              <button
+                type="button"
+                className={styles.btnInvia}
+                onClick={invia}
+                disabled={anteprima}
+                title="Salva momento"
+              >
+                Invia
+              </button>
+            </div>
           </div>
         </div>
       </div>
