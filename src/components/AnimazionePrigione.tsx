@@ -33,14 +33,32 @@ const CAP_PARTICELLE = 500;
 
 export default function AnimazionePrigione({ snapshot, folderPath, sfondoSrc }: Props) {
   const { w, h } = useViewport();
-  const vmin = Math.min(w, h);
   const n = snapshot.prigionieri.length;
-  // Riquadri portrait affiancati: l'altezza è limitata dal viewport, la
-  // larghezza dallo spazio disponibile diviso per il numero di prigionieri.
-  const gapPx = vmin * 0.05;
-  const maxLarghezza = (w * 0.92 - (n - 1) * gapPx) / Math.max(1, n);
-  const altezza = Math.round(Math.min(h * 0.66, maxLarghezza / PORTRAIT_RATIO));
+  // Riquadri portrait di dimensione fissa (uguale per qualsiasi numero di
+  // prigionieri): l'altezza è ancorata al viewport, la larghezza segue il
+  // rapporto portrait. Per farli stare tutti in una riga si gioca solo sulla
+  // sovrapposizione laterale (le img non hanno sfondo, quindi possono anche
+  // accavallarsi senza artefatti).
+  const altezza = Math.round(h * 0.66 * 1.15);
   const larghezza = Math.round(altezza * PORTRAIT_RATIO);
+  // Sovrapposizione laterale tra immagini (applicata come margin-left negativo
+  // sugli slot dal secondo in poi: il gap negativo su flexbox è inaffidabile).
+  // Base: 30% della larghezza. Se anche così la riga eccede lo schermo, si
+  // aumenta la sovrapposizione quel tanto che basta per stare in w * 0.98.
+  let overlapPx = 0;
+  if (n > 1) {
+    const dispo = w * 0.98;
+    const overlapBase = larghezza * 0.3;
+    // Larghezza totale con la sola sovrapposizione base.
+    const totaleBase = n * larghezza - (n - 1) * overlapBase;
+    if (totaleBase > dispo) {
+      // Sovrapposizione necessaria per far stare tutto in `dispo`.
+      overlapPx = (n * larghezza - dispo) / (n - 1);
+    } else {
+      overlapPx = overlapBase;
+    }
+    overlapPx = Math.round(overlapPx);
+  }
 
   const [sbarre, setSbarre] = useState(false);
   const [flash, setFlash] = useState(false);
@@ -154,12 +172,17 @@ export default function AnimazionePrigione({ snapshot, folderPath, sfondoSrc }: 
       <div className={styles.vignette} aria-hidden="true" />
 
       {/* Personaggi: immagini in portrait (senza nomi né manette) */}
-      <div className={styles.prigionieri} style={{ gap: gapPx }}>
+      <div className={styles.prigionieri}>
         {snapshot.prigionieri.map((p, i) => (
           <div
             key={p.personaggioId}
             className={styles.slot}
-            style={{ animationDelay: `${i * 0.1}s` }}
+            style={{
+              animationDelay: `${i * 0.1}s`,
+              marginLeft: i > 0 ? -overlapPx : 0,
+              // Gli slot a sinistra stanno sopra a quelli a destra.
+              zIndex: n - i,
+            }}
           >
             <div
               className={styles.ritrattoWrap}
