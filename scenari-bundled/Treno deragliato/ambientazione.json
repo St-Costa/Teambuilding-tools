@@ -2,97 +2,9 @@
   "schemaVersion": 1,
   "nome": "Treno deragliato",
   "creataIl": "2026-05-29T09:47:30.172Z",
-  "modificataIl": "2026-06-22T09:35:45.377Z",
+  "modificataIl": "2026-06-22T09:41:33.702Z",
   "mappaPath": "mappa-0ba34270-b261-4cec-81bf-f606e25e1d22.png",
   "personaggi": [
-    {
-      "id": "5ab61745-055e-4cc3-92d8-626bf5e07dfb",
-      "nome": "Otto Kruger",
-      "colore": "#FB8C00",
-      "imgPath": "personaggi/5ab61745-055e-4cc3-92d8-626bf5e07dfb.png",
-      "crop": {
-        "zoom": 4.511428022968907,
-        "offsetX": 0.007194871168870215,
-        "offsetY": 1.6313525860126201
-      },
-      "posizione": {
-        "x": 0.8212030570395386,
-        "y": 0.7942304505940115
-      },
-      "posizioneIniziale": {
-        "x": 0.8212030570395386,
-        "y": 0.7942304505940115
-      },
-      "oggettoId": null,
-      "oggettoInizialeId": null,
-      "npc": false
-    },
-    {
-      "id": "e96af4bd-b93e-4c70-b671-65a0505c4f25",
-      "nome": "Carlo Moretti",
-      "colore": "#43A047",
-      "imgPath": "personaggi/e96af4bd-b93e-4c70-b671-65a0505c4f25.png",
-      "crop": {
-        "zoom": 4.556998002998896,
-        "offsetX": -0.024953988882211543,
-        "offsetY": 1.6326079148512622
-      },
-      "posizione": {
-        "x": 0.3239351431528727,
-        "y": 0.5124550430862992
-      },
-      "posizioneIniziale": {
-        "x": 0.3239351431528727,
-        "y": 0.5124550430862992
-      },
-      "oggettoId": null,
-      "oggettoInizialeId": null,
-      "npc": false
-    },
-    {
-      "id": "35d010e9-a76f-4d07-950c-9c1da7259ac2",
-      "nome": "Daphnè de Rocherfort",
-      "colore": "#D81B60",
-      "imgPath": "personaggi/35d010e9-a76f-4d07-950c-9c1da7259ac2.png",
-      "crop": {
-        "zoom": 3.7661140520652037,
-        "offsetX": -0.027867243840144232,
-        "offsetY": 1.2776020930363583
-      },
-      "posizione": {
-        "x": 0.4872181347767898,
-        "y": 0.6460593253150866
-      },
-      "posizioneIniziale": {
-        "x": 0.4872181347767898,
-        "y": 0.6460593253150866
-      },
-      "oggettoId": null,
-      "oggettoInizialeId": null,
-      "npc": false
-    },
-    {
-      "id": "5bf72f00-49ac-41c5-9d0d-a50d08b3d542",
-      "nome": "Hamish Douglas MacLeod",
-      "colore": "#00ACC1",
-      "imgPath": "personaggi/5bf72f00-49ac-41c5-9d0d-a50d08b3d542.png",
-      "crop": {
-        "zoom": 4.184571168961337,
-        "offsetX": 0.00015446589543269447,
-        "offsetY": 1.5216160700871395
-      },
-      "posizione": {
-        "x": 0.07625832557678222,
-        "y": 0.5625384436713324
-      },
-      "posizioneIniziale": {
-        "x": 0.07625832557678222,
-        "y": 0.5625384436713324
-      },
-      "oggettoId": null,
-      "oggettoInizialeId": null,
-      "npc": false
-    },
     {
       "id": "d842cece-bcbd-4f86-a7fe-73a85a17eb1d",
       "nome": "Fuochista",
@@ -108,8 +20,8 @@
         "y": 0.40519264058298665
       },
       "posizioneIniziale": {
-        "x": 0.8788595556849166,
-        "y": 0.3643419500690631
+        "x": 0.869198643164889,
+        "y": 0.40519264058298665
       },
       "oggettoId": null,
       "oggettoInizialeId": null,
@@ -121,15 +33,106 @@
       "colore": "#6D4C41",
       "imgPath": "personaggi/f6c883ee-f395-4b67-8e54-648421ce090a.png",
       "crop": {
-        "zoom": 4.83415629738214,
-        "offsetX": 0.1313410832331731,
-        "offsetY": 1.8424067570612983
+        "zoom": 4.350740667643927,
+        "offsetX": 0.15716083233173078,
+        "offsetY": 1.633027766301082
       },
       "posizione": {
-        "x": 0.6087197417157921,
-        "y": 0.4984451191637204
+        "x": 0.6092292902966686,
+        "y": 0.4965929140688945
       },
-      "posizioneIniziale": null,
+      "posizioneIniziale": {
+        "x": 0.6092292902966686,
+        "y": 0.4965929140688945
+      },
+      "oggettoId": null,
+      "oggettoInizialeId": null,
+      "npc": false
+    },
+    {
+      "id": "0457871a-b8ec-43a4-9b71-12ed2d9756d1",
+      "nome": "Otto Kruger",
+      "colore": "#FB8C00",
+      "imgPath": "personaggi/0457871a-b8ec-43a4-9b71-12ed2d9756d1.png",
+      "crop": {
+        "zoom": 3.668659773833101,
+        "offsetX": 0.00523869441105769,
+        "offsetY": 1.3389961829552282
+      },
+      "posizione": {
+        "x": 0.7973866472523118,
+        "y": 0.8286747430709148
+      },
+      "posizioneIniziale": {
+        "x": 0.7973866472523118,
+        "y": 0.8286747430709148
+      },
+      "oggettoId": null,
+      "oggettoInizialeId": null,
+      "npc": false
+    },
+    {
+      "id": "00c8b779-7393-43b0-ace6-b90dfda410a8",
+      "nome": "Daphnè de Rocherfort",
+      "colore": "#D81B60",
+      "imgPath": "personaggi/00c8b779-7393-43b0-ace6-b90dfda410a8.png",
+      "crop": {
+        "zoom": 3.236088099900441,
+        "offsetX": -0.018094576322115394,
+        "offsetY": 1.129105670635517
+      },
+      "posizione": {
+        "x": 0.49739860661822327,
+        "y": 0.6555231589923547
+      },
+      "posizioneIniziale": {
+        "x": 0.49739860661822327,
+        "y": 0.6555231589923547
+      },
+      "oggettoId": null,
+      "oggettoInizialeId": null,
+      "npc": false
+    },
+    {
+      "id": "c58138a3-66e0-440e-a475-11bb3df10801",
+      "nome": "Carlo Moretti",
+      "colore": "#43A047",
+      "imgPath": "personaggi/c58138a3-66e0-440e-a475-11bb3df10801.png",
+      "crop": {
+        "zoom": 4.0355257512164115,
+        "offsetX": 0.00454946664663463,
+        "offsetY": 1.44318601168119
+      },
+      "posizione": {
+        "x": 0.3181100582757179,
+        "y": 0.5199898012051339
+      },
+      "posizioneIniziale": {
+        "x": 0.3181100582757179,
+        "y": 0.5199898012051339
+      },
+      "oggettoId": null,
+      "oggettoInizialeId": null,
+      "npc": false
+    },
+    {
+      "id": "31691a2d-a165-490f-8826-077e3fc2a7c6",
+      "nome": "Hamish Douglas MacLeod",
+      "colore": "#00ACC1",
+      "imgPath": "personaggi/31691a2d-a165-490f-8826-077e3fc2a7c6.png",
+      "crop": {
+        "zoom": 3.668659773833101,
+        "offsetX": -0.018133075420673064,
+        "offsetY": 1.2768295288085936
+      },
+      "posizione": {
+        "x": 0.08800991933482524,
+        "y": 0.5923775028952822
+      },
+      "posizioneIniziale": {
+        "x": 0.08800991933482524,
+        "y": 0.5923775028952822
+      },
       "oggettoId": null,
       "oggettoInizialeId": null,
       "npc": false
