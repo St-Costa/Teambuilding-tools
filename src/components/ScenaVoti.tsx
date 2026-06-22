@@ -104,16 +104,23 @@ function GrigliaVotanti({
   caselleRef.current = caselle;
   const gridSize = dim * 2 + GAP_VOTI;
 
+  // Render in ordine di slot: il voto centrale (slot 4) per ULTIMO così, da DOM,
+  // si dipinge sopra gli angoli. NON usiamo z-index: un position:absolute con
+  // z-index (anche 0) crea uno stacking context, e su WebKitGTK lo sfondo rosso
+  // della colonna dietro quel contesto non viene invalidato quando si toglie il
+  // "più votato" → resta un rettangolino rosso fantasma (bug del voto centrale).
+  const votantiOrdinati = [...votanti].sort(
+    (a, b) =>
+      (caselle.get(a.personaggioId) ?? 4) - (caselle.get(b.personaggioId) ?? 4),
+  );
+
   return (
     <div style={{ position: "relative", width: gridSize, height: gridSize, flexShrink: 0 }}>
-      {votanti.map((v) => {
+      {votantiOrdinati.map((v) => {
         const slot = caselle.get(v.personaggioId) ?? 4;
         const { top, left } = posizioneCasella(slot, dim);
         return (
-          <div
-            key={v.personaggioId}
-            style={{ position: "absolute", top, left, zIndex: slot === 4 ? 1 : 0 }}
-          >
+          <div key={v.personaggioId} style={{ position: "absolute", top, left }}>
             <Cerchietto
               src={risolviAsset(folderPath, v.imgPath)}
               colore={v.colore}
@@ -142,10 +149,10 @@ export default function ScenaVoti({ snapshot, folderPath, sfondoSrc }: Props) {
   const gapPx = Math.max(8, Math.floor(w * 0.008));
   // colWidth esclude i gap così il totale resta dentro il 90% della larghezza
   const colWidth = Math.floor((w * 0.9 - (numChars - 1) * gapPx) / numChars);
-  // Quando l'NPC è visibile, i giocatori vengono rimpiccioliti (h*0.21 vs h*0.26)
-  // per garantire che la barra NPC in basso non si sovrapponga mai ai giocatori.
-  // Verifica matematica: con h=1080, playerH≈642px, NPC top≈766px → 124px di margine.
-  const dimMaxH = npcPresente ? Math.floor(h * 0.21) : Math.floor(h * 0.26);
+  // Dimensione "a riposo" dei giocatori (senza NPC). Quando l'NPC entra NON
+  // cambiamo questi px: è la transform scale su .contenutoConNpc a rimpicciolire
+  // tutto in modo fluido (vedi ScenaVoti.module.css), evitando reflow scattosi.
+  const dimMaxH = Math.floor(h * 0.26);
   const dimTarget = Math.min(Math.floor(colWidth * 0.87), dimMaxH);
   // Cerchietti votanti
   const dimVotante = Math.max(Math.floor(dimTarget * 0.42), 20);
@@ -172,8 +179,12 @@ export default function ScenaVoti({ snapshot, folderPath, sfondoSrc }: Props) {
   // Max voti su TUTTE le righe (giocatori + NPC): determina chi è "il più votato".
   const maxVoti = Math.max(...snapshot.righe.map((r) => r.votanti.length), 0);
 
-  // Riga NPC: cerchietto più piccolo per far stare la barra dentro lo spazio rimasto.
-  const dimNpc = Math.min(dimTarget, Math.floor(h * 0.16));
+  // Riga NPC: stessa taglia dei giocatori DOPO l'animazione di ingresso, cioè
+  // dimTarget ridotto dello stesso scale applicato in CSS (.contenutoConNpc →
+  // keyframe entraNpc). Tienili allineati: se cambi uno, cambia l'altro.
+  const SCALE_GIOCATORI = 0.86;
+  // NPC un 10% più piccolo dei giocatori (a parità di scale di ingresso).
+  const dimNpc = Math.round(dimTarget * SCALE_GIOCATORI * 0.9);
   const dimVotanteNpc = Math.max(Math.floor(dimNpc * 0.42), 20);
   const manetteNpcSize = Math.max(Math.floor(dimNpc * 0.55), 40);
 
@@ -182,9 +193,11 @@ export default function ScenaVoti({ snapshot, folderPath, sfondoSrc }: Props) {
     return (
       <div
         key={r.target.personaggioId}
-        className={`${styles.colonnaPersonaggio} ${isTop ? styles.colonnaTop : ""}`}
+        className={styles.colonnaPersonaggio}
         style={{ width: colWidth, minWidth: colWidth, boxSizing: "border-box" }}
       >
+        {/* Evidenza rossa sempre nel DOM, dietro al contenuto: fade in opacity */}
+        <div className={`${styles.evidenza} ${isTop ? styles.evidenzaTop : ""}`} aria-hidden="true" />
         {/* Manette: sempre nel DOM a dimensione fissa, invisible se non top */}
         <span
           className={styles.manette}

@@ -38,10 +38,24 @@
   box-sizing: border-box;
 }
 
-/* Con l'NPC in basso, i tondini votabili salgono verso l'alto */
+/* Con l'NPC in basso i giocatori salgono e rimpiccioliscono. Per restare
+   fluidi su WebKitGTK animiamo SOLO transform (composito su GPU): un'unica
+   translateY+scale sul contenuto muove e ridimensiona tutto insieme —
+   cerchietti, nomi, manette, voti — senza reflow per-elemento. Le dimensioni
+   inline restano quelle "senza NPC" (più grandi): è lo scale a rimpicciolirle. */
 .contenutoConNpc {
-  align-items: flex-start;
-  padding-top: 1vh;
+  animation: entraNpc 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+@keyframes entraNpc {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  /* scale qui = SCALE_GIOCATORI in ScenaVoti.tsx: l'NPC usa la stessa taglia
+     dei giocatori DOPO questo scale, così i due hanno lo stesso ingombro. */
+  100% {
+    transform: translateY(-13vh) scale(0.86);
+  }
 }
 
 /* Riga orizzontale centrata — align-items: flex-start per ancorare dall'alto */
@@ -55,6 +69,7 @@
 
 /* Colonna di ogni personaggio — larghezza fissa (+ minWidth) via inline style */
 .colonnaPersonaggio {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -62,19 +77,28 @@
   flex-shrink: 0;
   box-sizing: border-box;
   padding: 0.3rem 0.12rem 0.3rem; /* ridotto: spazio recuperato come gap tra colonne */
-  border-radius: 16px;
-  border: 2px solid transparent;
-  transition:
-    background 0.3s,
-    border-color 0.3s,
-    box-shadow 0.3s;
 }
 
-/* Il più votato: sfondo rosso (portrait, verticale) */
-.colonnaTop {
+/* Evidenza "più votato": elemento DEDICATO sempre nel DOM, dietro al contenuto
+   (z-index: -1), di cui si fa il fade in OPACITY. Niente toggle di
+   background/box-shadow con transition: su WebKitGTK, dentro il layer scalato
+   quando l'NPC è in maggioranza, quel fade lasciava un residuo di repaint
+   (rettangolino rosso fantasma). L'opacity si compone su GPU e non lascia tracce. */
+.evidenza {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 16px;
+  border: 2px solid rgba(220, 50, 50, 0.65);
   background: rgba(200, 30, 30, 0.28);
-  border-color: rgba(220, 50, 50, 0.65);
   box-shadow: 0 0 32px rgba(220, 50, 50, 0.35);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.evidenzaTop {
+  opacity: 1;
 }
 
 /* Manette: spazio fisso sopra il cerchietto (sempre nel DOM, visibility toggle) */
