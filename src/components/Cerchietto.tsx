@@ -2,6 +2,12 @@ import type { CSSProperties } from "react";
 import type { Crop } from "../lib/ambientazione";
 import styles from "./Cerchietto.module.css";
 
+// Discrimine sul formato: i PNG (potenzialmente con sfondo trasparente) non hanno
+// bordo, così il disco colorato arriva fino al bordo esterno.
+function isPng(src: string): boolean {
+  return /\.png(\?|#|$)/i.test(src) || src.startsWith("data:image/png");
+}
+
 interface Props {
   src: string;
   colore: string;
@@ -25,7 +31,11 @@ export default function Cerchietto({
   className,
   alt = "",
 }: Props) {
-  const bordo = spessoreBordo ?? Math.max(3, Math.round(dimensione * 0.14));
+  const bordoBase = spessoreBordo ?? Math.max(3, Math.round(dimensione * 0.14));
+  // I PNG (sfondo potenzialmente trasparente) non hanno bordo: il disco colorato
+  // arriva fino al bordo esterno e la figura ci "galleggia" sopra. L'anello NPC
+  // mantiene comunque il suo spessore (è l'unico segno di bordo per gli NPC).
+  const bordo = isPng(src) ? 0 : bordoBase;
   // Wrapper esterno: non ritaglia (così l'anello SVG dell'NPC può essere
   // disegnato anche sopra l'area del bordo); porta l'alone di selezione.
   const stileRoot: CSSProperties = {
@@ -38,6 +48,10 @@ export default function Cerchietto({
   const stileCerchio: CSSProperties = {
     borderColor: npc ? "transparent" : colore,
     borderWidth: bordo,
+    // Le immagini PNG con sfondo trasparente lasciano vedere il riempimento del
+    // cerchio: usiamo il colore del personaggio così appare un "disco" colorato
+    // con sopra la figura, invece dello sfondo bianco/grigio neutro.
+    background: colore,
   };
   const stileImg: CSSProperties = {
     transform: `translate(${crop.offsetX * 100}%, ${crop.offsetY * 100}%) scale(${crop.zoom})`,
@@ -76,10 +90,10 @@ export default function Cerchietto({
           <circle
             cx={dimensione / 2}
             cy={dimensione / 2}
-            r={(dimensione - bordo) / 2}
+            r={(dimensione - bordoBase) / 2}
             fill="none"
             stroke={colore}
-            strokeWidth={bordo}
+            strokeWidth={bordoBase}
             strokeDasharray={`${Math.max(2, dimensione * 0.2)} ${Math.max(2, dimensione * 0.1)}`}
           />
         </svg>
