@@ -35,9 +35,14 @@ export default function Cerchietto({
   };
   // Cerchio interno: ritaglia l'immagine; per gli NPC il bordo è trasparente
   // (l'anello visibile è l'SVG tratteggiato), per gli altri è il bordo pieno.
+  // Lo sfondo del cerchio è il colore del personaggio (non più grigio): così
+  // un'immagine PNG con sfondo trasparente appare come un "disco" colorato con
+  // sopra il personaggio, anziché mostrare un fondo bianco/grigio. Per gli NPC
+  // (anello tratteggiato) si tiene un grigio neutro per non riempire il tondo.
   const stileCerchio: CSSProperties = {
     borderColor: npc ? "transparent" : colore,
     borderWidth: bordo,
+    backgroundColor: npc ? "#ddd" : colore,
   };
   const stileImg: CSSProperties = {
     transform: `translate(${crop.offsetX * 100}%, ${crop.offsetY * 100}%) scale(${crop.zoom})`,

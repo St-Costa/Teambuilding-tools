@@ -17,6 +17,9 @@ export interface Personaggio {
   nome: string;
   colore: string;
   imgPath: string;
+  // Immagine dedicata all'animazione di incarcerazione (prigione). Se assente
+  // (null), l'animazione usa imgPath (la stessa del cerchietto sulla mappa).
+  imgPrigionePath: string | null;
   crop: Crop;
   posizione: Posizione;
   posizioneIniziale: Posizione | null;
@@ -170,11 +173,16 @@ function validaPersonaggio(raw: unknown, idx: number): Personaggio {
   if (raw.posizioneIniziale !== undefined && raw.posizioneIniziale !== null) {
     posizioneIniziale = validaPosizione(raw.posizioneIniziale, `${ctx}.posizioneIniziale`);
   }
+  const imgPrigionePath =
+    typeof raw.imgPrigionePath === "string" && raw.imgPrigionePath !== ""
+      ? raw.imgPrigionePath
+      : null;
   return {
     id: raw.id,
     nome: raw.nome,
     colore: raw.colore.toUpperCase(),
     imgPath: raw.imgPath,
+    imgPrigionePath,
     crop: validaCrop(raw.crop, ctx),
     posizione: validaPosizione(raw.posizione, ctx),
     posizioneIniziale,

@@ -173,7 +173,7 @@ export default function AnimazionePrigione({ snapshot, folderPath, sfondoSrc }: 
               }}
             >
               <img
-                src={risolviAsset(folderPath, p.imgPath)}
+                src={risolviAsset(folderPath, p.imgPrigionePath ?? p.imgPath)}
                 alt={p.nome}
                 className={styles.ritratto}
                 draggable={false}

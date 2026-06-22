@@ -15,6 +15,7 @@ interface PersonaggioSnap {
   nome: string;
   colore: string;
   imgPath: string;
+  imgPrigionePath: string | null;
   crop: Crop;
 }
 
@@ -58,6 +59,7 @@ export const useVotiStore = create<VotiState>((set, get) => ({
       nome: p.nome,
       colore: p.colore,
       imgPath: p.imgPath,
+      imgPrigionePath: p.imgPrigionePath,
       crop: p.crop,
     });
     const righe: PersonaggioSnap[] = amb.personaggi.filter((p) => !p.npc).map(toSnap);
@@ -111,7 +113,14 @@ export const useVotiStore = create<VotiState>((set, get) => ({
     if (maxVoti === 0) return;
     const prigionieri: PersonaggioMiniSnap[] = candidati
       .filter((r) => (state.votanti[r.personaggioId] ?? []).length === maxVoti)
-      .map((r) => ({ personaggioId: r.personaggioId, nome: r.nome, colore: r.colore, imgPath: r.imgPath, crop: r.crop }));
+      .map((r) => ({
+        personaggioId: r.personaggioId,
+        nome: r.nome,
+        colore: r.colore,
+        imgPath: r.imgPath,
+        imgPrigionePath: r.imgPrigionePath,
+        crop: r.crop,
+      }));
 
     const amb = useAmbientazioneStore.getState().current;
     const folder = useAmbientazioneStore.getState().folderPath;

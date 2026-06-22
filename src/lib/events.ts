@@ -93,6 +93,9 @@ export interface PersonaggioMiniSnap {
   nome: string;
   colore: string;
   imgPath: string;
+  // Immagine dedicata all'animazione di incarcerazione (se impostata). I voti
+  // usano imgPath; l'animazione prigione usa questa quando presente.
+  imgPrigionePath?: string | null;
   crop: import("./ambientazione").Crop;
 }
 

@@ -3,6 +3,8 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { eseguiSalvataggio, useAmbientazioneStore } from "../../state/ambientazioneStore";
 import { useVotiStore } from "../../state/votiStore";
 import { IconaVoto } from "../../components/Icone";
+import Cerchietto from "../../components/Cerchietto";
+import { risolviAsset } from "../../lib/storage";
 import styles from "./PulsanteVoti.module.css";
 import stylesConfig from "./PulsanteVotiConfig.module.css";
 
@@ -19,6 +21,7 @@ export default function PulsanteVoti({ numeroBadge }: Props) {
   const impostaSuonoPrigioniero = useAmbientazioneStore((s) => s.impostaSuonoPrigioniero);
   const impostaSuonoPrigionieroSting = useAmbientazioneStore((s) => s.impostaSuonoPrigionieroSting);
   const impostaSuonoPrigionieroSirena = useAmbientazioneStore((s) => s.impostaSuonoPrigionieroSirena);
+  const impostaImmaginePrigione = useAmbientazioneStore((s) => s.impostaImmaginePrigione);
 
   const fase = useVotiStore((s) => s.fase);
   const apri = useVotiStore((s) => s.apri);
@@ -102,6 +105,18 @@ export default function PulsanteVoti({ numeroBadge }: Props) {
       } catch { /* annullato */ }
     }
 
+    async function caricaImmaginePrigione(personaggioId: string) {
+      try {
+        const scelto = await open({
+          multiple: false,
+          filters: [{ name: "Immagini", extensions: ["png", "jpg", "jpeg", "webp"] }],
+        });
+        if (typeof scelto !== "string") return;
+        await impostaImmaginePrigione(personaggioId, scelto);
+        await eseguiSalvataggio();
+      } catch { /* annullato */ }
+    }
+
     return (
       <div style={{ position: "relative" }}>
         <button
@@ -160,6 +175,40 @@ export default function PulsanteVoti({ numeroBadge }: Props) {
                   onClick={() => void caricaSuonoSirena()}
                   tipo="audio"
                 />
+              </div>
+
+              <div className={stylesConfig.sezione}>
+                <span className={stylesConfig.sezTitolo}>Immagini animazione personaggi</span>
+                {current.personaggi.length === 0 ? (
+                  <span className={stylesConfig.mancante}>Nessun personaggio</span>
+                ) : (
+                  <div className={stylesConfig.personaggiGriglia}>
+                    {current.personaggi.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className={stylesConfig.personaggioBtn}
+                        onClick={() => void caricaImmaginePrigione(p.id)}
+                        title={
+                          p.imgPrigionePath
+                            ? `Immagine animazione impostata per ${p.nome} — clic per cambiarla`
+                            : `Scegli l'immagine dell'animazione per ${p.nome}`
+                        }
+                        aria-label={`Immagine animazione di ${p.nome}`}
+                      >
+                        <Cerchietto
+                          src={risolviAsset(folderPath, p.imgPrigionePath ?? p.imgPath)}
+                          colore={p.colore}
+                          crop={p.imgPrigionePath ? { zoom: 1, offsetX: 0, offsetY: 0 } : p.crop}
+                          dimensione={48}
+                          npc={p.npc}
+                          alt={p.nome}
+                        />
+                        {p.imgPrigionePath && <span className={stylesConfig.badgeOk}>✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </>

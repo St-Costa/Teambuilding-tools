@@ -26,31 +26,38 @@
   pointer-events: none;
 }
 
+/* Contesto di posizionamento: i blocchi (giocatori e NPC) si posizionano in
+   modo assoluto al centro e si spostano via transform (animato). */
 .contenuto {
   position: relative;
   z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 100%;
   height: 100%;
-  padding: 2rem;
-  box-sizing: border-box;
+  overflow: hidden;
 }
 
-/* Con l'NPC in basso, i tondini votabili salgono verso l'alto */
-.contenutoConNpc {
-  align-items: flex-start;
-  padding-top: 5vh;
-}
-
-/* Riga orizzontale centrata — align-items: flex-start per ancorare dall'alto */
-.rigaPersonaggi {
+/* Blocco giocatori: riga orizzontale, centrata come gruppo. Il transform (con
+   offset verticale) è impostato inline; la transizione anima lo spostamento
+   verso l'alto quando entra l'NPC. */
+.bloccoPersonaggi {
+  position: absolute;
+  left: 50%;
+  top: 50%;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   justify-content: center;
-  gap: 0;
+  max-width: 96vw;
+  transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+/* Blocco NPC: posizionato sotto i giocatori (transform inline + transizione). */
+.bloccoNpc {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 
 /* Colonna di ogni personaggio — larghezza fissa (+ minWidth) via inline style */
@@ -114,30 +121,39 @@
   flex-shrink: 0;
 }
 
-/* Disposizione "5 dei dadi": griglia 3×3, gli item piazzati via inline style */
-.votantiDado {
-  display: grid;
-  gap: 4px;
-  justify-content: center;
-  align-content: center;
-  justify-items: center;
-  align-items: center;
+/* Disposizione "dado" (4 o 5 voti): contenitore a dimensione fissa con le
+   pedine posizionate in modo assoluto sugli slot (transform inline). */
+.dado {
+  position: relative;
   flex-shrink: 0;
 }
 
-/* ── Riga NPC: landscape, entra dal basso ── */
-.npcRiga {
+/* Singola pedina del dado: transizione sul transform per animare i (pochi)
+   spostamenti, più una comparsa morbida quando entra un nuovo voto. */
+.dadoCella {
   position: absolute;
-  z-index: 2;
-  left: 50%;
-  bottom: 4vh;
-  transform: translateX(-50%);
+  left: 0;
+  top: 0;
+  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
+  /* Comparsa morbida (solo opacità: il transform resta quello inline) */
+  animation: votoComparsa 0.25s ease-out both;
+}
+
+@keyframes votoComparsa {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* ── Riga NPC: landscape, entra dal basso ── */
+/* (Il posizionamento verticale è del wrapper .bloccoNpc; qui solo l'aspetto e
+   l'animazione di ingresso dal basso.) */
+.npcRiga {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 1.2rem;
-  padding: 0.8rem 1.4rem;
+  gap: 2.2rem;
+  padding: 1rem 2rem;
   border-radius: 20px;
   border: 2px solid transparent;
   background: rgba(0, 0, 0, 0.35);
@@ -155,8 +171,8 @@
 }
 
 @keyframes npcEntra {
-  0% { opacity: 0; transform: translateX(-50%) translateY(140%); }
-  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  0% { opacity: 0; transform: translateY(140%); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 /* Manette NPC: a SINISTRA del rettangolo */

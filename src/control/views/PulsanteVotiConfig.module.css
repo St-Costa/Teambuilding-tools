@@ -87,6 +87,43 @@
   flex: 1;
 }
 
+.personaggiGriglia {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: center;
+  padding: 0.2rem 0;
+}
+
+.personaggioBtn {
+  position: relative;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  line-height: 0;
+}
+.personaggioBtn:hover { filter: brightness(1.1); }
+
+/* Pallino verde sull'angolo del cerchietto quando l'immagine prigione è scelta */
+.badgeOk {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #3a9a6a;
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+}
+
 .configurato {
   color: #3a9a6a;
 }

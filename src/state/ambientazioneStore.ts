@@ -71,6 +71,7 @@ interface AmbientazioneState {
   rinominaPersonaggio: (id: string, nome: string) => void;
   cambiaColorePersonaggio: (id: string, hex: string) => void;
   modificaCropPersonaggio: (id: string, crop: Crop) => void;
+  impostaImmaginePrigione: (id: string, sourceAbsPath: string | null) => Promise<void>;
   impostaNpcPersonaggio: (id: string, npc: boolean) => void;
   salvaPosizioneInizialePersonaggio: (id: string) => void;
   ripristinaPosizioneInizialePersonaggio: (id: string) => void;
@@ -306,6 +307,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       nome: nome.trim(),
       colore: colore.toUpperCase(),
       imgPath: relativo,
+      imgPrigionePath: null,
       crop,
       posizione: { x: 0.1, y: 0.1 },
       posizioneIniziale: null,
@@ -346,6 +348,30 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
     get().modifica((draft) => {
       const p = draft.personaggi.find((x) => x.id === id);
       if (p) p.crop = crop;
+    });
+  },
+
+  async impostaImmaginePrigione(id, sourceAbsPath) {
+    const { folderPath, current } = get();
+    if (!folderPath || !current) throw new Error("Nessuna ambientazione aperta");
+    if (sourceAbsPath === null) {
+      get().modifica((draft) => {
+        const p = draft.personaggi.find((x) => x.id === id);
+        if (p) p.imgPrigionePath = null;
+      });
+      return;
+    }
+    // Nome file dedicato (suffisso -prigione) così non sovrascrive l'immagine
+    // del cerchietto. nuovoId() evita la cache della WebView sul vecchio file.
+    const relativo = await copiaImmagineInCartella(
+      folderPath,
+      sourceAbsPath,
+      "personaggi",
+      `${id}-prigione-${nuovoId()}`,
+    );
+    get().modifica((draft) => {
+      const p = draft.personaggi.find((x) => x.id === id);
+      if (p) p.imgPrigionePath = relativo;
     });
   },
 

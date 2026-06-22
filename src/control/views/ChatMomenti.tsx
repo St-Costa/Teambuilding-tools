@@ -4,7 +4,9 @@ import { renderMarkdown } from "../../lib/markdown";
 import styles from "./ChatMomenti.module.css";
 
 // Chat dei "momenti meme": vive sulla mappa in regia (mai in proiezione),
-// centrata in basso. A sinistra si scrive, a destra l'anteprima del .md.
+// centrata in basso. Si scrive nella casella in basso; il pulsante "Anteprima"
+// (sopra "Invia") trasforma la casella di scrittura nell'anteprima del .md già
+// scritto, e ripremendolo si torna a scrivere.
 // Il riquadro è ridimensionabile: bordo alto = altezza, bordi laterali =
 // larghezza (simmetrica, il centro resta fermo).
 
@@ -32,6 +34,9 @@ export default function ChatMomenti() {
   const [larghezza, setLarghezza] = useState(LARGHEZZA_DEFAULT);
   const [altezza, setAltezza] = useState(ALTEZZA_DEFAULT);
   const [bozza, setBozza] = useState("");
+  // Quando true, la casella di scrittura mostra l'anteprima del .md già scritto
+  // al posto del campo di testo.
+  const [anteprima, setAnteprima] = useState(false);
 
   const dragRef = useRef<DragState | null>(null);
 
@@ -119,7 +124,7 @@ export default function ChatMomenti() {
       />
 
       <div className={styles.contenuto}>
-        {/* Colonna sinistra: chat */}
+        {/* Colonna unica: chat */}
         <div className={styles.chat}>
           <div className={styles.intestazione}>😂 Momenti meme</div>
           <div className={styles.listaMessaggi}>
@@ -144,24 +149,43 @@ export default function ChatMomenti() {
             )}
           </div>
           <div className={styles.inputRiga}>
-            <textarea
-              className={styles.input}
-              value={bozza}
-              placeholder="Scrivi un momento e premi Invio…"
-              onChange={(e) => setBozza(e.target.value)}
-              onKeyDown={handleKeyDown}
-              rows={1}
-            />
-            <button type="button" className={styles.btnInvia} onClick={invia} title="Salva momento">
-              Invia
-            </button>
+            {anteprima ? (
+              // La casella di scrittura diventa l'anteprima del .md già scritto.
+              <div
+                className={`${styles.input} ${styles.inputAnteprima} ${styles.previewBody}`}
+                dangerouslySetInnerHTML={{ __html: html }}
+              />
+            ) : (
+              <textarea
+                className={styles.input}
+                value={bozza}
+                placeholder="Scrivi un momento e premi Invio…"
+                onChange={(e) => setBozza(e.target.value)}
+                onKeyDown={handleKeyDown}
+                rows={1}
+              />
+            )}
+            <div className={styles.colonnaPulsanti}>
+              <button
+                type="button"
+                className={`${styles.btnAnteprima} ${anteprima ? styles.btnAnteprimaAttivo : ""}`}
+                onClick={() => setAnteprima((v) => !v)}
+                title={anteprima ? "Torna a scrivere" : "Vedi l'anteprima .md di quanto scritto"}
+                aria-pressed={anteprima}
+              >
+                {anteprima ? "Modifica" : "Anteprima"}
+              </button>
+              <button
+                type="button"
+                className={styles.btnInvia}
+                onClick={invia}
+                disabled={anteprima}
+                title="Salva momento"
+              >
+                Invia
+              </button>
+            </div>
           </div>
-        </div>
-
-        {/* Colonna destra: anteprima del file .md */}
-        <div className={styles.preview}>
-          <div className={styles.intestazione}>Anteprima .md</div>
-          <div className={styles.previewBody} dangerouslySetInnerHTML={{ __html: html }} />
         </div>
       </div>
     </div>

@@ -62,9 +62,10 @@
   box-sizing: border-box;
 }
 
-/* ── Colonna chat ── */
+/* ── Colonna chat (unica) ── */
 .chat {
-  flex: 1 1 50%;
+  flex: 1 1 auto;
+  width: 100%;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -135,9 +136,25 @@
 
 .inputRiga {
   display: flex;
+  align-items: stretch;
   gap: 6px;
   margin-top: 8px;
   flex-shrink: 0;
+}
+
+/* Colonna con i due pulsanti: Anteprima (sopra) e Invia (sotto) */
+.colonnaPulsanti {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* La casella di scrittura in modalità anteprima: stesso box del textarea, ma
+   mostra il markdown renderizzato e scrolla se serve. */
+.inputAnteprima {
+  overflow-y: auto;
+  cursor: default;
 }
 
 .input {
@@ -159,7 +176,7 @@
 }
 
 .btnInvia {
-  flex-shrink: 0;
+  flex: 1;
   border-radius: 7px;
   border: none;
   background: #3b82f6;
@@ -172,20 +189,35 @@
 .btnInvia:hover {
   background: #2f6fe0;
 }
-
-/* ── Colonna anteprima .md ── */
-.preview {
-  flex: 1 1 50%;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
-  padding-left: 10px;
+.btnInvia:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
+/* Pulsante "Anteprima/Modifica" sopra a "Invia" */
+.btnAnteprima {
+  flex-shrink: 0;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 5px 14px;
+  cursor: pointer;
+}
+.btnAnteprima:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+.btnAnteprimaAttivo {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+/* ── Stili del markdown renderizzato (anteprima .md) ── */
 .previewBody {
-  flex: 1;
-  overflow-y: auto;
   font-size: 0.86rem;
   line-height: 1.45;
   min-height: 0;
