@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import type { RigaVotiSnap, VotiSnapshot, PersonaggioMiniSnap } from "../lib/events";
 import { risolviAsset } from "../lib/storage";
 import Cerchietto from "./Cerchietto";
@@ -11,9 +12,65 @@ interface Props {
   sfondoSrc: string | null;
 }
 
-// Griglia dei votanti: layout normale a 2 colonne. Con 5 voti, la griglia
-// resta 2×2 e il 5° voto è sovrapposto al centro con position:absolute così
-// l'altezza occupata è identica a quella di 4 voti (niente spostamento layout).
+// Caselle del "5" del dado: 4 angoli (0..3) + centro (4). Le coordinate sono
+// calcolate sul box 2×2 così il centro si sovrappone agli angoli senza
+// aumentare l'ingombro rispetto a 4 voti.
+const GAP_VOTI = 4;
+function posizioneCasella(slot: number, dim: number): { top: number; left: number } {
+  const passo = dim + GAP_VOTI;
+  const centro = passo / 2; // (box - dim)/2 con box = 2*dim + gap
+  switch (slot) {
+    case 0:
+      return { top: 0, left: 0 };
+    case 1:
+      return { top: 0, left: passo };
+    case 2:
+      return { top: passo, left: 0 };
+    case 3:
+      return { top: passo, left: passo };
+    default:
+      return { top: centro, left: centro };
+  }
+}
+
+// Assegna a ogni votante una casella stabile (0..4) ricordando il render
+// precedente. Regola: il centro (4) è usato solo quando i 4 angoli sono pieni;
+// se un angolo si libera mentre il centro è occupato, l'occupante del centro
+// (cioè il 5° voto) scende nell'angolo liberato — così togliendo uno dei primi
+// 4 voti è sempre il voto centrale a prenderne il posto.
+function assegnaCaselle(
+  votanti: PersonaggioMiniSnap[],
+  precedenti: Map<string, number>,
+): Map<string, number> {
+  const idsCorrenti = new Set(votanti.map((v) => v.personaggioId));
+  const assegnazioni = new Map<string, number>();
+  // Mantieni le caselle dei votanti ancora presenti.
+  for (const [id, slot] of precedenti) {
+    if (idsCorrenti.has(id)) assegnazioni.set(id, slot);
+  }
+  const occupati = () => new Set(assegnazioni.values());
+  const primoAngoloLibero = () => {
+    const occ = occupati();
+    for (let s = 0; s < 4; s++) if (!occ.has(s)) return s;
+    return -1;
+  };
+  // Se il centro è occupato ma c'è un angolo libero, sposta il centro nell'angolo.
+  const idCentro = [...assegnazioni].find(([, s]) => s === 4)?.[0];
+  if (idCentro !== undefined) {
+    const angolo = primoAngoloLibero();
+    if (angolo !== -1) assegnazioni.set(idCentro, angolo);
+  }
+  // Assegna i votanti nuovi: prima gli angoli, poi il centro.
+  for (const v of votanti) {
+    if (assegnazioni.has(v.personaggioId)) continue;
+    const angolo = primoAngoloLibero();
+    assegnazioni.set(v.personaggioId, angolo !== -1 ? angolo : 4);
+  }
+  return assegnazioni;
+}
+
+// Griglia dei votanti a forma di "5" del dado (fino a 5 voti), con caselle
+// stabili tra i render. Oltre i 5 voti si ripiega sul flow grid a 2 colonne.
 function GrigliaVotanti({
   votanti,
   folderPath,
@@ -23,62 +80,50 @@ function GrigliaVotanti({
   folderPath: string;
   dim: number;
 }) {
-  if (votanti.length === 5) {
-    // Griglia 2×2 + 5° voto centrato in assoluto: stesso ingombro di 4 voti.
-    const gridSize = dim * 2 + 4;
+  const caselleRef = useRef<Map<string, number>>(new Map());
+
+  if (votanti.length > 5) {
+    caselleRef.current = new Map();
     return (
-      <div style={{ position: "relative", width: gridSize, height: gridSize, flexShrink: 0 }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(2, ${dim}px)`,
-            gridTemplateRows: `repeat(2, ${dim}px)`,
-            gap: "4px",
-          }}
-        >
-          {[votanti[0], votanti[1], votanti[3], votanti[4]].map((v) => (
+      <div className={styles.rigaVotanti} style={{ gridTemplateColumns: `repeat(2, ${dim}px)` }}>
+        {votanti.map((v) => (
+          <Cerchietto
+            key={v.personaggioId}
+            src={risolviAsset(folderPath, v.imgPath)}
+            colore={v.colore}
+            crop={v.crop}
+            dimensione={dim}
+            alt={v.nome}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  const caselle = assegnaCaselle(votanti, caselleRef.current);
+  caselleRef.current = caselle;
+  const gridSize = dim * 2 + GAP_VOTI;
+
+  return (
+    <div style={{ position: "relative", width: gridSize, height: gridSize, flexShrink: 0 }}>
+      {votanti.map((v) => {
+        const slot = caselle.get(v.personaggioId) ?? 4;
+        const { top, left } = posizioneCasella(slot, dim);
+        return (
+          <div
+            key={v.personaggioId}
+            style={{ position: "absolute", top, left, zIndex: slot === 4 ? 1 : 0 }}
+          >
             <Cerchietto
-              key={v.personaggioId}
               src={risolviAsset(folderPath, v.imgPath)}
               colore={v.colore}
               crop={v.crop}
               dimensione={dim}
               alt={v.nome}
             />
-          ))}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            zIndex: 1,
-          }}
-        >
-          <Cerchietto
-            src={risolviAsset(folderPath, votanti[2].imgPath)}
-            colore={votanti[2].colore}
-            crop={votanti[2].crop}
-            dimensione={dim}
-            alt={votanti[2].nome}
-          />
-        </div>
-      </div>
-    );
-  }
-  return (
-    <div className={styles.rigaVotanti} style={{ gridTemplateColumns: `repeat(2, ${dim}px)` }}>
-      {votanti.map((v) => (
-        <Cerchietto
-          key={v.personaggioId}
-          src={risolviAsset(folderPath, v.imgPath)}
-          colore={v.colore}
-          crop={v.crop}
-          dimensione={dim}
-          alt={v.nome}
-        />
-      ))}
+          </div>
+        );
+      })}
     </div>
   );
 }
