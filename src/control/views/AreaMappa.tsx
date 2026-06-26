@@ -28,6 +28,7 @@ export default function AreaMappa() {
   const setInModifica = useAmbientazioneStore((s) => s.setAnnotazioneInModifica);
   const spostaAnn = useAmbientazioneStore((s) => s.spostaAnnotazione);
   const ridimensionaAnn = useAmbientazioneStore((s) => s.ridimensionaAnnotazione);
+  const ruotaAnn = useAmbientazioneStore((s) => s.ruotaAnnotazione);
   const modificaTestoAnn = useAmbientazioneStore((s) => s.modificaTestoAnnotazione);
   const eliminaAnn = useAmbientazioneStore((s) => s.eliminaAnnotazione);
 
@@ -59,6 +60,16 @@ export default function AreaMappa() {
   } | null>(null);
   const pendingDim = useRef<number | null>(null);
   const rafDimRef = useRef<number | null>(null);
+  // Rotazione di un'annotazione (maniglia in alto, stile Canva).
+  const rotateRef = useRef<{
+    id: string;
+    centerX: number;
+    centerY: number;
+    startAngolo: number; // angolo puntatore↔centro all'inizio (gradi)
+    startRotazione: number; // rotazione dell'annotazione all'inizio
+  } | null>(null);
+  const pendingRot = useRef<number | null>(null);
+  const rafRotRef = useRef<number | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -356,6 +367,69 @@ export default function AreaMappa() {
     }
   }
 
+  // --- Annotazioni: rotazione tramite maniglia in alto (stile Canva) ---
+
+  function flushPendingRot() {
+    if (!rotateRef.current || pendingRot.current === null) {
+      rafRotRef.current = null;
+      return;
+    }
+    const { id } = rotateRef.current;
+    const rot = pendingRot.current;
+    pendingRot.current = null;
+    ruotaAnn(id, rot);
+    rafRotRef.current = null;
+  }
+
+  function handleRotatePointerDown(e: React.PointerEvent<HTMLDivElement>, id: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!rett) return;
+    const ann = current!.annotazioni.find((a) => a.id === id);
+    if (!ann) return;
+    const screen = rettInScreen();
+    if (!screen) return;
+    const centerX = screen.left + ann.posizione.x * screen.width;
+    const centerY = screen.top + ann.posizione.y * screen.height;
+    // atan2 in gradi dell'asse puntatore↔centro. La maniglia parte in alto
+    // (−90°): sottraendolo, trascinare la maniglia ovunque mappa 1:1 sull'angolo
+    // dell'annotazione partendo dalla sua rotazione corrente.
+    const startAngolo = (Math.atan2(e.clientY - centerY, e.clientX - centerX) * 180) / Math.PI;
+    rotateRef.current = {
+      id,
+      centerX,
+      centerY,
+      startAngolo,
+      startRotazione: ann.rotazione,
+    };
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+  }
+
+  function handleRotatePointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!rotateRef.current) return;
+    const { centerX, centerY, startAngolo, startRotazione } = rotateRef.current;
+    const angolo = (Math.atan2(e.clientY - centerY, e.clientX - centerX) * 180) / Math.PI;
+    let rot = startRotazione + (angolo - startAngolo);
+    // Scatto a multipli di 15° tenendo premuto Shift (come Canva).
+    if (e.shiftKey) rot = Math.round(rot / 15) * 15;
+    pendingRot.current = rot;
+    if (rafRotRef.current === null) {
+      rafRotRef.current = requestAnimationFrame(flushPendingRot);
+    }
+  }
+
+  function handleRotatePointerUp() {
+    if (rotateRef.current && pendingRot.current !== null) {
+      flushPendingRot();
+    }
+    rotateRef.current = null;
+    pendingRot.current = null;
+    if (rafRotRef.current !== null) {
+      cancelAnimationFrame(rafRotRef.current);
+      rafRotRef.current = null;
+    }
+  }
+
   // Conclude la modifica inline del testo: se vuoto elimina l'annotazione (un
   // campo di testo vuoto non avrebbe senso e non è salvabile), altrimenti salva.
   function concludiModificaTesto() {
@@ -460,6 +534,7 @@ export default function AreaMappa() {
               style={{
                 left: rett.offsetX + a.posizione.x * rett.larghezza,
                 top: rett.offsetY + a.posizione.y * rett.altezza,
+                transform: `translate(-50%, -50%) rotate(${a.rotazione}deg)`,
               }}
               {...dragHandlers}
               onClick={(e) => e.stopPropagation()}
@@ -495,19 +570,32 @@ export default function AreaMappa() {
               ) : (
                 <AnnotazioneView annotazione={a} latoMaggiore={latoMaggiore} />
               )}
-              {selezionata &&
-                !inModifica &&
-                (["nw", "ne", "se", "sw"] as const).map((angolo) => (
+              {selezionata && !inModifica && (
+                <>
+                  {(["nw", "ne", "se", "sw"] as const).map((angolo) => (
+                    <div
+                      key={angolo}
+                      className={`${styles.maniglia} ${styles[`maniglia_${angolo}`]}`}
+                      onPointerDown={(e) => handleResizePointerDown(e, a.id)}
+                      onPointerMove={handleResizePointerMove}
+                      onPointerUp={handleResizePointerUp}
+                      onPointerCancel={handleResizePointerUp}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ))}
+                  {/* Maniglia di rotazione sopra al riquadro (stile Canva).
+                      Shift mentre si trascina = scatti di 15°. */}
                   <div
-                    key={angolo}
-                    className={`${styles.maniglia} ${styles[`maniglia_${angolo}`]}`}
-                    onPointerDown={(e) => handleResizePointerDown(e, a.id)}
-                    onPointerMove={handleResizePointerMove}
-                    onPointerUp={handleResizePointerUp}
-                    onPointerCancel={handleResizePointerUp}
+                    className={styles.manigliaRotazione}
+                    onPointerDown={(e) => handleRotatePointerDown(e, a.id)}
+                    onPointerMove={handleRotatePointerMove}
+                    onPointerUp={handleRotatePointerUp}
+                    onPointerCancel={handleRotatePointerUp}
                     onClick={(e) => e.stopPropagation()}
+                    title="Trascina per ruotare (Shift = scatti di 15°)"
                   />
-                ))}
+                </>
+              )}
             </div>
           );
         })}

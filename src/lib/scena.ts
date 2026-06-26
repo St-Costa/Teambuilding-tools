@@ -41,6 +41,9 @@ export const EMOJI_ANNOTAZIONI = [
   "❓", // mistero
   "🐺", // lupo
   "🪨", // carbone / roccia (non esiste un'emoji dedicata al carbone)
+  "🐍", // serpente
+  "💨", // fumo
+  "🪈", // tubo (flauto/piffero, l'emoji più vicina a un tubo)
 ] as const;
 
 export const DIM_ANNOTAZIONE_SIMBOLO_DEFAULT = 0.06;

@@ -125,6 +125,40 @@
   cursor: nesw-resize;
 }
 
+/* Maniglia di rotazione: pallino sopra il riquadro, collegato da uno stelo
+   (pseudo-elemento) al bordo superiore — come in Canva. */
+.manigliaRotazione {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: -28px;
+  background: #fff;
+  border: 2px solid #2563eb;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  touch-action: none;
+  z-index: 2;
+}
+
+.manigliaRotazione:active {
+  cursor: grabbing;
+}
+
+.manigliaRotazione::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 2px;
+  height: 18px;
+  background: #2563eb;
+  transform: translateX(-50%);
+}
+
 .placeholder {
   flex: 1;
   display: flex;

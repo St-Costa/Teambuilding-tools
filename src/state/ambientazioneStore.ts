@@ -8,7 +8,7 @@ import type {
   Posizione,
   TipoAnnotazione,
 } from "../lib/ambientazione";
-import { DIM_ANNOTAZIONE_MAX, DIM_ANNOTAZIONE_MIN } from "../lib/ambientazione";
+import { DIM_ANNOTAZIONE_MAX, DIM_ANNOTAZIONE_MIN, normalizzaGradi } from "../lib/ambientazione";
 import {
   apriAmbientazione,
   copiaAudioInCartella,
@@ -103,6 +103,7 @@ interface AmbientazioneState {
   }) => string;
   spostaAnnotazione: (id: string, pos: Posizione) => void;
   ridimensionaAnnotazione: (id: string, dimensione: number) => void;
+  ruotaAnnotazione: (id: string, gradi: number) => void;
   modificaTestoAnnotazione: (id: string, contenuto: string) => void;
   cambiaColoreAnnotazione: (id: string, hex: string | null) => void;
   eliminaAnnotazione: (id: string) => void;
@@ -666,6 +667,7 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
       posizione: { x: 0.5, y: 0.5 },
       dimensione:
         tipo === "simbolo" ? DIM_ANNOTAZIONE_SIMBOLO_DEFAULT : DIM_ANNOTAZIONE_TESTO_DEFAULT,
+      rotazione: 0,
       colore: colore ?? null,
     };
     get().modifica((draft) => {
@@ -691,6 +693,13 @@ export const useAmbientazioneStore = create<AmbientazioneState>((set, get) => ({
     get().modifica((draft) => {
       const a = draft.annotazioni.find((x) => x.id === id);
       if (a) a.dimensione = dim;
+    });
+  },
+
+  ruotaAnnotazione(id, gradi) {
+    get().modifica((draft) => {
+      const a = draft.annotazioni.find((x) => x.id === id);
+      if (a) a.rotazione = normalizzaGradi(gradi);
     });
   },
 

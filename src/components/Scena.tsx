@@ -168,6 +168,7 @@ export default function Scena({
             style={{
               left: rett.offsetX + a.posizione.x * rett.larghezza,
               top: rett.offsetY + a.posizione.y * rett.altezza,
+              transform: `translate(-50%, -50%) rotate(${a.rotazione}deg)`,
             }}
           >
             <AnnotazioneView

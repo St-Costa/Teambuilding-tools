@@ -42,6 +42,7 @@ export interface Annotazione {
   contenuto: string; // emoji (simbolo) oppure testo digitato (testo)
   posizione: Posizione; // x,y normalizzate 0–1 = CENTRO (come i personaggi)
   dimensione: number; // frazione del lato maggiore mappa → guida il font-size
+  rotazione: number; // gradi orari, 0 = nessuna rotazione (default)
   colore: string | null; // solo per "testo": colore del testo (null = default)
 }
 
@@ -49,6 +50,11 @@ export interface Annotazione {
 // un'annotazione: clamp di sicurezza usato sia in validazione sia nel resize.
 export const DIM_ANNOTAZIONE_MIN = 0.01;
 export const DIM_ANNOTAZIONE_MAX = 0.5;
+
+/** Riporta un angolo in gradi nell'intervallo [0, 360). */
+export function normalizzaGradi(gradi: number): number {
+  return ((gradi % 360) + 360) % 360;
+}
 
 export const NUM_SLOT_SOUNDBOARD = 6;
 
@@ -230,6 +236,8 @@ function validaAnnotazione(raw: unknown, idx: number): Annotazione {
     contenuto: raw.contenuto,
     posizione: validaPosizione(raw.posizione, ctx),
     dimensione: Math.min(DIM_ANNOTAZIONE_MAX, Math.max(DIM_ANNOTAZIONE_MIN, raw.dimensione)),
+    // Rotazione opzionale (retrocompatibile: assente nei manifest vecchi → 0).
+    rotazione: isNumeroFinito(raw.rotazione) ? normalizzaGradi(raw.rotazione) : 0,
     colore,
   };
 }
