@@ -2,31 +2,9 @@
   "schemaVersion": 1,
   "nome": "Treno deragliato",
   "creataIl": "2026-05-29T09:47:30.172Z",
-  "modificataIl": "2026-06-22T11:17:44.589Z",
+  "modificataIl": "2026-06-26T08:24:40.333Z",
   "mappaPath": "mappa-0ba34270-b261-4cec-81bf-f606e25e1d22.png",
   "personaggi": [
-    {
-      "id": "d842cece-bcbd-4f86-a7fe-73a85a17eb1d",
-      "nome": "Fuochista",
-      "colore": "#5E35B1",
-      "imgPath": "personaggi/d842cece-bcbd-4f86-a7fe-73a85a17eb1d.png",
-      "crop": {
-        "zoom": 1.3310000000000004,
-        "offsetX": 0.06195749136117788,
-        "offsetY": 0.023465083195612982
-      },
-      "posizione": {
-        "x": 0.869198643164889,
-        "y": 0.40519264058298665
-      },
-      "posizioneIniziale": {
-        "x": 0.869198643164889,
-        "y": 0.40519264058298665
-      },
-      "oggettoId": null,
-      "oggettoInizialeId": null,
-      "npc": true
-    },
     {
       "id": "f6c883ee-f395-4b67-8e54-648421ce090a",
       "nome": "Friedrich Adler",
@@ -104,12 +82,12 @@
         "offsetY": 1.44318601168119
       },
       "posizione": {
-        "x": 0.3181100582757179,
-        "y": 0.5199898012051339
+        "x": 0.283952788813584,
+        "y": 0.48807743880173754
       },
       "posizioneIniziale": {
-        "x": 0.3181100582757179,
-        "y": 0.5199898012051339
+        "x": 0.283952788813584,
+        "y": 0.48807743880173754
       },
       "oggettoId": null,
       "oggettoInizialeId": null,
@@ -136,6 +114,28 @@
       "oggettoId": null,
       "oggettoInizialeId": null,
       "npc": false
+    },
+    {
+      "id": "be5075c4-da76-4ddf-9128-fdcecd37395d",
+      "nome": "Fuochista",
+      "colore": "#5E35B1",
+      "imgPath": "personaggi/be5075c4-da76-4ddf-9128-fdcecd37395d.png",
+      "crop": {
+        "zoom": 4.882986158971859,
+        "offsetX": 0.0456737811748798,
+        "offsetY": 1.6330865713266225
+      },
+      "posizione": {
+        "x": 0.8807848629535445,
+        "y": 0.36250564050742323
+      },
+      "posizioneIniziale": {
+        "x": 0.8807848629535445,
+        "y": 0.36250564050742323
+      },
+      "oggettoId": null,
+      "oggettoInizialeId": null,
+      "npc": true
     }
   ],
   "oggetti": [
@@ -263,6 +263,39 @@
         "y": 0.5658944516141712
       },
       "dimensione": 0.03934381466480538,
+      "colore": null
+    },
+    {
+      "id": "ef4dd3e4-c58c-43c5-9eda-d4a5fe4afc30",
+      "tipo": "simbolo",
+      "contenuto": "🔥",
+      "posizione": {
+        "x": 0.39942140161445616,
+        "y": 0.5862678536624636
+      },
+      "dimensione": 0.02994913258335067,
+      "colore": null
+    },
+    {
+      "id": "518862a3-cb2c-4a4b-b5df-c53f572f8d08",
+      "tipo": "simbolo",
+      "contenuto": "🔥",
+      "posizione": {
+        "x": 0.37980836822900776,
+        "y": 0.5303801543115721
+      },
+      "dimensione": 0.02974912990955399,
+      "colore": null
+    },
+    {
+      "id": "431470f9-5ddf-4d36-8810-c0abf43b09e7",
+      "tipo": "simbolo",
+      "contenuto": "🔥",
+      "posizione": {
+        "x": 0.409201135827391,
+        "y": 0.5405350537675413
+      },
+      "dimensione": 0.024427384902821318,
       "colore": null
     }
   ],

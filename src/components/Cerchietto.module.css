@@ -25,12 +25,3 @@
   user-select: none;
   display: block;
 }
-
-/* Anello tratteggiato NPC: sopra il cerchio, copre l'intero box (bordo incluso).
-   Il wrapper .root non ritaglia, quindi l'anello non viene tagliato. */
-.anelloNpc {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: visible;
-}

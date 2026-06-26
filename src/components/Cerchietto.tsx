@@ -15,6 +15,7 @@ interface Props {
   dimensione: number;
   spessoreBordo?: number;
   selezionato?: boolean;
+  /** @deprecated Gli NPC sono ora visivamente identici ai personaggi normali; mantenuto per compatibilità con i chiamanti. */
   npc?: boolean;
   className?: string;
   alt?: string;
@@ -27,7 +28,6 @@ export default function Cerchietto({
   dimensione,
   spessoreBordo,
   selezionato = false,
-  npc = false,
   className,
   alt = "",
 }: Props) {
@@ -43,10 +43,11 @@ export default function Cerchietto({
     height: dimensione,
     boxShadow: selezionato ? `0 0 0 3px rgba(255,255,255,0.8), 0 0 0 6px ${colore}` : undefined,
   };
-  // Cerchio interno: ritaglia l'immagine; per gli NPC il bordo è trasparente
-  // (l'anello visibile è l'SVG tratteggiato), per gli altri è il bordo pieno.
+  // Cerchio interno: ritaglia l'immagine e disegna il bordo colorato pieno.
+  // Gli NPC sono visivamente identici ai personaggi normali (stesso bordo,
+  // stesso trattamento PNG/sfondo): la distinzione resta solo logica.
   const stileCerchio: CSSProperties = {
-    borderColor: npc ? "transparent" : colore,
+    borderColor: colore,
     borderWidth: bordo,
     // Le immagini PNG con sfondo trasparente lasciano vedere il riempimento del
     // cerchio: usiamo il colore del personaggio così appare un "disco" colorato
@@ -76,28 +77,6 @@ export default function Cerchietto({
           }}
         />
       </div>
-      {npc && (
-        // Anello tratteggiato per gli NPC. Copre l'intero box (incluso il bordo);
-        // la frequenza dei trattini è controllata da strokeDasharray, proporzionale
-        // alla dimensione → resta fitta a ogni scala (niente effetto salvagente).
-        <svg
-          className={styles.anelloNpc}
-          width={dimensione}
-          height={dimensione}
-          viewBox={`0 0 ${dimensione} ${dimensione}`}
-          aria-hidden="true"
-        >
-          <circle
-            cx={dimensione / 2}
-            cy={dimensione / 2}
-            r={(dimensione - bordoBase) / 2}
-            fill="none"
-            stroke={colore}
-            strokeWidth={bordoBase}
-            strokeDasharray={`${Math.max(2, dimensione * 0.2)} ${Math.max(2, dimensione * 0.1)}`}
-          />
-        </svg>
-      )}
     </div>
   );
 }
